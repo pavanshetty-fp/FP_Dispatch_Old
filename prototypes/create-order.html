@@ -126,6 +126,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .bd-topoff{padding:0 10px;display:flex;align-items:center;justify-content:center;}
 .bd-del{width:36px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;}
 .bd-del:hover{color:#cc0200;}
+.bd-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
+.bd-status{padding:0 10px;font-size:10px;white-space:nowrap;}
 .bd-add{background:none;border:none;color:#34c3ff;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;margin-top:6px;}
 .bd-add:hover{color:#6fd4ff;}
 
@@ -307,10 +309,13 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
 
 /* ── Step 3 / Load Order wizard step ─────────────────────── */
-#step3{z-index:20;width:min(1320px,calc(100vw - 48px));background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
+#step3{z-index:20;width:min(1480px,calc(100vw - 40px));background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 70px);display:flex;flex-direction:column;}
 .s3-body{display:flex;flex:1;overflow:hidden;}
 /* delivery order on the left, load order on the right */
-.s3-do{width:392px;flex-shrink:0;padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
+.s3-do{width:490px;flex-shrink:0;padding:14px 16px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
+.s3-col-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.s3-col-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
+.s3-do-id{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
 .s3-lo{flex:1;min-width:0;padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);}
 .s3-do::-webkit-scrollbar,.s3-lo::-webkit-scrollbar{width:5px;}
 .s3-do::-webkit-scrollbar-thumb,.s3-lo::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
@@ -436,16 +441,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         <span class="step-arrow">›</span>
         <div class="step-node pending">
           <div class="step-num">2</div>
-          <span class="step-label">Order details</span>
+          <span class="step-label">Order planning</span>
         </div>
         <span class="step-arrow">›</span>
         <div class="step-node pending">
           <div class="step-num">3</div>
-          <span class="step-label">Load planning</span>
-        </div>
-        <span class="step-arrow">›</span>
-        <div class="step-node pending">
-          <div class="step-num">4</div>
           <span class="step-label">Best buy</span>
         </div>
       </div>
@@ -513,7 +513,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     <!-- Footer -->
     <div class="wiz-footer">
       <button class="btn-secondary">Cancel</button>
-      <button class="btn-primary" id="nextBtn" onclick="goToStep2()" disabled style="opacity:0.4;cursor:not-allowed;">Next</button>
+      <button class="btn-primary" id="nextBtn" onclick="goToOrderPlanning()" disabled style="opacity:0.4;cursor:not-allowed;">Next</button>
     </div>
   </div>
 </div>
@@ -521,17 +521,20 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 <!-- ═══════════════════════════════════════════════════════════
      STEP 2: Create Order
      ═══════════════════════════════════════════════════════════ -->
-<div class="scrim" id="scrim2" style="display:none;">
-  <div id="step2">
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 2: Order planning — delivery order on the left, load order on the right
+     ═══════════════════════════════════════════════════════════ -->
+<div class="scrim" id="scrim3" style="display:none;align-items:flex-start;padding:40px 0;">
+  <div id="step3">
+
     <!-- Header -->
     <div class="co-hdr">
       <div class="co-breadcrumb">
         <span>Create Order</span>
         <span class="co-breadcrumb-sep">›</span>
-        <span class="co-breadcrumb-cust" id="coCustomerName">Morris PLC</span>
+        <span class="co-breadcrumb-cust" id="s3CustomerName">Morris PLC</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <!-- Step trail compact -->
         <div class="step-trail" style="margin:0;">
           <div class="step-node done" style="gap:5px;">
             <div class="step-num">✓</div>
@@ -540,16 +543,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node active" style="gap:5px;">
             <div class="step-num">2</div>
-            <span class="step-label" style="font-size:10px;">Order details</span>
+            <span class="step-label" style="font-size:10px;">Order planning</span>
           </div>
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node pending" style="gap:5px;">
             <div class="step-num">3</div>
-            <span class="step-label" style="font-size:10px;">Load planning</span>
-          </div>
-          <span class="step-arrow" style="margin:0 6px;">›</span>
-          <div class="step-node pending" style="gap:5px;">
-            <div class="step-num">4</div>
             <span class="step-label" style="font-size:10px;">Best buy</span>
           </div>
         </div>
@@ -558,24 +556,32 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     </div>
 
     <!-- Customer info bar -->
-    <div style="padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+    <div style="padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;">
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:28px;height:28px;border-radius:4px;background:rgba(54,87,245,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         </div>
         <div>
-          <div id="coCustomerFull" style="font-size:13px;font-weight:600;color:#fff;">Morris PLC – 112</div>
-          <div id="coCustomerAddr" style="font-size:11px;color:#6b7280;margin-top:1px;">Denver, CO, USA, Colorado</div>
+          <div id="s3CustomerFull" style="font-size:13px;font-weight:600;color:#fff;">Morris PLC – 112</div>
+          <div id="s3CustomerAddr" style="font-size:11px;color:#6b7280;">Denver, CO, USA</div>
         </div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn-ghost-sm">See Quote</button>
-        <button class="btn-ghost-sm">Lock Pricing</button>
       </div>
     </div>
 
-    <!-- Form body -->
-    <div class="co-body">
+    <!-- 2-col body -->
+    <div class="s3-body">
+
+      <!-- Left: the delivery order -->
+      <div class="s3-do">
+
+        <div class="s3-col-lbl">Delivery order</div>
+        <div class="s3-do-id">
+          <span class="do-pill do-pill-unassigned">Unassigned</span>
+          <span class="do-num" id="s3DoNum">D-5157060</span>
+          <span class="do-sep">·</span>
+          <span class="do-shipto" id="s3DoShipTo">—</span>
+        </div>
+
 
       <!-- Date + Time + Urgent -->
       <div class="form-row" style="align-items:flex-end;">
@@ -629,16 +635,18 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <table class="bd-tbl" id="bdTbl">
         <thead>
           <tr>
-            <th style="width:40%">Product</th>
-            <th style="width:35%;text-align:right;">Ordered (gal)</th>
-            <th style="width:10%;text-align:center;">Top Off</th>
-            <th style="width:15%"></th>
+            <th>Product</th>
+            <th style="width:94px;text-align:right;">Ordered (gal)</th>
+            <th style="width:56px;text-align:center;">Top Off</th>
+            <th style="width:62px;text-align:right;">Loaded</th>
+            <th style="width:112px;">Status</th>
+            <th style="width:34px;"></th>
           </tr>
         </thead>
         <tbody id="bdBody">
           <tr>
             <td>
-              <select class="bd-sel">
+              <select class="bd-sel" onchange="syncProducts()">
                 <option value="">Select product…</option>
                 <option selected>UNL87</option>
                 <option>CLR DSL</option>
@@ -647,13 +655,15 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                 <option>Diesel DEF</option>
               </select>
             </td>
-            <td><input class="bd-qty" type="number" value="3000" min="0" placeholder="0"></td>
+            <td><input class="bd-qty" type="number" value="3000" min="0" placeholder="0" onchange="syncProducts()"></td>
             <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td class="bd-loaded">—</td>
+            <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
           </tr>
           <tr>
             <td>
-              <select class="bd-sel">
+              <select class="bd-sel" onchange="syncProducts()">
                 <option value="">Select product…</option>
                 <option>UNL87</option>
                 <option selected>CLR DSL</option>
@@ -662,8 +672,10 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                 <option>Diesel DEF</option>
               </select>
             </td>
-            <td><input class="bd-qty" type="number" value="1500" min="0" placeholder="0"></td>
+            <td><input class="bd-qty" type="number" value="1500" min="0" placeholder="0" onchange="syncProducts()"></td>
             <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td class="bd-loaded">—</td>
+            <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
           </tr>
         </tbody>
@@ -731,98 +743,13 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
       </div>
 
-    </div><!-- /co-body -->
-
-    <!-- Footer -->
-    <div class="co-footer">
-      <div class="co-footer-left">
-        <button class="btn-secondary" onclick="goBackToStep1()">← Back</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-secondary" onclick="closeAll()">Cancel</button>
-        <button class="btn-primary" onclick="goToStep3()">Next: load planning →</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     STEP 3: Load Order
-     ═══════════════════════════════════════════════════════════ -->
-<div class="scrim" id="scrim3" style="display:none;align-items:flex-start;padding:40px 0;">
-  <div id="step3">
-
-    <!-- Header -->
-    <div class="co-hdr">
-      <div class="co-breadcrumb">
-        <span>Create Order</span>
-        <span class="co-breadcrumb-sep">›</span>
-        <span class="co-breadcrumb-cust" id="s3CustomerName">Morris PLC</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div class="step-trail" style="margin:0;">
-          <div class="step-node done" style="gap:5px;">
-            <div class="step-num">✓</div>
-            <span class="step-label" style="font-size:10px;">Customer</span>
-          </div>
-          <span class="step-arrow" style="margin:0 6px;">›</span>
-          <div class="step-node done" style="gap:5px;">
-            <div class="step-num">✓</div>
-            <span class="step-label" style="font-size:10px;">Order details</span>
-          </div>
-          <span class="step-arrow" style="margin:0 6px;">›</span>
-          <div class="step-node active" style="gap:5px;">
-            <div class="step-num">3</div>
-            <span class="step-label" style="font-size:10px;">Load planning</span>
-          </div>
-          <span class="step-arrow" style="margin:0 6px;">›</span>
-          <div class="step-node pending" style="gap:5px;">
-            <div class="step-num">4</div>
-            <span class="step-label" style="font-size:10px;">Best buy</span>
-          </div>
-        </div>
-        <button class="modal-close" onclick="closeAll()">×</button>
-      </div>
-    </div>
-
-    <!-- Customer info bar -->
-    <div style="padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:28px;height:28px;border-radius:4px;background:rgba(54,87,245,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-        </div>
-        <div>
-          <div id="s3CustomerFull" style="font-size:13px;font-weight:600;color:#fff;">Morris PLC – 112</div>
-          <div id="s3CustomerAddr" style="font-size:11px;color:#6b7280;">Denver, CO, USA</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2-col body -->
-    <div class="s3-body">
-
-      <!-- Left: the delivery order -->
-      <div class="s3-do">
-
-        <!-- Delivery Orders — editable, sits beside the load order -->
-        <div class="do-section">
-          <div class="do-hdr">
-            <div class="do-title-wrap">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              Delivery Orders
-              <span class="do-count" id="s3DoCount">1</span>
-            </div>
-          </div>
-          <div class="do-list" id="s3DoList"><!-- filled by JS --></div>
-          <div style="padding:8px 14px 10px;font-size:10px;color:#6b7280;border-top:1px solid rgba(255,255,255,0.05);">
-            Ordered gallons stay editable — adjust them against the compartment plan beside this.
-          </div>
-        </div>
 
       </div><!-- /s3-do -->
 
       <!-- Right: the load order -->
       <div class="s3-lo">
+
+        <div class="s3-col-lbl">Load order</div>
 
         <!-- Load Order section -->
         <div class="lo-section">
@@ -979,7 +906,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     <!-- Footer -->
     <div class="co-footer">
       <div class="co-footer-left">
-        <button class="btn-secondary" onclick="goBackToStep2()">← Back</button>
+        <button class="btn-secondary" onclick="goBackToOrderPlanning()">← Back</button>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-secondary" onclick="closeAll()">Discard</button>
@@ -1012,16 +939,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node done" style="gap:5px;">
             <div class="step-num">✓</div>
-            <span class="step-label" style="font-size:10px;">Order details</span>
-          </div>
-          <span class="step-arrow" style="margin:0 6px;">›</span>
-          <div class="step-node done" style="gap:5px;">
-            <div class="step-num">✓</div>
-            <span class="step-label" style="font-size:10px;">Load planning</span>
+            <span class="step-label" style="font-size:10px;">Order planning</span>
           </div>
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node active" style="gap:5px;">
-            <div class="step-num">4</div>
+            <div class="step-num">3</div>
             <span class="step-label" style="font-size:10px;">Best buy</span>
           </div>
         </div>
@@ -1038,7 +960,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         <div id="s4LoadLine" style="font-size:12.5px;font-weight:600;color:#fff;">—</div>
         <div id="s4LoadSub" style="font-size:11px;color:#6b7280;">—</div>
       </div>
-      <button class="btn-secondary" style="margin-left:auto;padding:5px 11px;font-size:11px;" onclick="goBackToStep3()">Edit load plan</button>
+      <button class="btn-secondary" style="margin-left:auto;padding:5px 11px;font-size:11px;" onclick="goBackToOrderPlanning()">Edit order plan</button>
     </div>
 
     <!-- Body: one block per product -->
@@ -1061,7 +983,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     <!-- Footer -->
     <div class="co-footer">
       <div class="co-footer-left">
-        <button class="btn-secondary" onclick="goBackToStep3()">← Back</button>
+        <button class="btn-secondary" onclick="goBackToOrderPlanning()">← Back</button>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-secondary" onclick="closeAll()">Discard</button>
@@ -1173,126 +1095,85 @@ function onCustomerChange(sel) {
 }
 function onShipToChange() {}
 
-// ── Step 1 → 2 ───────────────────────────────────────────
-function goToStep2() {
+// ── Step 1 → 2 (order planning) ──────────────────────────
+// Nothing is created here — the order and its load order are both created
+// at the end of best buy.
+function goToOrderPlanning() {
   if (!selectedCustomer) return;
   var stSel = document.getElementById('shipToSel');
-  var shipToText = stSel.value || '';
+  var shipToText = stSel.value ? stSel.options[stSel.selectedIndex].text : '';
+
   document.getElementById('scrim1').style.display = 'none';
-  document.getElementById('scrim2').style.display = 'flex';
-  document.getElementById('coCustomerName').textContent = selectedCustomer.name;
-  document.getElementById('coCustomerFull').textContent = selectedCustomer.name + ' – ' + selectedCustomer.erpId;
-  document.getElementById('coCustomerAddr').textContent = (shipToText ? shipToText + ' · ' : '') + selectedCustomer.addr;
-}
-function goBackToStep1() {
-  document.getElementById('scrim2').style.display = 'none';
-  document.getElementById('scrim1').style.display = 'flex';
-}
-
-// ── Step 2 → 3 ───────────────────────────────────────────
-// Nothing is created here — the order and its load order are both created
-// at the end of step 4.
-function goToStep3() {
-  var rows = document.querySelectorAll('#bdBody tr');
-  var products = [];
-  rows.forEach(function(tr) {
-    var sel = tr.querySelector('select');
-    var qty = tr.querySelector('input[type="number"]');
-    if (sel && qty && sel.value && qty.value) {
-      products.push({ name: sel.options[sel.selectedIndex].text, qty: parseInt(qty.value) });
-    }
-  });
-  if (products.length === 0) products = [{ name: 'UNL87', qty: 3000 }, { name: 'CLR DSL', qty: 1500 }];
-
-  s3.products = products;
-  _s3DoNum = 'D-' + (5157060 + Math.floor(Math.random() * 100));
-
-  document.getElementById('scrim2').style.display = 'none';
   document.getElementById('scrim3').style.display = 'flex';
 
-  var cust = selectedCustomer || { name: 'Morris PLC', erpId: '112', addr: 'Denver, CO, USA' };
+  var cust = selectedCustomer;
   document.getElementById('s3CustomerName').textContent = cust.name;
   document.getElementById('s3CustomerFull').textContent = cust.name + ' – ' + cust.erpId;
-  document.getElementById('s3CustomerAddr').textContent = cust.addr;
+  document.getElementById('s3CustomerAddr').textContent = (shipToText ? shipToText + ' · ' : '') + cust.addr;
 
-  buildS3DoList(products, cust);
-  buildS3Gallons(products);
+  _s3DoNum = 'D-' + (5157060 + Math.floor(Math.random() * 100));
+  document.getElementById('s3DoNum').textContent = _s3DoNum;
+  document.getElementById('s3DoShipTo').textContent = shipToText || cust.addr.split(',')[0];
 
-  // Reset truck picker
+  // Reset the load order side
   document.getElementById('s3TruckSel').value = '';
   document.getElementById('s3DriverSel').value = '';
+  document.getElementById('s3TruckAuto').style.display = 'none';
   document.getElementById('s3TruckCapRow').style.display = 'none';
   document.getElementById('s3CompSection').style.display = 'none';
   s3.truck = null;
   s3.assignments = [];
 
   var now = new Date();
-  document.getElementById('s3CreatedTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' today';
+  document.getElementById('s3CreatedTime').textContent =
+    now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' today';
+
+  syncProducts();
 }
 
-function buildS3DoList(products, cust) {
-  var stSel = document.getElementById('shipToSel');
-  var shipTo = stSel && stSel.value
-    ? stSel.options[stSel.selectedIndex].text
-    : cust.name + ' · ' + cust.addr.split(',')[0];
-  var planDate = document.querySelector('#step2 input[placeholder="MM/DD/YYYY"]').value || '11/18/2026';
-  var planTime = document.querySelector('#step2 input[placeholder="HH:mm"]').value || '06:00';
-
-  var rowsHtml = products.map(function(p, i) {
-    var col = PROD_COLORS[p.name] || '#9ba3af';
-    var blendBadge = BLEND_PRODUCTS.indexOf(p.name) >= 0 ? ' <span class="badge-blend">Blend</span>' : '';
-    return '<tr>' +
-      '<td><div class="dl-prod"><span class="prod-dot" style="background:' + col + ';"></span>' + p.name + blendBadge + '</div></td>' +
-      '<td><input class="dl-qty" type="number" min="0" step="50" value="' + p.qty + '" onchange="onDoQtyChange(' + i + ',this)"></td>' +
-      '<td class="dl-loaded" id="s3DoLoaded' + i + '">—</td>' +
-      '<td class="dl-status" id="s3DoStatus' + i + '"><span style="color:#4b5563;">Pick a truck</span></td>' +
-    '</tr>';
-  }).join('');
-
-  document.getElementById('s3DoList').innerHTML =
-    '<div class="do-row-static" style="padding-bottom:9px;">' +
-      '<div class="do-row-meta">' +
-        '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
-        '<span class="do-num">' + _s3DoNum + '</span>' +
-        '<span class="do-sep">·</span>' +
-        '<span class="do-shipto">' + shipTo + '</span>' +
-        '<span class="do-time">' + planDate + ' ' + planTime + '</span>' +
-      '</div>' +
-    '</div>' +
-    '<table class="do-lines-tbl">' +
-      '<thead><tr>' +
-        '<th>Product</th>' +
-        '<th style="text-align:right;width:118px;">Ordered (gal)</th>' +
-        '<th style="text-align:right;width:84px;">Loaded</th>' +
-        '<th style="width:132px;">Status</th>' +
-      '</tr></thead>' +
-      '<tbody>' + rowsHtml + '</tbody>' +
-    '</table>';
-
-  document.getElementById('s3DoCount').textContent = '1';
+function goBackToStep1() {
+  document.getElementById('scrim3').style.display = 'none';
+  document.getElementById('scrim1').style.display = 'flex';
 }
 
-// Editing an ordered quantity re-plans the compartments immediately
-function onDoQtyChange(idx, inp) {
-  s3.products[idx].qty = Math.max(0, parseInt(inp.value) || 0);
-  buildS3Gallons(s3.products);
-  if (s3.truck) {
-    onTruckChange(document.getElementById('s3TruckSel'));
-  } else {
-    updateS3DoStatuses();
-  }
+// The order lines live in the delivery column, so anything that changes them
+// re-reads the table and re-plans the compartments beside it.
+function syncProducts() {
+  var products = [];
+  document.querySelectorAll('#bdBody tr').forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    var qty = tr.querySelector('input[type="number"]');
+    if (sel && qty && sel.value && qty.value) {
+      products.push({ name: sel.options[sel.selectedIndex].text, qty: parseInt(qty.value) || 0 });
+    }
+  });
+  s3.products = products;
+  buildS3Gallons(products);
+  if (s3.truck) autoAssign(); else updateS3DoStatuses();
 }
 
-// Updates only the Loaded + Status cells so the qty input keeps focus
+// Writes the Loaded and Status cells on the order lines. Only those two cells
+// are touched, so the quantity input keeps focus while you type.
 function updateS3DoStatuses() {
   var assignedByProd = {};
   s3.assignments.forEach(function(a) {
     if (a.product) assignedByProd[a.product] = (assignedByProd[a.product] || 0) + a.qty;
   });
-  s3.products.forEach(function(p, i) {
-    var loadedEl = document.getElementById('s3DoLoaded' + i);
-    var statusEl = document.getElementById('s3DoStatus' + i);
+  var rows = document.querySelectorAll('#bdBody tr');
+  var i = 0;
+  rows.forEach(function(tr) {
+    var loadedEl = tr.querySelector('.bd-loaded');
+    var statusEl = tr.querySelector('.bd-status');
     if (!loadedEl || !statusEl) return;
+    var sel = tr.querySelector('select');
+    var qtyInp = tr.querySelector('input[type="number"]');
+    if (!sel || !sel.value || !qtyInp || !qtyInp.value) {
+      loadedEl.textContent = '—';
+      statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
+      return;
+    }
+    var p = s3.products[i++];
+    if (!p) return;
     if (!s3.truck) {
       loadedEl.textContent = '—';
       statusEl.innerHTML = '<span style="color:#4b5563;">Pick a truck</span>';
@@ -1302,7 +1183,7 @@ function updateS3DoStatuses() {
     var short = p.qty - loaded;
     loadedEl.textContent = loaded.toLocaleString();
     if (short > 0) {
-      statusEl.innerHTML = '<span style="color:#ff931e;">⚠ ' + short.toLocaleString() + ' gal won\'t fit</span>';
+      statusEl.innerHTML = '<span style="color:#ff931e;">⚠ ' + short.toLocaleString() + " gal won't fit</span>";
     } else if (p.qty === 0) {
       statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
     } else {
@@ -1321,15 +1202,14 @@ function buildS3Gallons(products) {
   document.getElementById('s3GallonsBody').innerHTML = html;
 }
 
-// ── Step 3 → 2 ───────────────────────────────────────────
-function goBackToStep2() {
-  document.getElementById('scrim3').style.display = 'none';
-  document.getElementById('scrim2').style.display = 'flex';
+// ── Best buy → order planning ────────────────────────────
+function goBackToOrderPlanning() {
+  document.getElementById('scrim4').style.display = 'none';
+  document.getElementById('scrim3').style.display = 'flex';
 }
 
 function closeAll() {
   document.getElementById('scrim1').style.display = 'none';
-  document.getElementById('scrim2').style.display = 'none';
   document.getElementById('scrim3').style.display = 'none';
   document.getElementById('scrim4').style.display = 'none';
 }
@@ -1584,11 +1464,6 @@ function pickAccount(prod, term, acct) {
   renderBestBuy();
 }
 
-function goBackToStep3() {
-  document.getElementById('scrim4').style.display = 'none';
-  document.getElementById('scrim3').style.display = 'flex';
-}
-
 // Creates the delivery order and its load order together
 function createOrderAndLoad() {
   document.getElementById('scrim4').style.display = 'none';
@@ -1836,10 +1711,11 @@ function addTrailer() {
 function addBdRow() {
   var tbody = document.getElementById('bdBody');
   var tr = document.createElement('tr');
-  tr.innerHTML = '<td><select class="bd-sel"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
+  tr.innerHTML = '<td><select class="bd-sel" onchange="syncProducts()"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0" onchange="syncProducts()"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td class="bd-loaded">—</td><td class="bd-status"><span style="color:#4b5563;">—</span></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
   tbody.appendChild(tr);
+  syncProducts();
 }
-function delBdRow(btn) { btn.closest('tr').remove(); }
+function delBdRow(btn) { btn.closest('tr').remove(); syncProducts(); }
 
 // ── Tab switch ────────────────────────────────────────────
 function switchTab(btn) {
