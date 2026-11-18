@@ -185,6 +185,63 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
 .warn-banner.ok{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);}
 .rule-note{font-size:9.5px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
 
+/* Load plan vs sourcing, inside whichever load order the tabs have open */
+.lou-seg{display:flex;background:#1f2226;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px;margin-left:auto;align-self:center;}
+.lou-seg-btn{padding:4px 12px;border:none;background:transparent;color:#797a7d;font-family:inherit;font-size:11px;cursor:pointer;border-radius:4px;white-space:nowrap;}
+.lou-seg-btn:hover{color:#d5d6d7;}
+.lou-seg-btn.on{background:#3657f5;color:#fff;font-weight:600;}
+.lou-seg-btn .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff931e;margin-left:5px;vertical-align:middle;}
+
+.src-pane{padding:13px 16px;overflow-y:auto;flex:1;min-width:0;}
+.src-pane::-webkit-scrollbar{width:5px;}
+.src-pane::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.src-cta-wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;}
+.src-cta{display:flex;align-items:center;gap:9px;padding:11px 20px;border:1px dashed rgba(54,87,245,0.35);border-radius:6px;background:rgba(54,87,245,0.05);color:#34c3ff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.src-cta:hover:not(:disabled){background:rgba(54,87,245,0.14);border-color:rgba(54,87,245,0.6);}
+.src-cta:disabled{opacity:.45;cursor:not-allowed;color:#6b7280;border-color:rgba(255,255,255,0.12);background:transparent;}
+.src-cta-sub{font-size:10.5px;color:#6b7280;}
+/* ── Step 4: Best buy ─────────────────────────────────────── */
+.bb-body{padding:16px 20px;overflow-y:auto;flex:1;}
+.bb-body::-webkit-scrollbar{width:5px;}
+.bb-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.bb-prod-block{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.bb-prod-hdr{background:rgba(255,255,255,0.03);padding:9px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.bb-prod-name{font-size:12.5px;font-weight:600;color:#e9ebf0;}
+.bb-prod-gal{font-size:11px;color:#9ba3af;}
+.bb-prod-best{margin-left:auto;font-size:10px;color:#00c765;font-weight:600;}
+.bb-tbl{width:100%;border-collapse:collapse;background:#262930;}
+.bb-tbl th{background:#1f2226;padding:5px 10px;text-align:left;font-size:9.5px;font-weight:700;color:#797a7d;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.bb-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.06);height:38px;vertical-align:middle;}
+.bb-tbl tr:last-child td{border-bottom:none;}
+.bb-tbl tr.picked{background:rgba(0,199,101,0.06);}
+.bb-radio-cell{width:36px;padding:0 0 0 11px !important;}
+.bb-radio{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bb-radio.on{border-color:#00c765;}
+.bb-radio.on::after{content:'';width:7px;height:7px;border-radius:50%;background:#00c765;}
+.bb-cell{padding:0 10px;font-size:11.5px;color:#e9ebf0;}
+.bb-cell-sub{font-size:10px;color:#6b7280;}
+.bb-price{padding:0 10px;font-size:12px;font-weight:600;color:#e9ebf0;text-align:right;white-space:nowrap;}
+.bb-price-best{color:#00c765;}
+.bb-delta{padding:0 10px;font-size:10.5px;text-align:right;white-space:nowrap;}
+.bb-acct{width:100%;height:38px;padding:0 20px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.06);font-family:inherit;font-size:11.5px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+/* Whole-load sourcing choice: cheapest per product, or everything at one terminal */
+.bb-modes{display:flex;gap:7px;margin-bottom:13px;}
+.bb-mode{flex:1;min-width:0;padding:9px 11px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:#262930;cursor:pointer;text-align:left;font-family:inherit;}
+.bb-mode:hover{border-color:rgba(255,255,255,0.24);}
+.bb-mode.on{border-color:#3657f5;background:rgba(54,87,245,0.1);}
+.bb-mode:disabled{opacity:0.4;cursor:not-allowed;}
+.bb-mode-name{font-size:11px;font-weight:600;color:#e9ebf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb-mode-total{font-size:13.5px;font-weight:700;color:#e9ebf0;margin-top:4px;}
+.bb-mode-sub{font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb-total{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
+.bb-total-lbl{font-size:11.5px;color:#9ba3af;}
+.bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
+.bb-total-save{font-size:10.5px;color:#00c765;margin-top:2px;}
+.bb-total{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
+.bb-total-lbl{font-size:11.5px;color:#9ba3af;}
+.bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
+.bb-total-save{font-size:10.5px;margin-top:2px;}
+
 /* Footer */
 .lou-foot{height:52px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;background:rgba(0,0,0,0.12);}
 .lou-foot-meta{font-size:11px;color:#9ba3af;}
@@ -270,13 +327,20 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
         <span class="lou-empty-sub">Orders for the same driver are grouped into one load order</span>
       </div>
 
-      <!-- Driver tabs -->
-      <div class="lou-tabs" id="louTabs" style="display:none;"></div>
+      <!-- Driver tabs, and what you are doing to the load they name -->
+      <div style="display:flex;align-items:stretch;gap:12px;padding-right:16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;" id="louTabRow">
+        <div class="lou-tabs" id="louTabs" style="flex:1;border-bottom:none;"></div>
+        <div class="lou-seg" id="louSeg" style="display:none;">
+          <button class="lou-seg-btn on" id="segPlan" onclick="setLouView('plan')">Load plan</button>
+          <button class="lou-seg-btn" id="segSrc" onclick="setLouView('src')">Sourcing</button>
+        </div>
+      </div>
 
       <!-- Tab content -->
       <div class="lou-content" id="louContent" style="display:none;">
         <div class="lou-left" id="louLeft"></div>
         <div class="lou-right" id="louRight"></div>
+        <div class="src-pane" id="louSrc" style="display:none;"></div>
       </div>
 
       <div class="lou-foot" id="louFoot" style="display:none;">
@@ -334,6 +398,51 @@ function hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%6
 function shiftLabel(k){ var s=SHIFTS[k]; return s ? s.name+' '+hhmm(s.from)+'–'+hhmm(s.to) : '—'; }
 function trailerCap(k){ var t=TRAILERS[k]; return t ? t.comps.reduce(function(s,c){return s+c.cap;},0) : 0; }
 function truckCap(k){ var t=TRUCKS[k]; return t ? t.comps.reduce(function(s,c){return s+c.cap;},0) : 0; }
+
+// ── Sourcing — where each load picks its products up ──────
+// Loading accounts belong to a terminal, so picking a terminal narrows them.
+var SRC_TERMINALS = {
+  'Magellan CC': { supplier:'Kendrick Oil', accounts:['MCC-7823','MCC-8841'], dist:'12 mi' },
+  'Buckeye CC':  { supplier:'Flint Hills',  accounts:['BCC-2290','BCC-2291'], dist:'23 mi' },
+  'Valero West': { supplier:'Valero',       accounts:['VLW-5510'],            dist:'31 mi' },
+};
+// rack price per gallon for the planned date
+var RACK = {
+  'UNL87':      { 'Magellan CC':2.914, 'Buckeye CC':2.887, 'Valero West':2.942 },
+  'UNL93':      { 'Magellan CC':3.302, 'Buckeye CC':3.341, 'Valero West':3.288 },
+  'CLR DSL':    { 'Magellan CC':3.118, 'Buckeye CC':3.094, 'Valero West':3.151 },
+  'HO DSL':     { 'Magellan CC':3.207, 'Buckeye CC':3.244, 'Valero West':3.189 },
+  'Diesel DEF': { 'Magellan CC':1.842, 'Buckeye CC':1.878, 'Valero West':1.821 },
+};
+
+// Each load order sources itself, so the state lives on the unit.
+function cheapestTerminal(prod) {
+  var r = RACK[prod];
+  if (!r) return Object.keys(SRC_TERMINALS)[0];
+  return Object.keys(r).sort(function(a,b){ return r[a]-r[b]; })[0];
+}
+function unitTotalFor(u, mode) {
+  return u.products.reduce(function(sum,l) {
+    var rack = RACK[l.name] || {};
+    var t = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    return sum + (rack[t]||0) * l.qty;
+  }, 0);
+}
+function terminalCanSupplyAll(u, term) {
+  return u.products.every(function(l){ return typeof (RACK[l.name]||{})[term] === 'number'; });
+}
+function applyUnitMode(u, mode) {
+  u.srcMode = mode;
+  u.products.forEach(function(l) {
+    var t = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    if (!SRC_TERMINALS[t]) return;
+    var prev = u.srcPicks[l.name];
+    u.srcPicks[l.name] = {
+      terminal: t,
+      account: (prev && prev.terminal === t) ? prev.account : SRC_TERMINALS[t].accounts[0],
+    };
+  });
+}
 
 var DRIVERS = {
   alex:  { name:'Alex Trebek',  shift:'e6', truck:'Hi-12' },
@@ -552,8 +661,13 @@ function buildUnits(alsoOpen) {
       products: Object.keys(b.prodMap).map(function(n){ return { name:n, qty:b.prodMap[n] }; }),
       truck:   prev ? prev.truck   : (DRIVERS[b.driver] ? DRIVERS[b.driver].truck : ''),
       trailer: prev ? prev.trailer : '',
-      assignments: []
+      assignments: [],
+      srcCreated: prev ? prev.srcCreated : false,
+      srcMode:    prev ? prev.srcMode    : 'best',
+      srcPicks:   prev ? prev.srcPicks   : {},
     };
+    // the lines may have moved, so re-apply whatever sourcing choice is in force
+    if (u.srcCreated && u.srcMode !== 'custom') applyUnitMode(u, u.srcMode);
     autoAssignUnit(u);
     next[k] = u;
   });
@@ -679,6 +793,139 @@ function unitShortfall(u) {
 }
 
 // ── Render ────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════
+//  Sourcing a load order
+// ══════════════════════════════════════════════════════════
+// Planning the load says which truck carries what; sourcing says where that
+// product is picked up. One follows the other, per load order.
+var louView = 'plan';
+
+function setLouView(v) {
+  louView = v;
+  document.getElementById('segPlan').classList.toggle('on', v === 'plan');
+  document.getElementById('segSrc').classList.toggle('on', v === 'src');
+  renderUnit();
+}
+
+function createSourcing() {
+  var u = units[activeTab];
+  if (!u || !u.truck) return;
+  u.srcCreated = true;
+  applyUnitMode(u, 'best');
+  renderUnit();
+}
+function setUnitMode(mode) { applyUnitMode(units[activeTab], mode); renderUnit(); }
+function pickUnitTerminal(prod, term) {
+  var u = units[activeTab];
+  u.srcPicks[prod] = { terminal:term, account:SRC_TERMINALS[term].accounts[0] };
+  u.srcMode = 'custom';
+  renderUnit();
+}
+function pickUnitAccount(prod, term, acct) {
+  units[activeTab].srcPicks[prod] = { terminal:term, account:acct };
+  renderUnit();
+}
+
+function money(n) {
+  return '$' + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function renderSourcingPane() {
+  var pane = document.getElementById('louSrc');
+  var u = units[activeTab];
+  if (!u) { pane.innerHTML = ''; return; }
+
+  if (!u.srcCreated) {
+    var ready = !!u.truck;
+    pane.innerHTML = '<div class="src-cta-wrap">' +
+      '<button class="src-cta"' + (ready?'':' disabled') + ' onclick="createSourcing()">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' +
+        'Create sourcing</button>' +
+      '<span class="src-cta-sub">' + (ready
+        ? 'Choose where this load picks up its ' + fmtGal(u.products) + ''
+        : 'Give this load a truck first') + '</span></div>';
+    return;
+  }
+
+  var bestTotal = unitTotalFor(u, 'best');
+  var bestStops = {};
+  u.products.forEach(function(l){ bestStops[cheapestTerminal(l.name)] = true; });
+  var bestStopCount = Object.keys(bestStops).length;
+
+  var chips = ['<button class="bb-mode' + (u.srcMode==='best'?' on':'') + '" onclick="setUnitMode(\'best\')">' +
+      '<div class="bb-mode-name">Cheapest per product</div>' +
+      '<div class="bb-mode-total">' + money(bestTotal) + '</div>' +
+      '<div class="bb-mode-sub" style="color:' + (bestStopCount>1?'#ff931e':'#00c765') + ';">' +
+        bestStopCount + ' terminal' + (bestStopCount>1?'s':'') + ' to visit</div></button>'];
+  Object.keys(SRC_TERMINALS).forEach(function(t) {
+    var ok = terminalCanSupplyAll(u, t), total = unitTotalFor(u, t), over = total - bestTotal;
+    var sub = !ok ? '<span style="color:#797a7d;">does not rack every product</span>'
+      : over > 0.005 ? '<span style="color:#ff931e;">+' + money(over).slice(1) + ' · 1 stop</span>'
+      : '<span style="color:#00c765;">cheapest · 1 stop</span>';
+    chips.push('<button class="bb-mode' + (u.srcMode===t?' on':'') + '"' + (ok?'':' disabled') +
+      ' onclick="setUnitMode(\'' + t + '\')">' +
+      '<div class="bb-mode-name">All at ' + t + '</div>' +
+      '<div class="bb-mode-total">' + (ok?money(total):'—') + '</div>' +
+      '<div class="bb-mode-sub">' + sub + '</div></button>');
+  });
+
+  var blocks = u.products.map(function(l) {
+    var col = PROD_COLORS[l.name] || '#9ba3af';
+    var rack = RACK[l.name] || {};
+    var best = cheapestTerminal(l.name), bestPrice = rack[best];
+    var pick = u.srcPicks[l.name] || { terminal:best, account:SRC_TERMINALS[best].accounts[0] };
+    var rows = Object.keys(SRC_TERMINALS).map(function(t) {
+      var price = rack[t], term = SRC_TERMINALS[t], isPick = pick.terminal === t;
+      var delta = price - bestPrice;
+      var deltaHtml = delta === 0 ? '<span style="color:#00c765;">best</span>'
+                                  : '<span style="color:#797a7d;">+$' + delta.toFixed(3) + '</span>';
+      var acctOpts = term.accounts.map(function(a) {
+        return '<option value="' + a + '"' + (isPick && pick.account===a ? ' selected':'') + '>' + a + '</option>';
+      }).join('');
+      return '<tr class="' + (isPick?'picked':'') + '" onclick="pickUnitTerminal(\'' + l.name + '\',\'' + t + '\')" style="cursor:pointer;">' +
+        '<td class="bb-radio-cell"><div class="bb-radio' + (isPick?' on':'') + '"></div></td>' +
+        '<td class="bb-cell">' + t + '<div class="bb-cell-sub">' + term.dist + '</div></td>' +
+        '<td class="bb-cell">' + term.supplier + '</td>' +
+        '<td onclick="event.stopPropagation();"><select class="bb-acct" onchange="pickUnitAccount(\'' + l.name + '\',\'' + t + '\',this.value)"' + (isPick?'':' disabled style="opacity:.4;"') + '>' + acctOpts + '</select></td>' +
+        '<td class="bb-price' + (delta===0?' bb-price-best':'') + '">$' + price.toFixed(3) + '</td>' +
+        '<td class="bb-delta">' + deltaHtml + '</td>' +
+        '<td class="bb-price">' + money(price * l.qty) + '</td></tr>';
+    }).join('');
+    return '<div class="bb-prod-block"><div class="bb-prod-hdr">' +
+        '<span class="prod-dot" style="background:' + col + ';"></span>' +
+        '<span class="bb-prod-name">' + l.name + '</span>' +
+        '<span class="bb-prod-gal">' + l.qty.toLocaleString() + ' gal to load</span>' +
+        '<span class="bb-prod-best">' + (pick.terminal === best ? '✓ cheapest source' : 'not the cheapest source') + '</span>' +
+      '</div><table class="bb-tbl"><thead><tr>' +
+        '<th></th><th>Terminal</th><th>Supplier</th><th style="width:146px;">Loading account</th>' +
+        '<th style="width:84px;text-align:right;">$/gal</th><th style="width:70px;text-align:right;">vs best</th>' +
+        '<th style="width:108px;text-align:right;">Line cost</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }).join('');
+
+  var total = u.products.reduce(function(s,l) {
+    return s + ((RACK[l.name]||{})[(u.srcPicks[l.name]||{}).terminal] || 0) * l.qty;
+  }, 0);
+  var over = total - bestTotal;
+  var stops = {};
+  u.products.forEach(function(l){ if (u.srcPicks[l.name]) stops[u.srcPicks[l.name].terminal] = true; });
+  var names = Object.keys(stops);
+
+  pane.innerHTML = '<div class="bb-modes">' + chips.join('') + '</div>' + blocks +
+    (names.length > 1
+      ? '<div style="font-size:10px;color:#ff931e;margin-bottom:8px;">This load picks up at ' + names.length +
+        ' terminals — ' + names.join(' and ') + '.</div>' : '') +
+    '<div class="bb-total"><div><div class="bb-total-lbl">Estimated product cost</div>' +
+      '<div class="bb-total-save" style="color:' + (over>0.005?'#ff931e':'#00c765') + ';">' +
+        (over > 0.005 ? money(over) + ' above the cheapest sourcing' : 'every product on its cheapest source') +
+      '</div></div><div class="bb-total-val">' + money(total) + '</div></div>';
+}
+
+function fmtGal(products) {
+  return products.reduce(function(a,p){ return a+p.qty; },0).toLocaleString() + ' gal';
+}
+
 function renderUnit() {
   var keys = Object.keys(units);
   var empty  = document.getElementById('louEmpty');
@@ -688,7 +935,7 @@ function renderUnit() {
 
   if (!keys.length) {
     empty.style.display = 'flex';
-    tabs.style.display = 'none';
+    document.getElementById('louTabRow').style.display = 'none';
     content.style.display = 'none';
     foot.style.display = 'none';
     document.getElementById('louHdrMeta').textContent = 'No orders yet';
@@ -697,9 +944,16 @@ function renderUnit() {
   }
 
   empty.style.display = 'none';
+  document.getElementById('louTabRow').style.display = 'flex';
   tabs.style.display = 'flex';
   content.style.display = 'flex';
   foot.style.display = 'flex';
+
+  // the switch only means something once a load exists to source
+  var unsourced = keys.filter(function(k){ return units[k].truck && !units[k].srcCreated; }).length;
+  document.getElementById('louSeg').style.display = 'flex';
+  document.getElementById('segSrc').innerHTML = 'Sourcing' +
+    (unsourced ? '<span class="dot" title="' + unsourced + ' still to source"></span>' : '');
 
   var totalOrders = keys.reduce(function(s,k){ return s + units[k].orders.length; },0);
   document.getElementById('louHdrMeta').textContent =
@@ -718,13 +972,21 @@ function renderUnit() {
       flag + name + '<span class="lou-tab-badge">'+u.orders.length+'</span></button>';
   }).join('');
 
-  renderTabContent();
+  // load plan or sourcing, for whichever load order the tabs have open
+  var planning = louView === 'plan';
+  document.getElementById('louLeft').style.display  = planning ? '' : 'none';
+  document.getElementById('louRight').style.display = planning ? '' : 'none';
+  document.getElementById('louSrc').style.display   = planning ? 'none' : '';
+  if (planning) renderTabContent(); else renderSourcingPane();
 
   var totalShort = keys.reduce(function(s,k){ return s + unitShortfall(units[k]); },0);
   var noTruckCount = keys.filter(function(k){ return !units[k].truck; }).length;
   var footMeta = document.getElementById('louFootMeta');
+  var needSrc = keys.filter(function(k){ return units[k].truck && !units[k].srcCreated; }).length;
   if (noTruckCount) {
-    footMeta.innerHTML = '<span style="color:#ff931e;">'+noTruckCount+' load order'+(noTruckCount>1?'s':'')+' still need a truck</span>';
+    footMeta.innerHTML = '<span style="color:#ff931e;">'+noTruckCount+' load order'+(noTruckCount>1?'s still need':' still needs')+' a truck</span>';
+  } else if (needSrc) {
+    footMeta.innerHTML = '<span style="color:#ff931e;">'+needSrc+' load order'+(needSrc>1?'s still need':' still needs')+' sourcing</span>';
   } else if (totalShort) {
     footMeta.innerHTML = '<span style="color:#ff931e;">'+totalShort.toLocaleString()+' gal won\'t fit across '+keys.length+' load order'+(keys.length>1?'s':'')+'</span>';
   } else {
@@ -943,6 +1205,7 @@ function buildBanner(u) {
 
 // ── Edits ─────────────────────────────────────────────────
 function setTruck(v)   { units[activeTab].truck = v;   autoAssignUnit(units[activeTab]); renderUnit(); }
+
 function setTrailer(v) { units[activeTab].trailer = v; autoAssignUnit(units[activeTab]); renderUnit(); }
 function reAuto()      { autoAssignUnit(units[activeTab]); renderUnit(); }
 

@@ -60,6 +60,22 @@ it up moves focus there and the unit takes the room, with the two units above
 shrinking to a band. All three then trade focus: whichever is in focus takes the
 space, the others dim and offer to take over.
 
+## Sourcing follows the load, everywhere
+
+All three flows source a load the same way, with the same unit — per product,
+each terminal with its supplier, loading account, rack price and the gap to the
+cheapest, plus the whole-load choice across the top.
+
+| Flow | Where sourcing sits |
+|------|---------------------|
+| Create order | Best buy, the step after order planning |
+| Edit order | Its own unit across the bottom, behind **Create sourcing** |
+| Shift planner | A **Sourcing** view beside the load plan, per driver tab |
+
+In the planner each load order sources itself: the driver tabs pick which load,
+the switch picks whether you are planning it or sourcing it, and the footer says
+how many still need sourcing before they can be created.
+
 ## Compartment planning
 
 Both `create-order.html` and `shift-planner.html` share the same rules:

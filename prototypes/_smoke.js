@@ -111,6 +111,28 @@
       if (!document.querySelectorAll('.as-tbl tbody tr').length) throw new Error('no compartments');
     });
     step('switch driver tab', () => document.querySelectorAll('.lou-tab')[1].click());
+    step('sourcing is the next step', () => {
+      document.getElementById('segSrc').click();
+      const cta = document.querySelector('#louSrc .src-cta');
+      if (!cta) throw new Error('no Create sourcing CTA');
+      if (cta.disabled) throw new Error('CTA locked though the load has a truck');
+    });
+    step('create sourcing for this load', () => {
+      document.querySelector('#louSrc .src-cta').click();
+      if (!document.querySelectorAll('#louSrc .bb-prod-block').length) throw new Error('no product blocks');
+      if (!document.querySelector('#louSrc .bb-total-val').textContent.trim()) throw new Error('no total');
+    });
+    step('each load sources on its own', () => {
+      const sourced = document.querySelector('#louSrc .bb-total-val').textContent;
+      document.querySelectorAll('.lou-tab')[0].click();          // the one not touched yet
+      if (!document.querySelector('#louSrc .src-cta')) throw new Error('the other load was sourced too');
+      document.querySelector('#louSrc .src-cta').click();
+      if (document.querySelector('#louSrc .bb-total-val').textContent === sourced) throw new Error('same total for a different load');
+    });
+    step('back to the load plan', () => {
+      document.getElementById('segPlan').click();
+      if (document.getElementById('louSrc').style.display !== 'none') throw new Error('sourcing still showing');
+    });
     step('drag an order in', () => {
       const dt = new DataTransfer();
       const card = document.querySelectorAll('.sp-card')[4];
