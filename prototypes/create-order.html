@@ -1204,36 +1204,75 @@ function onTruckChange(sel) {
 }
 
 // ── Auto-assign products to compartments ──────────────────
+// Best guess at a compartment plan. A compartment never holds two products,
+// so this is a packing problem with no single winning strategy: filling the
+// biggest product first wastes least space, but it can strand a small product
+// with nowhere to go. We run both orderings plus a seeded variant that gives
+// every product one compartment before any product takes a second, and keep
+// whichever plan loads the most gallons.
+function planAssignments(comps, products) {
+  function run(order, seed) {
+    var as = comps.map(function(c) {
+      return Object.assign({}, c, { product:'', qty:0 });
+    });
+    var rem = {};
+    products.forEach(function(p){ rem[p.name] = p.qty; });
+    var list = products.slice().sort(function(a,b) {
+      return order === 'asc' ? a.qty - b.qty : b.qty - a.qty;
+    });
+
+    if (seed) {
+      list.forEach(function(p) {
+        var r = rem[p.name];
+        if (r <= 0) return;
+        // prefer the compartment that takes the whole line with least spare;
+        // if none can, take the roomiest one going
+        var fit = -1, fitWaste = Infinity, big = -1, bigCap = -1;
+        for (var i=0;i<as.length;i++) {
+          if (as[i].product !== '') continue;
+          if (as[i].cap >= r) {
+            var w = as[i].cap - r;
+            if (w < fitWaste) { fitWaste = w; fit = i; }
+          } else if (as[i].cap > bigCap) { bigCap = as[i].cap; big = i; }
+        }
+        var pick = fit >= 0 ? fit : big;
+        if (pick < 0) return;
+        var load = Math.min(as[pick].cap, r);
+        as[pick].product = p.name;
+        as[pick].qty = load;
+        rem[p.name] = r - load;
+      });
+    }
+
+    list.forEach(function(p) {
+      var r = rem[p.name];
+      for (var i=0; i<as.length && r>0; i++) {
+        var a = as[i];
+        if (a.product !== '' && a.product !== p.name) continue;   // no mixing
+        var space = a.cap - a.qty;
+        if (space <= 0) continue;
+        var load = Math.min(space, r);
+        a.product = p.name;
+        a.qty += load;
+        r -= load;
+      }
+      rem[p.name] = r;
+    });
+
+    return { as: as, loaded: as.reduce(function(s,a){ return s+a.qty; },0) };
+  }
+
+  var best = null;
+  [['desc',true], ['asc',true], ['desc',false]].forEach(function(cfg) {
+    var r = run(cfg[0], cfg[1]);
+    if (!best || r.loaded > best.loaded) best = r;
+  });
+  return best.as;
+}
+
 function autoAssign() {
   if (!s3.truck) return;
-  var truck = TRUCKS[s3.truck];
-
-  // Reset
-  s3.assignments = truck.comps.map(function(c) { return { product: '', qty: 0, cap: c.cap }; });
-
-  // Track remaining per product
-  var remaining = {};
-  s3.products.forEach(function(p) { remaining[p.name] = p.qty; });
-
-  // Sort products by qty descending
-  var sorted = s3.products.slice().sort(function(a,b) { return b.qty - a.qty; });
-
-  sorted.forEach(function(p) {
-    var rem = remaining[p.name];
-    if (rem <= 0) return;
-    for (var i = 0; i < s3.assignments.length && rem > 0; i++) {
-      var a = s3.assignments[i];
-      if (a.product !== '' && a.product !== p.name) continue;
-      var canFit = a.cap - a.qty;
-      if (canFit <= 0) continue;
-      var load = Math.min(canFit, rem);
-      a.product = p.name;
-      a.qty += load;
-      rem -= load;
-    }
-    remaining[p.name] = rem;
-  });
-
+  s3.assignments = planAssignments(TRUCKS[s3.truck].comps, s3.products);
   renderCompartments();
 }
 

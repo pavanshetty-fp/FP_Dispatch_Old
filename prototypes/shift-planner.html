@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Shift Planner — FleetPanda Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height:100vh;overflow:hidden;}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 40%,rgba(30,40,55,0.7) 0%,#0a0d13 70%);z-index:0;}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:48px 48px;z-index:0;}
+
+.app{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;}
+
+/* ── Top bar ──────────────────────────────────────────────── */
+.sp-topbar{height:52px;background:#2b343a;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;}
+.sp-title-wrap{display:flex;align-items:center;gap:10px;}
+.sp-title{font-size:14px;font-weight:600;color:#fff;letter-spacing:0.4px;}
+.sp-date{font-size:12px;color:#9ba3af;}
+.sp-topbar-right{display:flex;align-items:center;gap:8px;}
+.sp-sel{height:30px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:11.5px;padding:0 26px 0 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.lou-toggle{display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:4px;border:1px solid rgba(99,102,241,0.35);background:rgba(99,102,241,0.08);color:#a5b4fc;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.lou-toggle:hover{background:rgba(99,102,241,0.16);}
+.lou-toggle.on{background:#6366f1;border-color:#6366f1;color:#fff;}
+.lou-toggle-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(0,0,0,0.25);font-size:9px;font-weight:700;}
+
+/* ── Body split ───────────────────────────────────────────── */
+.sp-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Orders area ──────────────────────────────────────────── */
+.sp-orders{flex:1;overflow-y:auto;padding:14px 16px 20px;min-height:0;}
+.sp-orders::-webkit-scrollbar{width:6px;}
+.sp-orders::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+.sp-orders-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sp-orders-hdr-left{display:flex;align-items:center;gap:12px;}
+.sp-orders-title{font-size:12px;font-weight:600;color:#e9ebf0;letter-spacing:0.3px;}
+.sp-hint{font-size:10.5px;color:#6b7280;}
+.sp-selbar{display:flex;align-items:center;gap:10px;}
+.sp-selcount{font-size:11.5px;color:#a5b4fc;font-weight:600;}
+.sp-selgal{font-size:11px;color:#6b7280;}
+.btn-build{padding:7px 14px;border-radius:4px;border:none;background:#6366f1;color:#fff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.btn-build:hover{background:#5254cc;}
+.btn-build:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-ghost{padding:6px 11px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-family:inherit;font-size:11px;cursor:pointer;}
+.btn-ghost:hover{background:rgba(255,255,255,0.05);color:#ccc;}
+
+/* Driver group */
+.sp-group{margin-bottom:16px;}
+.sp-group-hdr{display:flex;align-items:center;gap:9px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sp-avatar{width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.25);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#a5b4fc;flex-shrink:0;}
+.sp-avatar.unassigned{background:rgba(107,114,128,0.12);border-color:rgba(107,114,128,0.22);color:#6b7280;}
+.sp-group-name{font-size:12px;font-weight:600;color:#e9ebf0;}
+.sp-group-meta{font-size:10.5px;color:#6b7280;}
+.sp-group-truck{font-size:10px;color:#818cf8;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);padding:2px 7px;border-radius:3px;}
+.sp-group-tally{margin-left:auto;font-size:10.5px;color:#9ba3af;}
+.sp-group-selall{background:none;border:none;color:#818cf8;font-size:10.5px;font-family:inherit;cursor:pointer;padding:0;}
+.sp-group-selall:hover{color:#a5b4fc;}
+
+/* Order cards */
+.sp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));gap:8px;}
+.sp-card{background:#262930;border:1px solid rgba(255,255,255,0.08);border-left:3px solid #3d4454;border-radius:4px;padding:9px 11px;display:flex;flex-direction:column;gap:7px;cursor:grab;transition:border-color 0.12s,background 0.12s;}
+.sp-card:hover{background:#2b2f37;border-color:rgba(255,255,255,0.14);}
+.sp-card.selected{border-left-color:#6366f1;background:rgba(99,102,241,0.07);border-color:rgba(99,102,241,0.3);}
+.sp-card.dragging{opacity:0.4;}
+.sp-card-top{display:flex;align-items:center;gap:8px;}
+.sp-cb{width:15px;height:15px;border:1.5px solid rgba(255,255,255,0.22);border-radius:3px;background:#2c3034;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.sp-cb.checked{background:#6366f1;border-color:#6366f1;}
+.sp-ordnum{font-size:11.5px;font-weight:600;color:#e9ebf0;}
+.sp-time{margin-left:auto;font-size:10px;color:#6b7280;}
+.sp-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:8.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
+.sp-pill-scheduled{background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.22);}
+.sp-pill-unassigned{background:rgba(107,114,128,0.14);color:#9ba3af;border:1px solid rgba(107,114,128,0.22);}
+.sp-cust{font-size:11px;color:#9ba3af;line-height:1.4;}
+.sp-cust strong{color:#e9ebf0;font-weight:500;}
+.sp-prods{display:flex;flex-wrap:wrap;gap:5px;}
+.sp-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;color:#e9ebf0;}
+.sp-chip-qty{font-size:9.5px;color:#9ba3af;}
+.prod-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ── Load Order unit (bottom panel) ───────────────────────── */
+.lou{height:0;overflow:hidden;background:#1e242c;border-top:1px solid rgba(99,102,241,0.3);flex-shrink:0;display:flex;flex-direction:column;transition:height 0.22s ease;}
+.lou.open{height:464px;}
+.lou.drop-target{border-top-color:#6366f1;box-shadow:0 -4px 24px rgba(99,102,241,0.18);}
+
+.lou-hdr{height:44px;background:#252d36;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;}
+.lou-hdr-left{display:flex;align-items:center;gap:9px;}
+.lou-hdr-title{font-size:12.5px;font-weight:600;color:#fff;letter-spacing:0.4px;}
+.lou-hdr-meta{font-size:11px;color:#6b7280;}
+.lou-close{width:26px;height:26px;border:none;background:transparent;color:#6b7280;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.lou-close:hover{background:rgba(255,255,255,0.06);color:#ccc;}
+
+/* Empty / drop state */
+.lou-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:2px dashed rgba(99,102,241,0.22);border-radius:6px;margin:16px;color:#6b7280;}
+.lou-empty.over{border-color:#6366f1;background:rgba(99,102,241,0.06);}
+.lou-empty-title{font-size:12.5px;font-weight:600;color:#9ba3af;}
+.lou-empty-sub{font-size:11px;color:#6b7280;}
+
+/* Driver tabs */
+.lou-tabs{display:flex;gap:0;background:rgba(0,0,0,0.18);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 16px;flex-shrink:0;overflow-x:auto;}
+.lou-tabs::-webkit-scrollbar{height:0;}
+.lou-tab{display:flex;align-items:center;gap:7px;padding:9px 14px;border:none;background:transparent;border-bottom:2px solid transparent;color:#6b7280;font-family:inherit;font-size:11.5px;font-weight:500;cursor:pointer;white-space:nowrap;letter-spacing:0.2px;}
+.lou-tab:hover{color:#9ba3af;}
+.lou-tab.active{color:#fff;border-bottom-color:#6366f1;background:rgba(99,102,241,0.06);}
+.lou-tab-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,0.08);color:#9ba3af;}
+.lou-tab.active .lou-tab-badge{background:rgba(99,102,241,0.25);color:#a5b4fc;}
+.lou-tab-flag{font-size:11px;}
+
+/* Tab content: 2 subdivisions */
+.lou-content{flex:1;display:flex;overflow:hidden;}
+.lou-left{width:300px;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.07);padding:13px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:11px;background:rgba(0,0,0,0.1);}
+.lou-right{flex:1;padding:13px 16px;overflow-y:auto;}
+.lou-left::-webkit-scrollbar,.lou-right::-webkit-scrollbar{width:5px;}
+.lou-left::-webkit-scrollbar-thumb,.lou-right::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+.lou-driver-card{display:flex;align-items:center;gap:9px;}
+.lou-driver-name{font-size:12.5px;font-weight:600;color:#fff;}
+.lou-driver-shift{font-size:10.5px;color:#6b7280;margin-top:1px;}
+
+.f-grp{display:flex;flex-direction:column;gap:4px;}
+.f-lbl{font-size:10px;font-weight:600;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
+.f-sel{height:34px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:11.5px;padding:0 26px 0 10px;outline:none;cursor:pointer;appearance:none;width:100%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.f-sel:focus{border-color:rgba(99,102,241,0.5);}
+
+.cap-line{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#9ba3af;}
+.cap-bar{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-top:5px;}
+.cap-bar-fill{height:100%;border-radius:3px;transition:width 0.25s;}
+
+.lou-orders-lbl{font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.07);}
+.lou-ord{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#9ba3af;padding:4px 0;}
+.lou-ord-num{color:#e9ebf0;font-weight:500;}
+.lou-ord-drop{margin-left:auto;background:none;border:none;color:#4b5563;cursor:pointer;font-size:13px;padding:0 2px;}
+.lou-ord-drop:hover{color:#ef4444;}
+
+.btn-add-trailer{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 11px;border:1px dashed rgba(99,102,241,0.3);border-radius:4px;background:rgba(99,102,241,0.04);color:#818cf8;font-family:inherit;font-size:10.5px;font-weight:500;cursor:pointer;width:100%;}
+.btn-add-trailer:hover{background:rgba(99,102,241,0.1);}
+
+/* Compartment plan */
+.cp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.cp-lbl{font-size:10px;font-weight:600;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
+.btn-link{background:none;border:none;color:#818cf8;font-size:10.5px;font-family:inherit;cursor:pointer;padding:0;}
+.btn-link:hover{color:#a5b4fc;}
+.cp-unit-lbl{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.cplan-row{display:flex;height:84px;border:1px solid rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;background:#1a1d22;margin-bottom:9px;}
+.comp{display:flex;flex-direction:column;min-width:0;}
+.comp+.comp{border-left:1px solid rgba(255,255,255,0.08);}
+.comp-cap{font-size:8.5px;font-weight:500;color:#6b7280;padding:3px 6px 2px;}
+.comp-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.comp-striped{flex:1;background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.025),rgba(255,255,255,0.025) 2px,transparent 2px,transparent 7px);}
+.comp-foot{flex-shrink:0;display:flex;align-items:center;gap:3px;padding:3px 6px;border-top:1px solid rgba(255,255,255,0.07);}
+.comp-num{font-size:8.5px;font-weight:600;color:#9ba3af;}
+.comp-prod{font-size:9px;color:#9ba3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:3px;}
+.comp-prod-empty{color:#4b5563;font-style:italic;}
+
+/* Assignment table */
+.as-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.as-tbl th{background:#1d1f23;padding:5px 9px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.as-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.06);height:34px;vertical-align:middle;}
+.as-tbl tr:last-child td{border-bottom:none;}
+.as-lbl{padding:0 9px;font-size:10.5px;font-weight:600;color:#9ba3af;white-space:nowrap;}
+.as-cap{padding:0 9px;font-size:10.5px;color:#6b7280;}
+.as-sel{width:100%;height:34px;padding:0 20px 0 9px;border:none;border-left:1px solid rgba(255,255,255,0.06);font-family:inherit;font-size:11px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.as-sel:focus{background-color:rgba(99,102,241,0.08);}
+.as-qty{width:100%;height:34px;padding:0 9px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.06);color:#e9ebf0;font-family:inherit;font-size:11px;outline:none;text-align:right;}
+.as-qty:focus{background:rgba(99,102,241,0.08);}
+.as-status{padding:0 9px;font-size:9.5px;white-space:nowrap;}
+.as-unit{padding:0 9px;font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+
+/* Lines summary */
+.lines-tbl{width:100%;border-collapse:collapse;margin-bottom:11px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.lines-tbl th{background:rgba(0,0,0,0.22);padding:5px 9px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.lines-tbl td{padding:0;border-top:1px solid rgba(255,255,255,0.06);height:32px;vertical-align:middle;}
+.ln-prod{padding:0 9px;font-size:11px;color:#e9ebf0;display:flex;align-items:center;gap:6px;height:32px;}
+.ln-qty{width:100%;height:32px;padding:0 9px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.06);color:#e9ebf0;font-family:inherit;font-size:11px;outline:none;text-align:right;}
+.ln-qty:focus{background:rgba(99,102,241,0.1);}
+.ln-cell{padding:0 9px;font-size:10.5px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
+.ln-status{padding:0 9px;font-size:9.5px;white-space:nowrap;}
+
+/* Banner */
+.warn-banner{margin-top:8px;padding:7px 11px;border-radius:4px;font-size:10.5px;line-height:1.6;display:flex;flex-direction:column;gap:2px;}
+.warn-banner.overfill{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);}
+.warn-banner.partial{background:rgba(234,179,8,0.07);border:1px solid rgba(234,179,8,0.2);}
+.warn-banner.ok{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);}
+.rule-note{font-size:9.5px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
+
+/* Footer */
+.lou-foot{height:52px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;background:rgba(0,0,0,0.12);}
+.lou-foot-meta{font-size:11px;color:#9ba3af;}
+.btn-secondary{padding:7px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-family:inherit;font-size:11.5px;cursor:pointer;font-weight:500;}
+.btn-secondary:hover{background:rgba(255,255,255,0.05);}
+.btn-primary{padding:7px 16px;border-radius:4px;border:none;background:#6366f1;color:#fff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.btn-primary:hover{background:#5254cc;}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a28;border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:10px 20px;font-size:12.5px;color:#34d399;font-weight:500;z-index:200;display:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-grid"></div>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="sp-topbar">
+    <div class="sp-title-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="sp-title">Shift Planner</span>
+      <span class="sp-date">Wed 18 Nov 2026</span>
+    </div>
+    <div class="sp-topbar-right">
+      <select class="sp-sel">
+        <option>All shifts</option>
+        <option selected>Day Shift · 06:00 – 18:00</option>
+        <option>Night Shift · 18:00 – 06:00</option>
+      </select>
+      <select class="sp-sel">
+        <option>Denver Hub</option>
+        <option>Phoenix Hub</option>
+        <option>Florida Hub</option>
+      </select>
+      <button class="lou-toggle" id="louToggle" onclick="toggleUnit()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Load Order unit
+        <span class="lou-toggle-count" id="louToggleCount">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sp-body">
+
+    <!-- Orders -->
+    <div class="sp-orders">
+      <div class="sp-orders-hdr">
+        <div class="sp-orders-hdr-left">
+          <span class="sp-orders-title">Orders <span id="spOrderCount" style="color:#6b7280;font-weight:500;">(9)</span></span>
+          <span class="sp-hint">Drag orders into the load order unit, or tick them and build</span>
+        </div>
+        <div class="sp-selbar">
+          <span class="sp-selcount" id="spSelCount">0 selected</span>
+          <span class="sp-selgal" id="spSelGal"></span>
+          <button class="btn-ghost" onclick="clearSel()">Clear</button>
+          <button class="btn-build" id="btnBuild" onclick="buildUnits(true)" disabled>Build load orders</button>
+        </div>
+      </div>
+      <div id="spGroups"></div>
+    </div>
+
+    <!-- Load Order unit -->
+    <div class="lou" id="lou"
+         ondragover="onUnitDragOver(event)"
+         ondragleave="onUnitDragLeave(event)"
+         ondrop="onUnitDrop(event)">
+
+      <div class="lou-hdr">
+        <div class="lou-hdr-left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="lou-hdr-title">Load Order unit</span>
+          <span class="lou-hdr-meta" id="louHdrMeta">No orders yet</span>
+        </div>
+        <button class="lou-close" onclick="toggleUnit()">×</button>
+      </div>
+
+      <!-- Empty state / drop zone -->
+      <div class="lou-empty" id="louEmpty">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="lou-empty-title">Drop orders here</span>
+        <span class="lou-empty-sub">Orders for the same driver are grouped into one load order</span>
+      </div>
+
+      <!-- Driver tabs -->
+      <div class="lou-tabs" id="louTabs" style="display:none;"></div>
+
+      <!-- Tab content -->
+      <div class="lou-content" id="louContent" style="display:none;">
+        <div class="lou-left" id="louLeft"></div>
+        <div class="lou-right" id="louRight"></div>
+      </div>
+
+      <div class="lou-foot" id="louFoot" style="display:none;">
+        <span class="lou-foot-meta" id="louFootMeta"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" onclick="discardUnits()">Discard</button>
+          <button class="btn-primary" id="btnCreateLOs" onclick="createLoadOrders()">Create load orders</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Products ──────────────────────────────────────────────
+var PROD_COLORS = {
+  'UNL87':      '#c4a319',
+  'UNL93':      '#8a6cff',
+  'CLR DSL':    '#2f9be0',
+  'HO DSL':     '#e0483f',
+  'Diesel DEF': '#46cf9c',
+  'Biodiesel':  '#7bd14a',
+  'Kerosene':   '#c8ccd2',
+};
+
+// Products that are themselves blends. A compartment holds one product;
+// only a blend may combine components in the same compartment.
+var BLEND_PRODUCTS = [];
+
+// ── Fleet ─────────────────────────────────────────────────
+var TRUCKS = {
+  'Hi-12': { type:'Bobtail', totalCap:5000, comps:[{cap:2000},{cap:2000},{cap:1000}] },
+  'HV-7':  { type:'Tanker',  totalCap:9000, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
+  'TR-22': { type:'Bobtail', totalCap:3500, comps:[{cap:2000},{cap:1500}] },
+  'PB-9':  { type:'Tanker',  totalCap:6000, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+};
+var TRAILERS = {
+  'TR-HT7Z': { totalCap:18000, comps:[{cap:4500},{cap:3000},{cap:4500},{cap:3500},{cap:2500}] },
+  'TR-LRYE': { totalCap:17000, comps:[{cap:2500},{cap:4500},{cap:2500},{cap:2000},{cap:2000},{cap:3500}] },
+  'TR-KC1X': { totalCap:16500, comps:[{cap:3500},{cap:4500},{cap:2500},{cap:3000},{cap:3000}] },
+};
+
+// ── Drivers ───────────────────────────────────────────────
+var DRIVERS = {
+  alex:  { name:'Alex Trebek',  shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'Hi-12' },
+  ravi:  { name:'Ravi Patel',   shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'HV-7'  },
+  omar:  { name:'Omar Khalid',  shift:'Night Shift', hrs:'18:00 – 06:00', truck:'TR-22' },
+  priya: { name:'Priya Sharma', shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'PB-9'  },
+};
+
+// ── Orders on the board ───────────────────────────────────
+var ORDERS = [
+  { id:'D-5157060', cust:'Morris PLC',           shipTo:'Upstairs Hub',      driver:'alex',  time:'06:30', prods:[{name:'UNL87',qty:3000},{name:'CLR DSL',qty:1500}] },
+  { id:'D-5157061', cust:'Acme Fuel Co',         shipTo:'Branch 1A',         driver:'alex',  time:'08:15', prods:[{name:'UNL87',qty:2000}] },
+  { id:'D-5157062', cust:'Dean Ltd',             shipTo:'SJ Main',           driver:'ravi',  time:'07:00', prods:[{name:'HO DSL',qty:2500}] },
+  { id:'D-5157063', cust:'Aguilar and Sons',     shipTo:'Tampa HQ',          driver:'ravi',  time:'10:30', prods:[{name:'CLR DSL',qty:2000},{name:'UNL93',qty:1000}] },
+  { id:'D-5157064', cust:"Jeff's Jalopies",      shipTo:'Tucson Main',       driver:'omar',  time:'19:00', prods:[{name:'UNL87',qty:1800}] },
+  { id:'D-5157065', cust:'Sunbelt Pump & Power', shipTo:'PC268 Niceville',   driver:'priya', time:'06:45', prods:[{name:'CLR DSL',qty:3200}] },
+  { id:'D-5157066', cust:'Clearwater Utilities', shipTo:'Portland',          driver:'priya', time:'09:20', prods:[{name:'Diesel DEF',qty:800},{name:'UNL87',qty:1800}] },
+  { id:'D-5157067', cust:'Morris PLC',           shipTo:'Downtown Terminal', driver:'',      time:'11:00', prods:[{name:'UNL93',qty:900}] },
+  { id:'D-5157068', cust:'Dean Ltd',             shipTo:'Oakland Depot',     driver:'',      time:'13:30', prods:[{name:'HO DSL',qty:1400}] },
+];
+
+// ── State ─────────────────────────────────────────────────
+var selected = {};
+var units = {};        // driverKey -> unit
+var activeTab = null;
+var unitOpen = false;
+
+var UNASSIGNED = '_unassigned';
+
+function orderById(id) {
+  for (var i=0;i<ORDERS.length;i++) if (ORDERS[i].id === id) return ORDERS[i];
+  return null;
+}
+function initials(name) {
+  return name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+}
+function ordGal(o) {
+  return o.prods.reduce(function(s,p){ return s+p.qty; },0);
+}
+
+// ══════════════════════════════════════════════════════════
+//  Shift planner board
+// ══════════════════════════════════════════════════════════
+function renderOrders() {
+  var groups = {};
+  ORDERS.forEach(function(o) {
+    var k = o.driver || UNASSIGNED;
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(o);
+  });
+
+  var order = Object.keys(DRIVERS).filter(function(k){ return groups[k]; });
+  if (groups[UNASSIGNED]) order.push(UNASSIGNED);
+
+  var html = order.map(function(k) {
+    var list = groups[k];
+    var d = DRIVERS[k];
+    var isUn = k === UNASSIGNED;
+    var gal = list.reduce(function(s,o){ return s+ordGal(o); },0);
+    var allSel = list.every(function(o){ return selected[o.id]; });
+
+    var cards = list.map(function(o) {
+      var sel = !!selected[o.id];
+      var chips = o.prods.map(function(p) {
+        var col = PROD_COLORS[p.name] || '#9ba3af';
+        return '<span class="sp-chip"><span class="prod-dot" style="background:'+col+';"></span>'+p.name+
+               ' <span class="sp-chip-qty">'+p.qty.toLocaleString()+'</span></span>';
+      }).join('');
+      var check = sel ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      return '<div class="sp-card'+(sel?' selected':'')+'" draggable="true" '+
+               'ondragstart="onDragStart(event,\''+o.id+'\')" ondragend="onDragEnd(event)" '+
+               'onclick="toggleSel(\''+o.id+'\')">'+
+          '<div class="sp-card-top">'+
+            '<div class="sp-cb'+(sel?' checked':'')+'">'+check+'</div>'+
+            '<span class="sp-ordnum">'+o.id+'</span>'+
+            '<span class="sp-pill '+(isUn?'sp-pill-unassigned':'sp-pill-scheduled')+'">'+(isUn?'Unassigned':'Scheduled')+'</span>'+
+            '<span class="sp-time">'+o.time+'</span>'+
+          '</div>'+
+          '<div class="sp-cust"><strong>'+o.cust+'</strong> · '+o.shipTo+'</div>'+
+          '<div class="sp-prods">'+chips+'</div>'+
+        '</div>';
+    }).join('');
+
+    var truckTag = (!isUn && d && d.truck) ? '<span class="sp-group-truck">'+d.truck+' · '+TRUCKS[d.truck].totalCap.toLocaleString()+' gal</span>' : '';
+
+    return '<div class="sp-group">'+
+        '<div class="sp-group-hdr">'+
+          '<div class="sp-avatar'+(isUn?' unassigned':'')+'">'+(isUn?'—':initials(d.name))+'</div>'+
+          '<span class="sp-group-name">'+(isUn?'Unassigned':d.name)+'</span>'+
+          '<span class="sp-group-meta">'+(isUn?'no driver yet':d.shift)+'</span>'+
+          truckTag+
+          '<span class="sp-group-tally">'+list.length+' orders · '+gal.toLocaleString()+' gal</span>'+
+          '<button class="sp-group-selall" onclick="event.stopPropagation();selectGroup(\''+k+'\','+(!allSel)+')">'+(allSel?'Deselect':'Select all')+'</button>'+
+        '</div>'+
+        '<div class="sp-cards">'+cards+'</div>'+
+      '</div>';
+  }).join('');
+
+  document.getElementById('spGroups').innerHTML = html;
+  document.getElementById('spOrderCount').textContent = '('+ORDERS.length+')';
+  updateSelBar();
+}
+
+function toggleSel(id) {
+  if (selected[id]) delete selected[id]; else selected[id] = true;
+  renderOrders();
+  if (unitOpen) buildUnits(false);
+}
+function selectGroup(k, on) {
+  ORDERS.forEach(function(o) {
+    var key = o.driver || UNASSIGNED;
+    if (key !== k) return;
+    if (on) selected[o.id] = true; else delete selected[o.id];
+  });
+  renderOrders();
+  if (unitOpen) buildUnits(false);
+}
+function clearSel() {
+  selected = {};
+  units = {};
+  activeTab = null;
+  renderOrders();
+  renderUnit();
+}
+function updateSelBar() {
+  var ids = Object.keys(selected);
+  var gal = ids.reduce(function(s,id){ var o=orderById(id); return s + (o?ordGal(o):0); },0);
+  document.getElementById('spSelCount').textContent = ids.length + ' selected';
+  document.getElementById('spSelGal').textContent = ids.length ? '· ' + gal.toLocaleString() + ' gal' : '';
+  document.getElementById('btnBuild').disabled = ids.length === 0;
+  document.getElementById('louToggleCount').textContent = Object.keys(units).length;
+}
+
+// ── Drag and drop ─────────────────────────────────────────
+function onDragStart(e, id) {
+  e.dataTransfer.setData('text/plain', id);
+  e.dataTransfer.effectAllowed = 'copy';
+  e.currentTarget.classList.add('dragging');
+  if (!unitOpen) openUnit();       // give the drag somewhere to land
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.getElementById('lou').classList.remove('drop-target');
+  document.getElementById('louEmpty').classList.remove('over');
+}
+function onUnitDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  document.getElementById('lou').classList.add('drop-target');
+  document.getElementById('louEmpty').classList.add('over');
+}
+function onUnitDragLeave(e) {
+  if (e.currentTarget.contains(e.relatedTarget)) return;
+  document.getElementById('lou').classList.remove('drop-target');
+  document.getElementById('louEmpty').classList.remove('over');
+}
+function onUnitDrop(e) {
+  e.preventDefault();
+  var id = e.dataTransfer.getData('text/plain');
+  document.getElementById('lou').classList.remove('drop-target');
+  document.getElementById('louEmpty').classList.remove('over');
+  if (!id) return;
+  selected[id] = true;
+  var o = orderById(id);
+  renderOrders();
+  buildUnits(false);
+  if (o) activeTab = o.driver || UNASSIGNED;
+  renderUnit();
+}
+
+// ══════════════════════════════════════════════════════════
+//  Load Order unit
+// ══════════════════════════════════════════════════════════
+function toggleUnit() { unitOpen ? closeUnit() : openUnit(); }
+function openUnit() {
+  unitOpen = true;
+  document.getElementById('lou').classList.add('open');
+  document.getElementById('louToggle').classList.add('on');
+  if (Object.keys(selected).length) buildUnits(false);
+  renderUnit();
+}
+function closeUnit() {
+  unitOpen = false;
+  document.getElementById('lou').classList.remove('open');
+  document.getElementById('louToggle').classList.remove('on');
+}
+
+// Group selected orders by driver — one load order per driver
+function buildUnits(alsoOpen) {
+  var byDriver = {};
+  ORDERS.forEach(function(o) {
+    if (!selected[o.id]) return;
+    var k = o.driver || UNASSIGNED;
+    if (!byDriver[k]) byDriver[k] = { driver:o.driver, orders:[], prodMap:{} };
+    byDriver[k].orders.push(o);
+    o.prods.forEach(function(p) {
+      byDriver[k].prodMap[p.name] = (byDriver[k].prodMap[p.name] || 0) + p.qty;
+    });
+  });
+
+  var next = {};
+  Object.keys(byDriver).forEach(function(k) {
+    var b = byDriver[k];
+    var prev = units[k];
+    var u = {
+      key: k,
+      driver: b.driver,
+      orders: b.orders,
+      products: Object.keys(b.prodMap).map(function(n){ return { name:n, qty:b.prodMap[n] }; }),
+      truck:   prev ? prev.truck   : (DRIVERS[b.driver] ? DRIVERS[b.driver].truck : ''),
+      trailer: prev ? prev.trailer : '',
+      assignments: []
+    };
+    autoAssignUnit(u);
+    next[k] = u;
+  });
+  units = next;
+
+  var keys = Object.keys(units);
+  if (!activeTab || keys.indexOf(activeTab) < 0) activeTab = keys[0] || null;
+
+  updateSelBar();
+  if (alsoOpen && !unitOpen) openUnit(); else renderUnit();
+}
+
+// Compartments available to a unit = truck compartments + trailer compartments
+function unitComps(u) {
+  var comps = [];
+  if (u.truck && TRUCKS[u.truck]) {
+    TRUCKS[u.truck].comps.forEach(function(c,i) {
+      comps.push({ cap:c.cap, unit:u.truck, isTrailer:false, label:'C'+(i+1) });
+    });
+  }
+  if (u.trailer && TRAILERS[u.trailer]) {
+    TRAILERS[u.trailer].comps.forEach(function(c,i) {
+      comps.push({ cap:c.cap, unit:u.trailer, isTrailer:true, label:'T'+(i+1) });
+    });
+  }
+  return comps;
+}
+function unitCap(u) {
+  return unitComps(u).reduce(function(s,c){ return s+c.cap; },0);
+}
+function unitNeeded(u) {
+  return u.products.reduce(function(s,p){ return s+p.qty; },0);
+}
+
+// Best guess at a compartment plan. A compartment never holds two products,
+// so this is a packing problem with no single winning strategy: filling the
+// biggest product first wastes least space, but it can strand a small product
+// with nowhere to go. We run both orderings plus a seeded variant that gives
+// every product one compartment before any product takes a second, and keep
+// whichever plan loads the most gallons.
+function planAssignments(comps, products) {
+  function run(order, seed) {
+    var as = comps.map(function(c) {
+      return Object.assign({}, c, { product:'', qty:0 });
+    });
+    var rem = {};
+    products.forEach(function(p){ rem[p.name] = p.qty; });
+    var list = products.slice().sort(function(a,b) {
+      return order === 'asc' ? a.qty - b.qty : b.qty - a.qty;
+    });
+
+    if (seed) {
+      list.forEach(function(p) {
+        var r = rem[p.name];
+        if (r <= 0) return;
+        // prefer the compartment that takes the whole line with least spare;
+        // if none can, take the roomiest one going
+        var fit = -1, fitWaste = Infinity, big = -1, bigCap = -1;
+        for (var i=0;i<as.length;i++) {
+          if (as[i].product !== '') continue;
+          if (as[i].cap >= r) {
+            var w = as[i].cap - r;
+            if (w < fitWaste) { fitWaste = w; fit = i; }
+          } else if (as[i].cap > bigCap) { bigCap = as[i].cap; big = i; }
+        }
+        var pick = fit >= 0 ? fit : big;
+        if (pick < 0) return;
+        var load = Math.min(as[pick].cap, r);
+        as[pick].product = p.name;
+        as[pick].qty = load;
+        rem[p.name] = r - load;
+      });
+    }
+
+    list.forEach(function(p) {
+      var r = rem[p.name];
+      for (var i=0; i<as.length && r>0; i++) {
+        var a = as[i];
+        if (a.product !== '' && a.product !== p.name) continue;   // no mixing
+        var space = a.cap - a.qty;
+        if (space <= 0) continue;
+        var load = Math.min(space, r);
+        a.product = p.name;
+        a.qty += load;
+        r -= load;
+      }
+      rem[p.name] = r;
+    });
+
+    return { as: as, loaded: as.reduce(function(s,a){ return s+a.qty; },0) };
+  }
+
+  var best = null;
+  [['desc',true], ['asc',true], ['desc',false]].forEach(function(cfg) {
+    var r = run(cfg[0], cfg[1]);
+    if (!best || r.loaded > best.loaded) best = r;
+  });
+  return best.as;
+}
+
+function autoAssignUnit(u) {
+  u.assignments = planAssignments(unitComps(u), u.products);
+}
+
+function unitShortfall(u) {
+  var byProd = {};
+  u.assignments.forEach(function(a) {
+    if (a.product) byProd[a.product] = (byProd[a.product]||0) + a.qty;
+  });
+  var short = 0;
+  u.products.forEach(function(p) {
+    var d = p.qty - (byProd[p.name]||0);
+    if (d > 0) short += d;
+  });
+  return short;
+}
+
+// ── Render ────────────────────────────────────────────────
+function renderUnit() {
+  var keys = Object.keys(units);
+  var empty  = document.getElementById('louEmpty');
+  var tabs   = document.getElementById('louTabs');
+  var content= document.getElementById('louContent');
+  var foot   = document.getElementById('louFoot');
+
+  if (!keys.length) {
+    empty.style.display = 'flex';
+    tabs.style.display = 'none';
+    content.style.display = 'none';
+    foot.style.display = 'none';
+    document.getElementById('louHdrMeta').textContent = 'No orders yet';
+    updateSelBar();
+    return;
+  }
+
+  empty.style.display = 'none';
+  tabs.style.display = 'flex';
+  content.style.display = 'flex';
+  foot.style.display = 'flex';
+
+  var totalOrders = keys.reduce(function(s,k){ return s + units[k].orders.length; },0);
+  document.getElementById('louHdrMeta').textContent =
+    keys.length + ' load order' + (keys.length>1?'s':'') + ' · ' + totalOrders + ' delivery order' + (totalOrders>1?'s':'');
+
+  // Tabs — one per driver
+  tabs.innerHTML = keys.map(function(k) {
+    var u = units[k];
+    var name = k === UNASSIGNED ? 'Unassigned' : DRIVERS[u.driver].name;
+    var short = unitShortfall(u);
+    var noTruck = !u.truck;
+    var flag = noTruck ? '<span class="lou-tab-flag" style="color:#6b7280;">○</span>'
+             : short > 0 ? '<span class="lou-tab-flag" style="color:#eab308;">⚠</span>'
+             : '<span class="lou-tab-flag" style="color:#4ade80;">✓</span>';
+    return '<button class="lou-tab'+(k===activeTab?' active':'')+'" onclick="setTab(\''+k+'\')">'+
+      flag + name + '<span class="lou-tab-badge">'+u.orders.length+'</span></button>';
+  }).join('');
+
+  renderTabContent();
+
+  var totalShort = keys.reduce(function(s,k){ return s + unitShortfall(units[k]); },0);
+  var noTruckCount = keys.filter(function(k){ return !units[k].truck; }).length;
+  var footMeta = document.getElementById('louFootMeta');
+  if (noTruckCount) {
+    footMeta.innerHTML = '<span style="color:#eab308;">'+noTruckCount+' load order'+(noTruckCount>1?'s':'')+' still need a truck</span>';
+  } else if (totalShort) {
+    footMeta.innerHTML = '<span style="color:#eab308;">'+totalShort.toLocaleString()+' gal won\'t fit across '+keys.length+' load order'+(keys.length>1?'s':'')+'</span>';
+  } else {
+    footMeta.innerHTML = '<span style="color:#4ade80;">All gallons assigned</span>';
+  }
+  document.getElementById('btnCreateLOs').textContent =
+    'Create ' + keys.length + ' load order' + (keys.length>1?'s':'');
+
+  updateSelBar();
+}
+
+function setTab(k) { activeTab = k; renderUnit(); }
+
+function renderTabContent() {
+  var u = units[activeTab];
+  if (!u) return;
+  var isUn = activeTab === UNASSIGNED;
+  var d = isUn ? null : DRIVERS[u.driver];
+  var cap = unitCap(u), needed = unitNeeded(u);
+  var pct = cap ? Math.min(100, Math.round(needed/cap*100)) : 0;
+  var over = cap && needed > cap;
+  var barCol = !cap ? '#3d4454' : over ? '#ef4444' : (pct>88 ? '#eab308' : '#4ade80');
+
+  // ── Subdivision 1: driver, truck, trailer, orders in this load ──
+  var truckOpts = '<option value="">Select truck…</option>' + Object.keys(TRUCKS).map(function(t) {
+    return '<option value="'+t+'"'+(u.truck===t?' selected':'')+'>'+t+' · '+TRUCKS[t].type+' · '+TRUCKS[t].totalCap.toLocaleString()+' gal</option>';
+  }).join('');
+  var trailerOpts = '<option value="">No trailer</option>' + Object.keys(TRAILERS).map(function(t) {
+    return '<option value="'+t+'"'+(u.trailer===t?' selected':'')+'>'+t+' · '+TRAILERS[t].comps.length+' comps · '+TRAILERS[t].totalCap.toLocaleString()+' gal</option>';
+  }).join('');
+
+  var ordsHtml = u.orders.map(function(o) {
+    return '<div class="lou-ord">'+
+      '<span class="lou-ord-num">'+o.id+'</span>'+
+      '<span>'+o.cust+'</span>'+
+      '<button class="lou-ord-drop" title="Remove from this load" onclick="removeOrder(\''+o.id+'\')">×</button>'+
+    '</div>';
+  }).join('');
+
+  document.getElementById('louLeft').innerHTML =
+    '<div class="lou-driver-card">'+
+      '<div class="sp-avatar'+(isUn?' unassigned':'')+'">'+(isUn?'—':initials(d.name))+'</div>'+
+      '<div>'+
+        '<div class="lou-driver-name">'+(isUn?'Unassigned':d.name)+'</div>'+
+        '<div class="lou-driver-shift">'+(isUn?'Assign a driver to dispatch':d.shift+' · '+d.hrs)+'</div>'+
+      '</div>'+
+    '</div>'+
+
+    (isUn ? '<div class="f-grp"><label class="f-lbl">Driver</label>'+
+      '<select class="f-sel" onchange="assignDriver(this.value)"><option value="">Select driver…</option>'+
+      Object.keys(DRIVERS).map(function(dk){ return '<option value="'+dk+'">'+DRIVERS[dk].name+' · '+DRIVERS[dk].shift+'</option>'; }).join('')+
+      '</select></div>' : '') +
+
+    '<div class="f-grp"><label class="f-lbl">Truck</label>'+
+      '<select class="f-sel" onchange="setTruck(this.value)">'+truckOpts+'</select></div>'+
+
+    '<div class="f-grp"><label class="f-lbl">Trailer</label>'+
+      '<select class="f-sel" onchange="setTrailer(this.value)">'+trailerOpts+'</select></div>'+
+
+    (u.truck && !u.trailer && over
+      ? '<button class="btn-add-trailer" onclick="suggestTrailer()">+ Add a trailer — '+(needed-cap).toLocaleString()+' gal over</button>'
+      : '') +
+
+    '<div>'+
+      '<div class="cap-line"><span>'+needed.toLocaleString()+' gal needed</span>'+
+        '<span style="font-weight:600;color:'+(cap?(over?'#ef4444':'#4ade80'):'#6b7280')+';">'+(cap?cap.toLocaleString()+' gal':'—')+'</span></div>'+
+      '<div class="cap-bar"><div class="cap-bar-fill" style="width:'+pct+'%;background:'+barCol+';"></div></div>'+
+      (cap ? '<div style="font-size:9.5px;color:#6b7280;margin-top:4px;">'+unitComps(u).length+' compartments'+(u.trailer?' (truck + trailer)':'')+'</div>' : '')+
+    '</div>'+
+
+    '<div class="lou-orders-lbl">Orders in this load ('+u.orders.length+')</div>'+
+    ordsHtml;
+
+  // ── Subdivision 2: compartments and the lines that fill them ──
+  if (!u.truck) {
+    document.getElementById('louRight').innerHTML =
+      '<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#4b5563;">'+
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'+
+        '<span style="font-size:12px;color:#6b7280;">Pick a truck to lay out compartments</span>'+
+      '</div>';
+    return;
+  }
+
+  document.getElementById('louRight').innerHTML =
+    buildLinesTbl(u) +
+    '<div class="cp-hdr">'+
+      '<span class="cp-lbl">Compartment plan</span>'+
+      '<button class="btn-link" onclick="reAuto()">↺ Auto-assign</button>'+
+    '</div>' +
+    buildCplan(u) +
+    buildAssignTbl(u) +
+    '<div class="rule-note">'+
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'+
+      'One product per compartment — products can only share a compartment when the product is a blend'+
+    '</div>' +
+    buildBanner(u);
+}
+
+// Aggregated order lines — editable against the compartment plan
+function buildLinesTbl(u) {
+  var byProd = {};
+  u.assignments.forEach(function(a) {
+    if (a.product) byProd[a.product] = (byProd[a.product]||0) + a.qty;
+  });
+  var rows = u.products.map(function(p,i) {
+    var col = PROD_COLORS[p.name] || '#9ba3af';
+    var loaded = byProd[p.name] || 0;
+    var short = p.qty - loaded;
+    var status = !u.truck ? '<span style="color:#4b5563;">—</span>'
+      : short > 0 ? '<span style="color:#eab308;">⚠ '+short.toLocaleString()+' gal won\'t fit</span>'
+      : '<span style="color:#4ade80;">✓ Fully loaded</span>';
+    var blend = BLEND_PRODUCTS.indexOf(p.name) >= 0 ? ' <span style="font-size:7.5px;font-weight:700;background:rgba(96,165,250,0.12);color:#60a5fa;padding:1px 4px;border-radius:2px;text-transform:uppercase;">Blend</span>' : '';
+    return '<tr>'+
+      '<td><div class="ln-prod"><span class="prod-dot" style="background:'+col+';"></span>'+p.name+blend+'</div></td>'+
+      '<td><input class="ln-qty" type="number" min="0" step="50" value="'+p.qty+'" onchange="setLineQty('+i+',this)"></td>'+
+      '<td class="ln-cell">'+loaded.toLocaleString()+'</td>'+
+      '<td class="ln-status">'+status+'</td>'+
+    '</tr>';
+  }).join('');
+
+  return '<table class="lines-tbl">'+
+    '<thead><tr>'+
+      '<th>Order lines — combined across '+u.orders.length+' order'+(u.orders.length>1?'s':'')+'</th>'+
+      '<th style="text-align:right;width:112px;">Ordered (gal)</th>'+
+      '<th style="text-align:right;width:80px;">Loaded</th>'+
+      '<th style="width:132px;">Status</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function buildCplan(u) {
+  var INNER = 56;
+  function row(list, label) {
+    if (!list.length) return '';
+    var cells = list.map(function(a) {
+      var idx = u.assignments.indexOf(a);
+      var pct = a.qty>0 ? a.qty/a.cap : 0;
+      var fill = Math.round(INNER*pct), spare = INNER - fill;
+      var col = PROD_COLORS[a.product] || 'transparent';
+      var has = a.product && a.qty>0;
+      var body = has
+        ? '<div style="flex:'+spare+';background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.025),rgba(255,255,255,0.025) 2px,transparent 2px,transparent 7px);"></div>'+
+          '<div style="flex:'+fill+';min-height:11px;background:'+col+';opacity:0.85;display:flex;align-items:center;justify-content:center;">'+
+            '<span style="font-size:8px;font-weight:600;color:rgba(0,0,0,0.65);">'+a.qty.toLocaleString()+'</span></div>'
+        : '<div class="comp-striped"></div>';
+      var dot = has ? '<span class="prod-dot" style="background:'+col+';"></span>' : '';
+      return '<div class="comp" style="flex:'+(a.cap/1000)+';" title="'+a.label+' · '+a.cap.toLocaleString()+' gal">'+
+        '<div class="comp-cap">'+a.cap.toLocaleString()+'</div>'+
+        '<div class="comp-body">'+body+'</div>'+
+        '<div class="comp-foot"><span class="comp-num">'+a.label+'</span>'+
+          '<span class="comp-prod'+(has?'':' comp-prod-empty')+'">'+dot+' '+(has?a.product:'empty')+'</span></div>'+
+      '</div>';
+    }).join('');
+    return '<div class="cp-unit-lbl">'+label+'</div><div class="cplan-row">'+cells+'</div>';
+  }
+  var truckComps   = u.assignments.filter(function(a){ return !a.isTrailer; });
+  var trailerComps = u.assignments.filter(function(a){ return a.isTrailer; });
+  return row(truckComps, u.truck + ' · truck') + row(trailerComps, u.trailer + ' · trailer');
+}
+
+function buildAssignTbl(u) {
+  var opts = '<option value="">— empty</option>' +
+    u.products.map(function(p){ return '<option value="'+p.name+'">'+p.name+'</option>'; }).join('');
+
+  var rows = u.assignments.map(function(a,i) {
+    var spare = a.cap - a.qty;
+    var status = !a.product ? '<span style="color:#4b5563;">—</span>'
+      : spare > 0 ? '<span style="color:#eab308;">+'+spare.toLocaleString()+' spare</span>'
+      : '<span style="color:#4ade80;">✓ Full</span>';
+    var col = PROD_COLORS[a.product] || '';
+    var sel = opts.replace('value="'+a.product+'"', 'value="'+a.product+'" selected');
+    return '<tr style="'+(col?'border-left:2px solid '+col+';':'')+'">'+
+      '<td class="as-lbl">'+a.label+'</td>'+
+      '<td class="as-unit">'+(a.isTrailer?'Trailer':'Truck')+'</td>'+
+      '<td class="as-cap">'+a.cap.toLocaleString()+'</td>'+
+      '<td><select class="as-sel" onchange="setCompProd('+i+',this)">'+sel+'</select></td>'+
+      '<td><input class="as-qty" type="number" min="0" max="'+a.cap+'" value="'+(a.qty||'')+'" placeholder="0" onchange="setCompQty('+i+',this)"></td>'+
+      '<td class="as-status">'+status+'</td>'+
+    '</tr>';
+  }).join('');
+
+  return '<table class="as-tbl"><thead><tr>'+
+      '<th style="width:48px;">Comp</th>'+
+      '<th style="width:62px;">Unit</th>'+
+      '<th style="width:68px;">Cap</th>'+
+      '<th>Product</th>'+
+      '<th style="width:104px;">Qty (gal)</th>'+
+      '<th style="width:96px;">Status</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function buildBanner(u) {
+  var cap = unitCap(u), needed = unitNeeded(u);
+  var byProd = {};
+  u.assignments.forEach(function(a) {
+    if (a.product) byProd[a.product] = (byProd[a.product]||0) + a.qty;
+  });
+
+  var lines = [], sev = 'ok';
+  if (needed > cap) {
+    lines.push(['#ef4444','⚠ '+(needed-cap).toLocaleString()+' gal over capacity — add a trailer or move an order to another driver']);
+    sev = 'overfill';
+  }
+  u.products.forEach(function(p) {
+    var short = p.qty - (byProd[p.name]||0);
+    if (short > 0) {
+      lines.push(['#eab308','⚠ '+short.toLocaleString()+' gal of '+p.name+' not assigned to a compartment']);
+      if (sev === 'ok') sev = 'partial';
+    }
+  });
+  if (!lines.length) lines.push(['#4ade80','✓ Every ordered gallon is assigned to a compartment']);
+
+  return '<div class="warn-banner '+sev+'">' +
+    lines.map(function(l){ return '<div style="color:'+l[0]+';">'+l[1]+'</div>'; }).join('') +
+  '</div>';
+}
+
+// ── Edits ─────────────────────────────────────────────────
+function setTruck(v)   { units[activeTab].truck = v;   autoAssignUnit(units[activeTab]); renderUnit(); }
+function setTrailer(v) { units[activeTab].trailer = v; autoAssignUnit(units[activeTab]); renderUnit(); }
+function reAuto()      { autoAssignUnit(units[activeTab]); renderUnit(); }
+
+function suggestTrailer() {
+  var u = units[activeTab];
+  var gap = unitNeeded(u) - unitCap(u);
+  var pick = Object.keys(TRAILERS).filter(function(t){ return TRAILERS[t].totalCap >= gap; })
+    .sort(function(a,b){ return TRAILERS[a].totalCap - TRAILERS[b].totalCap; })[0];
+  if (pick) setTrailer(pick);
+}
+
+function setCompProd(i, sel) {
+  var a = units[activeTab].assignments[i];
+  a.product = sel.value;
+  if (!sel.value) a.qty = 0;
+  renderUnit();
+}
+function setCompQty(i, inp) {
+  var a = units[activeTab].assignments[i];
+  a.qty = Math.min(Math.max(0, parseInt(inp.value)||0), a.cap);
+  renderUnit();
+}
+function setLineQty(i, inp) {
+  var u = units[activeTab];
+  u.products[i].qty = Math.max(0, parseInt(inp.value)||0);
+  autoAssignUnit(u);
+  renderUnit();
+}
+
+function assignDriver(dk) {
+  if (!dk) return;
+  var u = units[UNASSIGNED];
+  if (!u) return;
+  u.orders.forEach(function(o){ o.driver = dk; });
+  activeTab = dk;
+  renderOrders();
+  buildUnits(false);
+}
+
+function removeOrder(id) {
+  delete selected[id];
+  renderOrders();
+  buildUnits(false);
+}
+
+function discardUnits() {
+  units = {}; selected = {}; activeTab = null;
+  renderOrders(); renderUnit(); closeUnit();
+}
+
+function createLoadOrders() {
+  var n = Object.keys(units).length;
+  var noTruck = Object.keys(units).filter(function(k){ return !units[k].truck; }).length;
+  if (noTruck) {
+    showToast('⚠ '+noTruck+' load order'+(noTruck>1?'s':'')+' still need a truck', true);
+    return;
+  }
+  showToast('✓ '+n+' load order'+(n>1?'s':'')+' created');
+  discardUnits();
+}
+
+function showToast(msg, warn) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = warn ? '#3a2a16' : '#1a3a28';
+  t.style.borderColor = warn ? 'rgba(234,179,8,0.35)' : 'rgba(52,211,153,0.3)';
+  t.style.color = warn ? '#eab308' : '#34d399';
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 2600);
+}
+
+renderOrders();
+</script>
+
+</body>
+</html>
