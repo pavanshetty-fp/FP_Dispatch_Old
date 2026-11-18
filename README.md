@@ -6,7 +6,7 @@ Interactive prototypes for FleetPanda flows. Standalone HTML files — open in a
 
 | File | Tab | Flow |
 |------|-----|------|
-| `prototypes/create-order.html` | Create order | 4 steps: customer, order details, load planning, best buy |
+| `prototypes/create-order.html` | Create order | Delivery order and load order side by side on one screen |
 | `prototypes/load-order-unassigned.html` | Edit order | An existing unassigned delivery order, planned onto a truck |
 | `prototypes/shift-planner.html` | Shift planner | Select orders, grouped into one load order per driver |
 
@@ -29,14 +29,31 @@ Both `create-order.html` and `shift-planner.html` share the same rules:
 - Ordered gallons and the compartment plan sit next to each other on purpose, so a
   line that won't fit can be adjusted against real capacity rather than guessed at.
 
-## Best buy
+## The split
 
-The last step picks where each product is loaded. It defaults every product to its
-cheapest terminal, but the cheapest price per product can sit at different
-terminals — so the step also says when that costs the driver a second stop.
-Loading accounts belong to a terminal, so choosing a terminal narrows them.
+`create-order.html` follows production: the delivery order and the load order sit
+side by side on one screen, not one after the other.
+
+- **Left — Bulk Delivery.** What the customer gets. One block per product, each
+  with a total planned quantity and an optional *Split by asset* that assigns
+  gallons to the customer's own tanks, against their last reading and ullage.
+- **Right — Load From.** Where it is picked up, with a tab per product. Source is
+  a Terminal or a Bulk Plant; a bulk plant draws against the stock in its tanks,
+  so quantity is capped by what is on hand. *Split Load* adds a second pickup.
+- The two stay in step: change a quantity on the left and the right says how many
+  gallons still have no source.
+
+## Blends
+
+A blend is a product made of constituents in fixed proportions — USA Winter Blend
+is DS2 80% / Antifreeze 20%. Two switches decide how one is picked up:
+
+- **Source each constituent separately** — each constituent gets its own source
+  row and its own share of the gallons (800 gal → DS2 640, Antifreeze 160).
+- **Splash blend** — the constituents are collected together and mixed on the
+  truck, so the blend takes a single pickup. Turning it on turns the other off.
 
 ## Open
 
-- Blend products — how a blend is defined and which components may share a compartment
+- Does the edit flow want the same split, applied the same way?
 - Scheduled-order flow into a load order
