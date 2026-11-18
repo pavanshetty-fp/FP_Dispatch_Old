@@ -365,39 +365,29 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
       </div>
 
-      <!-- Customer search (react-select style) -->
+      <!-- Customer dropdown -->
       <div class="form-row">
         <div class="f-col">
           <label class="f-lbl">Customer Name or ERP ID <span class="f-req">*</span></label>
-          <div class="rs-wrap" id="rsWrap">
-            <input class="rs-inp" id="custSearch" type="text" placeholder="Search customer…" autocomplete="off" oninput="filterCustomers(this.value)" onfocus="openRS()" onblur="closeRS()">
-            <div class="rs-dropdown" id="rsDropdown">
-              <div class="rs-opt" onmousedown="selectCustomer('Morris PLC','112','Denver, CO, USA, Colorado')">
-                <span>Morris PLC</span><span class="rs-opt-sub">112 · Denver, CO, USA</span>
-              </div>
-              <div class="rs-opt" onmousedown="selectCustomer('Acme Fuel Co','434','Cupertino, CA, USA')">
-                <span>Acme Fuel Co</span><span class="rs-opt-sub">434 · Cupertino, CA</span>
-              </div>
-              <div class="rs-opt" onmousedown="selectCustomer('Dean Ltd','517083','San Jose, CA, USA')">
-                <span>Dean Ltd</span><span class="rs-opt-sub">517083 · San Jose, CA</span>
-              </div>
-              <div class="rs-opt" onmousedown="selectCustomer('Jeff\'s Jalopies','12','Tucson, AZ, USA')">
-                <span>Jeff's Jalopies</span><span class="rs-opt-sub">12 · Tucson, AZ</span>
-              </div>
-            </div>
-          </div>
+          <select class="f-sel" id="custSel" onchange="onCustomerChange(this)">
+            <option value="">Select customer…</option>
+            <option value="morris|112|Denver, CO, USA">Morris PLC – 112</option>
+            <option value="acme|434|Cupertino, CA, USA">Acme Fuel Co – 434</option>
+            <option value="dean|517083|San Jose, CA, USA">Dean Ltd – 517083</option>
+            <option value="jalopies|12|Tucson, AZ, USA">Jeff's Jalopies – 12</option>
+            <option value="aguilar|9|Tampa, FL, USA">Aguilar and Sons – 9</option>
+            <option value="sunbelt|80000E19|Niceville, FL, USA">Sunbelt Pump & Power – PC268</option>
+            <option value="acme2|80000152|Portland, OR, USA">Clearwater Utilities Inc. – 80000152</option>
+          </select>
         </div>
       </div>
 
-      <!-- Ship To -->
+      <!-- Ship To (chained) -->
       <div class="form-row">
         <div class="f-col">
-          <label class="f-lbl">Ship To</label>
-          <select class="f-sel f-sel-placeholder" id="shipToSel" disabled>
-            <option value="">Select Ship To</option>
-            <option>Morris Group – Upstairs Hub</option>
-            <option>Morris Group – Downtown Terminal</option>
-            <option>Morris Group – East Depot</option>
+          <label class="f-lbl">Ship To <span class="f-req">*</span></label>
+          <select class="f-sel" id="shipToSel" disabled onchange="onShipToChange()">
+            <option value="">Select Ship To…</option>
           </select>
         </div>
       </div>
@@ -891,47 +881,82 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 <div id="successToast">Order created — opening Load Order</div>
 
 <script>
-// ── Customer search ───────────────────────────────────────
+// ── Customer / Ship To data ───────────────────────────────
+var SHIP_TOS = {
+  morris:   ['Morris Group – Upstairs Hub', 'Morris Group – Downtown Terminal', 'Morris Group – East Depot'],
+  acme:     ['Acme Branch 1A – Cupertino', 'Acme Branch 2B – San Jose', 'Acme Branch 3C – Palo Alto'],
+  dean:     ['Dean Ltd – SJ Main', 'Dean Ltd – Oakland Depot'],
+  jalopies: ['Jeff\'s Jalopies – Tucson Main', 'Jeff\'s Jalopies – Phoenix Site'],
+  aguilar:  ['Aguilar Tampa HQ', 'Aguilar Orlando Depot'],
+  sunbelt:  ['Sunbelt PC268 – Niceville FL', 'Sunbelt Ponte Verde Blvd'],
+  acme2:    ['Clearwater Utilities – Portland', 'Clearwater Utilities – Salem'],
+};
+
+var CUST_DATA = {
+  morris:   { name: 'Morris PLC',               erpId: '112',      addr: 'Denver, CO, USA' },
+  acme:     { name: 'Acme Fuel Co',             erpId: '434',      addr: 'Cupertino, CA, USA' },
+  dean:     { name: 'Dean Ltd',                 erpId: '517083',   addr: 'San Jose, CA, USA' },
+  jalopies: { name: "Jeff's Jalopies",          erpId: '12',       addr: 'Tucson, AZ, USA' },
+  aguilar:  { name: 'Aguilar and Sons',         erpId: '9',        addr: 'Tampa, FL, USA' },
+  sunbelt:  { name: 'Sunbelt Pump & Power',     erpId: '80000E19', addr: 'Niceville, FL, USA' },
+  acme2:    { name: 'Clearwater Utilities Inc.', erpId: '80000152', addr: 'Portland, OR, USA' },
+};
+
 var selectedCustomer = null;
 
-function openRS() {
-  document.getElementById('rsWrap').classList.add('open');
-}
-function closeRS() {
-  setTimeout(function() {
-    document.getElementById('rsWrap').classList.remove('open');
-  }, 150);
-}
-function filterCustomers(val) {
-  var opts = document.querySelectorAll('#rsDropdown .rs-opt');
+function onCustomerChange(sel) {
+  var val = sel.value;
+  var stSel = document.getElementById('shipToSel');
+  var nextBtn = document.getElementById('nextBtn');
+
+  // Reset Ship To
+  stSel.innerHTML = '<option value="">Select Ship To…</option>';
+  stSel.disabled = true;
+  selectedCustomer = null;
+
+  if (!val) {
+    nextBtn.disabled = true;
+    nextBtn.style.opacity = '0.4';
+    nextBtn.style.cursor = 'not-allowed';
+    return;
+  }
+
+  var key = val.split('|')[0];
+  var cust = CUST_DATA[key];
+  if (!cust) return;
+
+  selectedCustomer = cust;
+
+  // Populate Ship To
+  var opts = SHIP_TOS[key] || [];
   opts.forEach(function(o) {
-    o.style.display = o.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+    var opt = document.createElement('option');
+    opt.value = o;
+    opt.textContent = o;
+    stSel.appendChild(opt);
   });
-  if (val.length > 0) document.getElementById('rsWrap').classList.add('open');
-}
-function selectCustomer(name, erpId, addr) {
-  selectedCustomer = { name: name, erpId: erpId, addr: addr };
-  document.getElementById('custSearch').value = name + ' – ' + erpId;
-  document.getElementById('rsWrap').classList.remove('open');
-  // Enable Ship To
-  var st = document.getElementById('shipToSel');
-  st.disabled = false;
-  st.style.color = '';
+  stSel.disabled = false;
+
   // Enable Next
-  var btn = document.getElementById('nextBtn');
-  btn.disabled = false;
-  btn.style.opacity = '1';
-  btn.style.cursor = 'pointer';
+  nextBtn.disabled = false;
+  nextBtn.style.opacity = '1';
+  nextBtn.style.cursor = 'pointer';
+}
+
+function onShipToChange() {
+  // Ship To selection is optional — Next already enabled after customer pick
 }
 
 // ── Step navigation ───────────────────────────────────────
 function goToStep2() {
   if (!selectedCustomer) return;
+  var stSel = document.getElementById('shipToSel');
+  var shipToText = stSel.value || '';
   document.getElementById('scrim1').style.display = 'none';
   document.getElementById('scrim2').style.display = 'flex';
   document.getElementById('coCustomerName').textContent = selectedCustomer.name;
   document.getElementById('coCustomerFull').textContent = selectedCustomer.name + ' – ' + selectedCustomer.erpId;
-  document.getElementById('coCustomerAddr').textContent = selectedCustomer.addr;
+  document.getElementById('coCustomerAddr').textContent = (shipToText ? shipToText + ' · ' : '') + selectedCustomer.addr;
 }
 
 function goBackToStep1() {
