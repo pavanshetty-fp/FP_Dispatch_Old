@@ -220,7 +220,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .rrail-updates{font-size:12px;color:#34c3ff;margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:4px;}
 .comment-box{margin:0 14px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:#1d1f23;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 .comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
-.comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
+.comment-actions{display:flex;justify-content:flex-end;gap:6px;opacity:0.5;}
+.comment-actions svg{width:14px;height:14px;flex-shrink:0;}
 .comment-actions svg{width:14px;height:14px;}
 /* ── RR collapse ───────────────────────────────────────────── */
 .rr-chevron{width:12px;height:12px;transition:transform 0.15s ease;color:#4b5563;flex-shrink:0;}
@@ -1038,15 +1039,17 @@ function buildComp(a){
   const has = a.product && a.qty > 0;
   const col = PROD_COLORS[a.product] || '#9ba3af';
   const pct = has ? Math.round(a.qty / a.cap * 100) : 0;
-  const badgeHtml = BLEND_PRODUCTS.indexOf(a.product) >= 0 ? '<span class="badge-blend">Blend</span>' : '';
   const capColor = has ? '#6b7280' : '#3d4454';
   const body = has
     ?'<div class="comp-body"><div class="comp-empty"></div><div class="comp-fill" style="height:'+pct+'%;background:'+col+';opacity:0.8;"><span class="comp-fill-lbl">'+fmt(a.qty)+' gal</span></div></div>'
     :'<div class="comp-body"><div class="comp-striped"></div></div>';
+  const blendTxt = BLEND_PRODUCTS.indexOf(a.product) >= 0 ? ' (blend)' : '';
   const foot = has
-    ?'<div class="comp-foot"><span class="comp-num">'+a.label+'</span><span class="comp-prod" style="color:'+col+';">'+a.product+badgeHtml+'</span></div>'
+    ?'<div class="comp-foot"><span class="comp-num">'+a.label+'</span><span class="comp-prod" style="color:'+col+';">'+a.product+'</span></div>'
     :'<div class="comp-foot"><span class="comp-num">'+a.label+'</span><span class="comp-prod comp-prod-empty">Empty</span></div>';
-  return '<div class="comp" style="flex:'+a.cap+'"><div class="comp-cap" style="color:'+capColor+';">'+fmt(a.cap)+' gal</div>'+body+foot+'</div>';
+  const tip = has ? a.label+' · '+fmt(a.cap)+' gal · '+a.product+blendTxt+' '+fmt(a.qty)+' gal'
+                  : a.label+' · '+fmt(a.cap)+' gal · empty';
+  return '<div class="comp" style="flex:'+a.cap+'" title="'+tip+'"><div class="comp-cap" style="color:'+capColor+';">'+fmt(a.cap)+' gal</div>'+body+foot+'</div>';
 }
 
 function buildUnifiedEquipCard(data, isTrailer, comps) {

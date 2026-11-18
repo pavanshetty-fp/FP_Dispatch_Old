@@ -107,7 +107,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
 /* ── Tab switcher ─────────────────────────────────────────── */
 .tab-row{display:flex;gap:0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
-.tab-btn{flex:1;padding:7px 12px;border:none;background:transparent;color:#6b7280;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;letter-spacing:0.2px;transition:all 0.15s;}
+.tab-btn{flex:1;padding:7px 8px;white-space:nowrap;border:none;background:transparent;color:#6b7280;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;letter-spacing:0.2px;transition:all 0.15s;}
 .tab-btn.active{background:#3657f5;color:#fff;}
 .tab-btn:not(.active):hover{background:rgba(255,255,255,0.05);color:#ccc;}
 
@@ -117,17 +117,17 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .sec-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
 
 /* ── Bulk Delivery table ──────────────────────────────────── */
-.bd-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
-.bd-tbl th{background:rgba(0,0,0,0.25);padding:6px 10px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
+.bd-tbl{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.bd-tbl th{background:rgba(0,0,0,0.25);padding:5px 6px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
 .bd-tbl td{border-top:1px solid rgba(255,255,255,0.07);height:38px;vertical-align:middle;}
-.bd-sel{width:100%;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.bd-sel{width:100%;min-width:0;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
 .bd-sel:focus{background-color:rgba(54,87,245,0.08);}
-.bd-qty{width:100%;height:38px;padding:0 10px;background:transparent;border:none;color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;}
+.bd-qty{width:100%;height:38px;padding:0 6px;background:transparent;border:none;color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;}
 .bd-topoff{padding:0 10px;display:flex;align-items:center;justify-content:center;}
-.bd-del{width:36px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;}
+.bd-del{width:26px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;}
 .bd-del:hover{color:#cc0200;}
-.bd-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
-.bd-status{padding:0 10px;font-size:10px;white-space:nowrap;}
+.bd-loaded{padding:0 6px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
+.bd-status{padding:0 6px;font-size:10px;white-space:nowrap;}
 .bd-add{background:none;border:none;color:#34c3ff;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;margin-top:6px;}
 .bd-add:hover{color:#6fd4ff;}
 
@@ -275,7 +275,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .lo-tbl tr:last-child td{border-bottom:none;}
 .lo-chkcol{width:36px;padding:0 10px !important;}
 .lo-prodcol{padding:0 10px !important;font-size:12px;color:#fff;}
-.lo-sel{width:100%;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.lo-sel{width:100%;min-width:0;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
 .lo-sel:focus{background-color:rgba(54,87,245,0.08);}
 
 /* Actions */
@@ -306,13 +306,14 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .rrail-time{font-size:12px;color:#9ba3af;margin-top:3px;}
 .comment-box{margin:0 14px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:#1d1f23;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 .comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
-.comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
+.comment-actions{display:flex;justify-content:flex-end;gap:6px;opacity:0.5;}
+.comment-actions svg{width:14px;height:14px;flex-shrink:0;}
 
 /* ── Step 3 / Load Order wizard step ─────────────────────── */
 #step3{z-index:20;width:min(1480px,calc(100vw - 40px));background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 70px);display:flex;flex-direction:column;}
 .s3-body{display:flex;flex:1;overflow:hidden;}
 /* delivery order on the left, load order on the right */
-.s3-do{width:490px;flex-shrink:0;padding:14px 16px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
+.s3-do{width:clamp(432px,34%,512px);flex-shrink:0;padding:14px 16px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
 .s3-col-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
 .s3-col-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
 .s3-do-id{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
@@ -321,7 +322,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .s3-do::-webkit-scrollbar-thumb,.s3-lo::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
 
 /* Assignment table */
-.assign-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.assign-tbl{width:100%;table-layout:fixed;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
 .assign-tbl th{background:#1d1f23;padding:6px 10px;text-align:left;font-size:10px;font-weight:500;color:#9ba3af;letter-spacing:0.3px;border-bottom:1px solid rgba(255,255,255,0.08);}
 .assign-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.07);height:38px;vertical-align:middle;}
 .assign-tbl tr:last-child td{border-bottom:none;}
@@ -607,7 +608,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <!-- Order type + Common Carrier -->
       <div class="form-row" style="align-items:center;margin-bottom:14px;">
         <div style="flex:1;">
-          <div class="tab-row" style="max-width:280px;">
+          <div class="tab-row" style="max-width:230px;">
             <button class="tab-btn active" onclick="switchTab(this,'Delivery Order')">Delivery Order</button>
             <button class="tab-btn" onclick="switchTab(this,'Extraction Order')">Extraction Order</button>
           </div>
@@ -635,12 +636,12 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <table class="bd-tbl" id="bdTbl">
         <thead>
           <tr>
-            <th>Product</th>
-            <th style="width:94px;text-align:right;">Ordered (gal)</th>
-            <th style="width:56px;text-align:center;">Top Off</th>
-            <th style="width:62px;text-align:right;">Loaded</th>
-            <th style="width:112px;">Status</th>
-            <th style="width:34px;"></th>
+            <th style="min-width:96px;">Product</th>
+            <th style="width:70px;text-align:right;">Ordered</th>
+            <th style="width:58px;text-align:center;">Top off</th>
+            <th style="width:54px;text-align:right;">Loaded</th>
+            <th style="width:78px;">Status</th>
+            <th style="width:26px;"></th>
           </tr>
         </thead>
         <tbody id="bdBody">
@@ -831,11 +832,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                 <table class="assign-tbl">
                   <thead>
                     <tr>
-                      <th style="width:52px;">Comp</th>
-                      <th style="width:76px;">Cap (gal)</th>
-                      <th>Product</th>
-                      <th style="width:110px;">Qty (gal)</th>
-                      <th style="width:100px;">Status</th>
+                      <th style="width:44px;">Comp</th>
+                      <th style="width:58px;">Cap</th>
+                      <th style="min-width:122px;">Product</th>
+                      <th style="width:82px;">Qty (gal)</th>
+                      <th style="width:88px;">Status</th>
                     </tr>
                   </thead>
                   <tbody id="s3AssignBody"><!-- filled by JS --></tbody>
