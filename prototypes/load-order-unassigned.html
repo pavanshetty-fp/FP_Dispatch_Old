@@ -38,8 +38,25 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .btn-ticket{padding:5px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:inherit;cursor:pointer;letter-spacing:0.3px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#ccc;}
 
 /* Body grid */
-/* delivery order on the left, load order on the right, rail unchanged */
-.modal-body{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr) 338px;overflow:hidden;flex:1;}
+/* delivery order on the left, load order on the right, rail unchanged.
+   The unit in focus takes most of the width; the other dims and offers to
+   take over. data-split on .modal-body is the whole state. */
+/* flex, not grid: grid-template-columns cannot interpolate between 1fr and a
+   fixed width, so the swap would not animate. flex-basis does. */
+.modal-body{display:flex;overflow:hidden;flex:1;}
+.main-content,.lo-content{transition:flex-basis .22s ease;min-width:0;}
+.modal-body[data-split="do"] .main-content{flex:1 1 auto;}
+.modal-body[data-split="do"] .lo-content{flex:0 0 clamp(380px,30%,448px);}
+.modal-body[data-split="lo"] .main-content{flex:0 0 clamp(392px,30%,440px);}
+.modal-body[data-split="lo"] .lo-content{flex:1 1 auto;}
+.modal-body .right-rail{flex:0 0 338px;}
+.main-content,.lo-content{position:relative;}
+.main-content.dim,.lo-content.dim{background:rgba(0,0,0,0.12);}
+.col-hdr{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.col-hdr::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);order:1;}
+.dim .col-hdr{color:#4b5563;}
+.col-focus{order:2;display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:#9ba3af;font-family:inherit;font-size:9px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;cursor:pointer;white-space:nowrap;}
+.col-focus:hover{background:rgba(54,87,245,0.16);border-color:rgba(54,87,245,0.4);color:#6fd4ff;}
 .lo-content{padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);border-left:1px solid rgba(255,255,255,0.08);}
 .lo-content::-webkit-scrollbar{width:6px;}
 .lo-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
@@ -99,7 +116,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .shift-bar-pct{font-size:10px;color:#6b7280;white-space:nowrap;}
 
 /* Equipment row */
-.equip-row{display:flex;gap:12px;align-items:flex-start;}
+.equip-row{display:flex;flex-direction:column;gap:10px;align-items:stretch;}
 .equip-card{flex:1;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
 .equip-card-hdr{padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);}
 .equip-icon{width:24px;height:24px;border-radius:3px;background:rgba(54,87,245,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -114,12 +131,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .cap-committed span{color:#6fd4ff;font-weight:600;}
 .cap-available{font-size:10px;font-weight:600;color:#00c765;}
 .cap-total{font-size:10px;color:#6b7280;}
-.add-trailer-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border:1px dashed rgba(54,87,245,0.3);border-radius:4px;background:rgba(54,87,245,0.04);color:#34c3ff;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;align-self:center;}
+.add-trailer-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 12px;width:100%;border:1px dashed rgba(54,87,245,0.3);border-radius:4px;background:rgba(54,87,245,0.04);color:#34c3ff;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;align-self:center;}
 .add-trailer-btn:hover{background:rgba(54,87,245,0.08);border-color:rgba(54,87,245,0.5);}
 
 /* Driver + shift inline row */
-.driver-shift-row{display:flex;align-items:flex-start;gap:12px;}
-.driver-col{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;}
+.driver-col-full{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
 /* Unified equipment card (header + capacity + compartments as one unit) */
 .equip-unit{flex:1;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;display:flex;flex-direction:column;}
 .equip-unit-top{padding:10px 12px;display:flex;flex-direction:column;gap:7px;}
@@ -346,63 +362,13 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
   </div>
 
   <!-- Body -->
-  <div class="modal-body">
+  <div class="modal-body" id="loBody" data-split="do">
     <!-- Main content -->
-    <div class="main-content">
-
-      <!-- 3-column section cards -->
-      <div class="section-grid">
-        <!-- Delivery Ticket -->
-        <div class="sec-card">
-          <div class="sec-hdr"><span class="sec-title">Delivery Ticket</span></div>
-          <div class="sec-body">
-            <div class="frow"><span class="flbl">Order #</span><span class="fval">5157058</span></div>
-            <div class="frow"><span class="flbl">Is PO Required?</span><span class="fval">No</span></div>
-            <div class="frow"><span class="flbl">PO #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Carrier #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Sales Order #</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Diversion #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">BOL #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Assigned Asset</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Transfer #</span><span class="fval fval-na">N/A</span></div>
-          </div>
-        </div>
-
-        <!-- Delivery Details -->
-        <div class="sec-card">
-          <div class="sec-hdr"><span class="sec-title">Delivery Details</span></div>
-          <div class="sec-body">
-            <div class="frow"><span class="flbl">Hub</span><span class="fval">FP Station — Calif… <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Planned Start</span><span class="fval">Nov 18 2026, 00:00</span></div>
-            <div class="frow"><span class="flbl">Planned End</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Arrived At</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Completed At</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Geo In</span><span class="fval fval-na">N/A. Please verify…</span></div>
-            <div class="frow"><span class="flbl">Geo Out</span><span class="fval fval-na">N/A. Please verify…</span></div>
-            <div class="frow"><span class="flbl">Common Carrier</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Driver Name</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
-            <div class="frow"><span class="flbl">Truck</span><span class="fval fval-na">—</span></div>
-            <div class="frow"><span class="flbl">Trailer</span><span class="fval fval-na">—</span></div>
-          </div>
-        </div>
-
-        <!-- Shipment Details -->
-        <div class="sec-card">
-          <div class="sec-hdr"><span class="sec-title">Shipment Details</span></div>
-          <div class="sec-body">
-            <div class="frow"><span class="flbl">Ship To Address</span><span class="fval">Upstairs Hub — Coworking…</span></div>
-            <div class="frow"><span class="flbl">State</span><span class="fval">Bagmati Province</span></div>
-            <div class="frow"><span class="flbl">Coordinates</span><span class="fval">27.678700, 85.33425</span></div>
-            <div class="frow"><span class="flbl">ERP ID</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Delivery Only</span><span class="fval">No</span></div>
-            <div class="frow"><span class="flbl">LOS</span><span class="fval">Chitwan Ops, Fuel</span></div>
-            <div class="frow"><span class="flbl">Payment Term</span><span class="fval fval-na">N/A</span></div>
-            <div class="frow"><span class="flbl">Customer Type</span><span class="fval fval-na">N/A</span></div>
-          </div>
-        </div>
+    <div class="main-content" id="colDo" onclick="colClick('do')">
+      <div class="col-hdr">Delivery order
+        <button class="col-focus" id="focusDo" onclick="event.stopPropagation();setSplit('do')" style="display:none;">Focus</button>
       </div>
 
-      <!-- Delivery reference bar -->
       <!-- Delivery Orders -->
       <div class="do-section">
         <div class="do-hdr">
@@ -497,10 +463,65 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
       </div>
 
+      <!-- 3-column section cards -->
+      <div class="section-grid">
+        <!-- Delivery Ticket -->
+        <div class="sec-card">
+          <div class="sec-hdr"><span class="sec-title">Delivery Ticket</span></div>
+          <div class="sec-body">
+            <div class="frow"><span class="flbl">Order #</span><span class="fval">5157058</span></div>
+            <div class="frow"><span class="flbl">Is PO Required?</span><span class="fval">No</span></div>
+            <div class="frow"><span class="flbl">PO #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Carrier #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Sales Order #</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Diversion #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">BOL #</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Assigned Asset</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Transfer #</span><span class="fval fval-na">N/A</span></div>
+          </div>
+        </div>
+
+        <!-- Delivery Details -->
+        <div class="sec-card">
+          <div class="sec-hdr"><span class="sec-title">Delivery Details</span></div>
+          <div class="sec-body">
+            <div class="frow"><span class="flbl">Hub</span><span class="fval">FP Station — Calif… <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Planned Start</span><span class="fval">Nov 18 2026, 00:00</span></div>
+            <div class="frow"><span class="flbl">Planned End</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Arrived At</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Completed At</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Geo In</span><span class="fval fval-na">N/A. Please verify…</span></div>
+            <div class="frow"><span class="flbl">Geo Out</span><span class="fval fval-na">N/A. Please verify…</span></div>
+            <div class="frow"><span class="flbl">Common Carrier</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Driver Name</span><span class="fval fval-na">N/A <span class="fedit">✏</span></span></div>
+            <div class="frow"><span class="flbl">Truck</span><span class="fval fval-na">—</span></div>
+            <div class="frow"><span class="flbl">Trailer</span><span class="fval fval-na">—</span></div>
+          </div>
+        </div>
+
+        <!-- Shipment Details -->
+        <div class="sec-card">
+          <div class="sec-hdr"><span class="sec-title">Shipment Details</span></div>
+          <div class="sec-body">
+            <div class="frow"><span class="flbl">Ship To Address</span><span class="fval">Upstairs Hub — Coworking…</span></div>
+            <div class="frow"><span class="flbl">State</span><span class="fval">Bagmati Province</span></div>
+            <div class="frow"><span class="flbl">Coordinates</span><span class="fval">27.678700, 85.33425</span></div>
+            <div class="frow"><span class="flbl">ERP ID</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Delivery Only</span><span class="fval">No</span></div>
+            <div class="frow"><span class="flbl">LOS</span><span class="fval">Chitwan Ops, Fuel</span></div>
+            <div class="frow"><span class="flbl">Payment Term</span><span class="fval fval-na">N/A</span></div>
+            <div class="frow"><span class="flbl">Customer Type</span><span class="fval fval-na">N/A</span></div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /main-content -->
 
     <!-- Right: the load order -->
-    <div class="lo-content">
+    <div class="lo-content" id="colLo" onclick="colClick('lo')">
+      <div class="col-hdr">Load order
+        <button class="col-focus" id="focusLo" onclick="event.stopPropagation();setSplit('lo')">Focus</button>
+      </div>
 
       <!-- Load Order Section -->
       <div class="lo-section">
@@ -513,20 +534,20 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
         <div class="lo-body">
 
-          <!-- Driver + Shift inline row (shift appears beside driver on selection) -->
-          <div class="driver-shift-row">
-            <div class="driver-col">
-              <label class="inp-lbl">Driver <span class="inp-req">*</span></label>
-              <select class="inp-sel" id="driverSel" onchange="onDriverChange(this.value)">
-                <option value="">— Select driver</option>
-                <option value="shriya">Shriya</option>
-                <option value="shriya2">Shriya Test 2</option>
-                <option value="aakash">Aakash</option>
-              </select>
-            </div>
+          <!-- The column is narrow, so these stack: driver, then the shift it
+               carries, then the truck, the trailer and the compartment plan. -->
+          <div class="driver-col-full">
+            <label class="inp-lbl">Driver <span class="inp-req">*</span></label>
+            <select class="inp-sel" id="driverSel" onchange="onDriverChange(this.value)">
+              <option value="">— Select driver</option>
+              <option value="shriya">Shriya</option>
+              <option value="shriya2">Shriya Test 2</option>
+              <option value="aakash">Aakash</option>
+            </select>
+          </div>
 
-            <!-- Shift card — revealed inline when driver is selected -->
-            <div id="shiftCard" class="shift-card lo-reveal" style="display:none;flex:1;">
+          <!-- Shift card — under the driver it belongs to -->
+          <div id="shiftCard" class="shift-card lo-reveal" style="display:none;">
               <div class="shift-top">
                 <div class="shift-icon">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff931e" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -544,10 +565,9 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                 <div class="shift-bar"><div class="shift-bar-fill" id="shiftBarFill" style="width:42%"></div></div>
                 <span class="shift-bar-pct" id="shiftBarPct">42% used</span>
               </div>
-            </div>
           </div>
 
-          <!-- Equipment units + rest — revealed when driver is selected -->
+          <!-- Truck, trailer and the compartment plan — revealed with the driver -->
           <div id="loExpanded" style="display:none;flex-direction:column;gap:14px;">
 
             <!-- Equipment row: each is a unified card (identity + capacity + compartments) -->
@@ -755,6 +775,20 @@ const DRIVERS = {
 };
 
 function fmt(n){return n.toLocaleString();}
+
+// ── The two units share the width ─────────────────────────
+// Whichever is in focus takes most of it; the other dims and offers to take
+// over, and clicking anywhere in the dimmed column brings it forward.
+function setSplit(which) {
+  document.getElementById('loBody').setAttribute('data-split', which);
+  document.getElementById('colDo').classList.toggle('dim', which === 'lo');
+  document.getElementById('colLo').classList.toggle('dim', which === 'do');
+  document.getElementById('focusDo').style.display = which === 'lo' ? 'inline-flex' : 'none';
+  document.getElementById('focusLo').style.display = which === 'do' ? 'inline-flex' : 'none';
+}
+function colClick(which) {
+  if (document.getElementById('loBody').getAttribute('data-split') !== which) setSplit(which);
+}
 
 
 // ══════════════════════════════════════════════════════════
@@ -1126,6 +1160,7 @@ function onDriverChange(val) {
   // Show equipment + sourcing, then plan the compartments from the order lines
   expanded.style.display = 'flex';
   loPlan.driver = val;
+  setSplit('lo');
   replanCompartments();
 }
 
@@ -1268,6 +1303,7 @@ function onTrailerSelect(val) {
   DRIVERS[driverKey].trailer = t;
   replanCompartments();
 }
+setSplit('do');
 </script>
 <!-- ═══════════════════════════════════════════════════════════
      Prototype switcher — a testing aid, not part of any screen.

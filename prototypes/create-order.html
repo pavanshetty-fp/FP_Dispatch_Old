@@ -667,8 +667,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <th style="min-width:96px;">Product</th>
             <th style="width:70px;text-align:right;">Ordered</th>
             <th style="width:58px;text-align:center;">Top off</th>
-            <th style="width:54px;text-align:right;">Loaded</th>
-            <th style="width:78px;">Status</th>
+            <th class="lo-col" style="width:54px;text-align:right;display:none;">Loaded</th>
+            <th class="lo-col" style="width:78px;display:none;">Status</th>
             <th style="width:26px;"></th>
           </tr>
         </thead>
@@ -686,8 +686,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             </td>
             <td><input class="bd-qty" type="number" value="3000" min="0" placeholder="0" onchange="syncProducts()"></td>
             <td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
-            <td class="bd-loaded">—</td>
-            <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
+            <td class="bd-loaded lo-col" style="display:none;">—</td>
+            <td class="bd-status lo-col" style="display:none;"></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
           </tr>
           <tr>
@@ -703,8 +703,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             </td>
             <td><input class="bd-qty" type="number" value="1500" min="0" placeholder="0" onchange="syncProducts()"></td>
             <td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
-            <td class="bd-loaded">—</td>
-            <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
+            <td class="bd-loaded lo-col" style="display:none;">—</td>
+            <td class="bd-status lo-col" style="display:none;"></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
           </tr>
         </tbody>
@@ -1175,6 +1175,7 @@ function goToOrderPlanning() {
   s3.truck = null;
   s3.assignments = [];
   s3HasLoadOrder = false;
+  showLoCols(false);
   document.getElementById('s3LoCta').style.display = '';
   document.getElementById('s3LoSection').style.display = 'none';
   setSplit('none');
@@ -1252,7 +1253,7 @@ function updateS3DoStatuses() {
     if (!p) return;
     if (!s3.truck) {
       loadedEl.textContent = '—';
-      statusEl.innerHTML = '<span style="color:#4b5563;">Pick a truck</span>';
+      statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
       return;
     }
     var loaded = assignedByProd[p.name] || 0;
@@ -1325,8 +1326,13 @@ function colClick(which) {
   if (document.getElementById('s3Body').getAttribute('data-split') !== which) setSplit(which);
 }
 
+function showLoCols(on) {
+  document.querySelectorAll('#bdTbl .lo-col').forEach(function(e){ e.style.display = on ? '' : 'none'; });
+}
+
 function addLoadOrder() {
   s3HasLoadOrder = true;
+  showLoCols(true);
   document.getElementById('s3LoCta').style.display = 'none';
   document.getElementById('s3LoSection').style.display = '';
   setSplit('lo');                       // planning the load order is the next act
@@ -1873,7 +1879,7 @@ function addTrailer() {
 function addBdRow() {
   var tbody = document.getElementById('bdBody');
   var tr = document.createElement('tr');
-  tr.innerHTML = '<td><select class="bd-sel" onchange="syncProducts()"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0" onchange="syncProducts()"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td class="bd-loaded">—</td><td class="bd-status"><span style="color:#4b5563;">—</span></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
+  tr.innerHTML = '<td><select class="bd-sel" onchange="syncProducts()"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0" onchange="syncProducts()"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td class="bd-loaded lo-col" style="display:none;">—</td><td class="bd-status"><span style="color:#4b5563;">—</span></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
   tbody.appendChild(tr);
   syncProducts();
 }
