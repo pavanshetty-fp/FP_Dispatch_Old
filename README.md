@@ -7,7 +7,7 @@ Interactive prototypes for FleetPanda flows. Standalone HTML files — open in a
 | File | Flow | Status |
 |------|------|--------|
 | `prototypes/load-order-unassigned.html` | Load Order — unassigned delivery order | In progress |
-| `prototypes/create-order.html` | Create Order — 3-step wizard ending in a load order | In progress |
+| `prototypes/create-order.html` | Create Order — 4 steps: customer, order details, load planning, best buy | In progress |
 | `prototypes/shift-planner.html` | Shift Planner — select orders, group into load orders by driver | In progress |
 
 ## Compartment planning
@@ -24,6 +24,13 @@ Both `create-order.html` and `shift-planner.html` share the same rules:
   ordered gallons on the delivery order lines.
 - Ordered gallons and the compartment plan sit next to each other on purpose, so a
   line that won't fit can be adjusted against real capacity rather than guessed at.
+
+## Best buy
+
+The last step picks where each product is loaded. It defaults every product to its
+cheapest terminal, but the cheapest price per product can sit at different
+terminals — so the step also says when that costs the driver a second stop.
+Loading accounts belong to a terminal, so choosing a terminal narrows them.
 
 ## Open
 

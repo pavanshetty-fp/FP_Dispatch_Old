@@ -350,6 +350,36 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .dl-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
 .dl-status{padding:0 10px;font-size:10px;white-space:nowrap;}
 .rule-note{font-size:10px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
+
+/* ── Step 4: Best buy ─────────────────────────────────────── */
+#step4{z-index:20;width:900px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
+.bb-body{padding:16px 20px;overflow-y:auto;flex:1;}
+.bb-body::-webkit-scrollbar{width:5px;}
+.bb-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.bb-prod-block{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.bb-prod-hdr{background:rgba(255,255,255,0.03);padding:9px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.bb-prod-name{font-size:12.5px;font-weight:600;color:#e9ebf0;}
+.bb-prod-gal{font-size:11px;color:#9ba3af;}
+.bb-prod-best{margin-left:auto;font-size:10px;color:#00c765;font-weight:600;}
+.bb-tbl{width:100%;border-collapse:collapse;background:#262930;}
+.bb-tbl th{background:#1f2226;padding:5px 10px;text-align:left;font-size:9.5px;font-weight:700;color:#797a7d;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.bb-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.06);height:38px;vertical-align:middle;}
+.bb-tbl tr:last-child td{border-bottom:none;}
+.bb-tbl tr.picked{background:rgba(0,199,101,0.06);}
+.bb-radio-cell{width:36px;padding:0 0 0 11px !important;}
+.bb-radio{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bb-radio.on{border-color:#00c765;}
+.bb-radio.on::after{content:'';width:7px;height:7px;border-radius:50%;background:#00c765;}
+.bb-cell{padding:0 10px;font-size:11.5px;color:#e9ebf0;}
+.bb-cell-sub{font-size:10px;color:#6b7280;}
+.bb-price{padding:0 10px;font-size:12px;font-weight:600;color:#e9ebf0;text-align:right;white-space:nowrap;}
+.bb-price-best{color:#00c765;}
+.bb-delta{padding:0 10px;font-size:10.5px;text-align:right;white-space:nowrap;}
+.bb-acct{width:100%;height:38px;padding:0 20px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.06);font-family:inherit;font-size:11.5px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.bb-total{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
+.bb-total-lbl{font-size:11.5px;color:#9ba3af;}
+.bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
+.bb-total-save{font-size:10.5px;color:#00c765;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -390,17 +420,22 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <div class="step-trail">
         <div class="step-node active">
           <div class="step-num">1</div>
-          <span class="step-label">Select Customer</span>
+          <span class="step-label">Select customer</span>
         </div>
         <span class="step-arrow">›</span>
         <div class="step-node pending">
           <div class="step-num">2</div>
-          <span class="step-label">Create Order</span>
+          <span class="step-label">Order details</span>
         </div>
         <span class="step-arrow">›</span>
         <div class="step-node pending">
           <div class="step-num">3</div>
-          <span class="step-label">Load Order</span>
+          <span class="step-label">Load planning</span>
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-node pending">
+          <div class="step-num">4</div>
+          <span class="step-label">Best buy</span>
         </div>
       </div>
 
@@ -494,12 +529,17 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node active" style="gap:5px;">
             <div class="step-num">2</div>
-            <span class="step-label" style="font-size:10px;">Create Order</span>
+            <span class="step-label" style="font-size:10px;">Order details</span>
           </div>
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node pending" style="gap:5px;">
             <div class="step-num">3</div>
-            <span class="step-label" style="font-size:10px;">Load Order</span>
+            <span class="step-label" style="font-size:10px;">Load planning</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node pending" style="gap:5px;">
+            <div class="step-num">4</div>
+            <span class="step-label" style="font-size:10px;">Best buy</span>
           </div>
         </div>
         <button class="modal-close" onclick="closeAll()">×</button>
@@ -689,7 +729,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-secondary" onclick="closeAll()">Cancel</button>
-        <button class="btn-primary" onclick="createOrder()">Create Order</button>
+        <button class="btn-primary" onclick="goToStep3()">Next: load planning →</button>
       </div>
     </div>
   </div>
@@ -717,12 +757,17 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node done" style="gap:5px;">
             <div class="step-num">✓</div>
-            <span class="step-label" style="font-size:10px;">Create Order</span>
+            <span class="step-label" style="font-size:10px;">Order details</span>
           </div>
           <span class="step-arrow" style="margin:0 6px;">›</span>
           <div class="step-node active" style="gap:5px;">
             <div class="step-num">3</div>
-            <span class="step-label" style="font-size:10px;">Load Order</span>
+            <span class="step-label" style="font-size:10px;">Load planning</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node pending" style="gap:5px;">
+            <div class="step-num">4</div>
+            <span class="step-label" style="font-size:10px;">Best buy</span>
           </div>
         </div>
         <button class="modal-close" onclick="closeAll()">×</button>
@@ -797,7 +842,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <div class="inp3" style="grid-template-columns:1fr 1fr;">
               <div class="inp-grp">
                 <label class="inp-lbl">Driver <span class="inp-req">*</span></label>
-                <select class="inp-sel" id="s3DriverSel">
+                <select class="inp-sel" id="s3DriverSel" onchange="onDriverChange(this)">
                   <option value="">Select Driver…</option>
                   <option value="alex">Alex Trebek — Day Shift</option>
                   <option value="ravi">Ravi Patel — Day Shift</option>
@@ -807,7 +852,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                 </select>
               </div>
               <div class="inp-grp">
-                <label class="inp-lbl">Truck <span class="inp-req">*</span></label>
+                <label class="inp-lbl">Truck <span class="inp-req">*</span> <span id="s3TruckAuto" style="display:none;font-weight:500;color:#34c3ff;text-transform:none;letter-spacing:0;">· mapped to driver</span></label>
                 <select class="inp-sel" id="s3TruckSel" onchange="onTruckChange(this)">
                   <option value="">Select Truck…</option>
                   <option value="Hi-12">Hi-12 · Bobtail · 5,000 gal (3 comps)</option>
@@ -920,15 +965,96 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-secondary" onclick="closeAll()">Discard</button>
-        <button class="btn-save" onclick="saveLoadOrder()">Save Load Order</button>
+        <button class="btn-save" onclick="goToStep4()">Next: best buy →</button>
       </div>
     </div>
 
   </div><!-- /step3 -->
 </div><!-- /scrim3 -->
 
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 4: Best buy — where each product is sourced from
+     ═══════════════════════════════════════════════════════════ -->
+<div class="scrim" id="scrim4" style="display:none;align-items:flex-start;padding:40px 0;">
+  <div id="step4">
+
+    <!-- Header -->
+    <div class="co-hdr">
+      <div class="co-breadcrumb">
+        <span>Create Order</span>
+        <span class="co-breadcrumb-sep">›</span>
+        <span class="co-breadcrumb-cust" id="s4CustomerName">Morris PLC</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="step-trail" style="margin:0;">
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Customer</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Order details</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Load planning</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node active" style="gap:5px;">
+            <div class="step-num">4</div>
+            <span class="step-label" style="font-size:10px;">Best buy</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeAll()">×</button>
+      </div>
+    </div>
+
+    <!-- Load summary bar -->
+    <div style="padding:9px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+      <div style="width:28px;height:28px;border-radius:4px;background:rgba(54,87,245,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div>
+        <div id="s4LoadLine" style="font-size:12.5px;font-weight:600;color:#fff;">—</div>
+        <div id="s4LoadSub" style="font-size:11px;color:#6b7280;">—</div>
+      </div>
+      <button class="btn-secondary" style="margin-left:auto;padding:5px 11px;font-size:11px;" onclick="goBackToStep3()">Edit load plan</button>
+    </div>
+
+    <!-- Body: one block per product -->
+    <div class="bb-body">
+      <div style="font-size:11px;color:#6b7280;margin-bottom:11px;">
+        Rack prices for the planned date. The cheapest source for each product is picked for you — change it if a terminal is out of the way or the account is wrong.
+      </div>
+      <div id="s4Blocks"></div>
+      <div id="s4Stops" class="rule-note" style="display:none;color:#ff931e;margin:0 0 8px;"></div>
+      <div class="bb-total">
+        <div>
+          <div class="bb-total-lbl">Estimated product cost</div>
+          <div class="bb-total-save" id="s4Saving"></div>
+        </div>
+        <div class="bb-total-val" id="s4Total">—</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="co-footer">
+      <div class="co-footer-left">
+        <button class="btn-secondary" onclick="goBackToStep3()">← Back</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" onclick="closeAll()">Discard</button>
+        <button class="btn-save" onclick="createOrderAndLoad()">Create order &amp; load order</button>
+      </div>
+    </div>
+
+  </div><!-- /step4 -->
+</div><!-- /scrim4 -->
+
 <!-- Success toast -->
-<div id="successToast">Order created — opening Load Order</div>
+<div id="successToast"></div>
 
 <script>
 // ── Product colors (from shipto_map palette) ──────────────
@@ -952,6 +1078,33 @@ var TRUCKS = {
   'HV-7':  { type:'Tanker',  totalCap:9000, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
   'TR-22': { type:'Bobtail', totalCap:3500, comps:[{cap:2000},{cap:1500}] },
   'PB-9':  { type:'Tanker',  totalCap:6000, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+};
+
+// Each driver already has a truck mapped to them, so picking the driver picks the truck
+var DRIVERS = {
+  alex:   { name:'Alex Trebek',     shift:'Day Shift',   truck:'Hi-12' },
+  ravi:   { name:'Ravi Patel',      shift:'Day Shift',   truck:'HV-7'  },
+  omar:   { name:'Omar Khalid',     shift:'Night Shift', truck:'TR-22' },
+  priya:  { name:'Priya Sharma',    shift:'Day Shift',   truck:'PB-9'  },
+  carlos: { name:'Carlos Schrader', shift:'Afternoon',   truck:'HV-7'  },
+};
+
+// ── Best buy: where each product is loaded from ───────────
+// Loading accounts belong to a terminal, so picking a terminal narrows the accounts.
+var TERMINALS = {
+  'Magellan CC': { supplier:'Kendrick Oil', accounts:['MCC-7823','MCC-8841'], dist:'12 mi' },
+  'Buckeye CC':  { supplier:'Flint Hills',  accounts:['BCC-2290','BCC-2291'], dist:'23 mi' },
+  'Valero West': { supplier:'Valero',       accounts:['VLW-5510'],            dist:'31 mi' },
+};
+// Rack price per gallon for the planned date
+var RACK = {
+  'UNL87':      { 'Magellan CC':2.914, 'Buckeye CC':2.887, 'Valero West':2.942 },
+  'UNL93':      { 'Magellan CC':3.302, 'Buckeye CC':3.341, 'Valero West':3.288 },
+  'CLR DSL':    { 'Magellan CC':3.118, 'Buckeye CC':3.094, 'Valero West':3.151 },
+  'HO DSL':     { 'Magellan CC':3.207, 'Buckeye CC':3.244, 'Valero West':3.189 },
+  'Diesel DEF': { 'Magellan CC':1.842, 'Buckeye CC':1.878, 'Valero West':1.821 },
+  'Biodiesel':  { 'Magellan CC':3.401, 'Buckeye CC':3.377, 'Valero West':3.430 },
+  'Kerosene':   { 'Magellan CC':3.512, 'Buckeye CC':3.549, 'Valero West':3.498 },
 };
 
 // ── Customer / Ship To data ───────────────────────────────
@@ -1018,7 +1171,9 @@ function goBackToStep1() {
 }
 
 // ── Step 2 → 3 ───────────────────────────────────────────
-function createOrder() {
+// Nothing is created here — the order and its load order are both created
+// at the end of step 4.
+function goToStep3() {
   var rows = document.querySelectorAll('#bdBody tr');
   var products = [];
   rows.forEach(function(tr) {
@@ -1153,18 +1308,190 @@ function goBackToStep2() {
   document.getElementById('scrim2').style.display = 'flex';
 }
 
-function saveLoadOrder() {
-  document.getElementById('scrim3').style.display = 'none';
-  var toast = document.getElementById('successToast');
-  toast.textContent = '✓ Load order saved';
-  toast.style.display = 'block';
-  setTimeout(function() { toast.style.display = 'none'; }, 2500);
-}
-
 function closeAll() {
   document.getElementById('scrim1').style.display = 'none';
   document.getElementById('scrim2').style.display = 'none';
   document.getElementById('scrim3').style.display = 'none';
+  document.getElementById('scrim4').style.display = 'none';
+}
+
+// ── Driver picks the truck ────────────────────────────────
+// Every driver has a truck mapped to them, so selecting the driver selects
+// the truck and plans its compartments. It stays changeable.
+function onDriverChange(sel) {
+  var d = DRIVERS[sel.value];
+  var auto = document.getElementById('s3TruckAuto');
+  if (!d || !d.truck) { auto.style.display = 'none'; return; }
+  var truckSel = document.getElementById('s3TruckSel');
+  truckSel.value = d.truck;
+  auto.style.display = 'inline';
+  onTruckChange(truckSel);
+}
+
+// ══════════════════════════════════════════════════════════
+//  Step 4 — Best buy
+// ══════════════════════════════════════════════════════════
+var s4 = { picks: {} };   // product -> { terminal, account }
+
+function goToStep4() {
+  if (!s3.truck) {
+    var t = document.getElementById('successToast');
+    t.textContent = '⚠ Pick a truck before sourcing the load';
+    t.style.background = '#3a2a16';
+    t.style.borderColor = 'rgba(255,147,30,0.35)';
+    t.style.color = '#ff931e';
+    t.style.display = 'block';
+    setTimeout(function(){ t.style.display = 'none'; }, 2600);
+    return;
+  }
+
+  document.getElementById('scrim3').style.display = 'none';
+  document.getElementById('scrim4').style.display = 'flex';
+
+  var cust = selectedCustomer || { name:'Morris PLC', erpId:'112' };
+  document.getElementById('s4CustomerName').textContent = cust.name;
+
+  // Only products that actually made it into a compartment need sourcing
+  var loaded = {};
+  s3.assignments.forEach(function(a) {
+    if (a.product && a.qty > 0) loaded[a.product] = (loaded[a.product] || 0) + a.qty;
+  });
+  s4.lines = Object.keys(loaded).map(function(n){ return { name:n, qty:loaded[n] }; });
+
+  // Default every product to its cheapest terminal
+  s4.lines.forEach(function(l) {
+    if (s4.picks[l.name]) return;
+    var best = cheapestTerminal(l.name);
+    s4.picks[l.name] = { terminal:best, account:TERMINALS[best].accounts[0] };
+  });
+
+  var drvSel = document.getElementById('s3DriverSel');
+  var drv = DRIVERS[drvSel.value];
+  var totalGal = s4.lines.reduce(function(s,l){ return s+l.qty; },0);
+  document.getElementById('s4LoadLine').textContent =
+    s3.truck + ' · ' + TRUCKS[s3.truck].type + (drv ? ' · ' + drv.name : '');
+  document.getElementById('s4LoadSub').textContent =
+    totalGal.toLocaleString() + ' gal across ' + s3.assignments.filter(function(a){return a.qty>0;}).length + ' compartments';
+
+  renderBestBuy();
+}
+
+function cheapestTerminal(prod) {
+  var r = RACK[prod];
+  if (!r) return Object.keys(TERMINALS)[0];
+  return Object.keys(r).sort(function(a,b){ return r[a] - r[b]; })[0];
+}
+
+function renderBestBuy() {
+  var html = s4.lines.map(function(l) {
+    var col = PROD_COLORS[l.name] || '#9ba3af';
+    var rack = RACK[l.name] || {};
+    var names = Object.keys(TERMINALS);
+    var best = cheapestTerminal(l.name);
+    var bestPrice = rack[best];
+    var pick = s4.picks[l.name];
+
+    var rows = names.map(function(t) {
+      var price = rack[t];
+      var term = TERMINALS[t];
+      var isPick = pick.terminal === t;
+      var delta = price - bestPrice;
+      var deltaHtml = delta === 0
+        ? '<span style="color:#00c765;">best</span>'
+        : '<span style="color:#797a7d;">+$' + delta.toFixed(3) + '</span>';
+      var acctOpts = term.accounts.map(function(a) {
+        return '<option value="'+a+'"'+(isPick && pick.account===a ? ' selected':'')+'>'+a+'</option>';
+      }).join('');
+
+      return '<tr class="'+(isPick?'picked':'')+'" onclick="pickTerminal(\''+l.name+'\',\''+t+'\')" style="cursor:pointer;">'+
+        '<td class="bb-radio-cell"><div class="bb-radio'+(isPick?' on':'')+'"></div></td>'+
+        '<td class="bb-cell">'+t+'<div class="bb-cell-sub">'+term.dist+'</div></td>'+
+        '<td class="bb-cell">'+term.supplier+'</td>'+
+        '<td onclick="event.stopPropagation();"><select class="bb-acct" onchange="pickAccount(\''+l.name+'\',\''+t+'\',this.value)"'+(isPick?'':' disabled style="opacity:0.4;"')+'>'+acctOpts+'</select></td>'+
+        '<td class="bb-price'+(delta===0?' bb-price-best':'')+'">$'+price.toFixed(3)+'</td>'+
+        '<td class="bb-delta">'+deltaHtml+'</td>'+
+        '<td class="bb-price">$'+(price*l.qty).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+      '</tr>';
+    }).join('');
+
+    var onBest = pick.terminal === best;
+
+    return '<div class="bb-prod-block">'+
+      '<div class="bb-prod-hdr">'+
+        '<span class="prod-dot" style="background:'+col+';"></span>'+
+        '<span class="bb-prod-name">'+l.name+'</span>'+
+        '<span class="bb-prod-gal">'+l.qty.toLocaleString()+' gal to load</span>'+
+        '<span class="bb-prod-best">'+(onBest ? '✓ cheapest source' : 'not the cheapest source')+'</span>'+
+      '</div>'+
+      '<table class="bb-tbl"><thead><tr>'+
+        '<th></th><th>Terminal</th><th>Supplier</th><th style="width:150px;">Loading account</th>'+
+        '<th style="width:88px;text-align:right;">$/gal</th>'+
+        '<th style="width:74px;text-align:right;">vs best</th>'+
+        '<th style="width:112px;text-align:right;">Line cost</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>'+
+    '</div>';
+  }).join('');
+
+  document.getElementById('s4Blocks').innerHTML = html ||
+    '<div style="padding:20px;text-align:center;font-size:12px;color:#4b5563;">Nothing is loaded into a compartment yet</div>';
+
+  // Totals
+  var total = 0, bestTotal = 0;
+  s4.lines.forEach(function(l) {
+    var rack = RACK[l.name] || {};
+    total     += (rack[s4.picks[l.name].terminal] || 0) * l.qty;
+    bestTotal += (rack[cheapestTerminal(l.name)]  || 0) * l.qty;
+  });
+  document.getElementById('s4Total').textContent =
+    '$' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  var over = total - bestTotal;
+  var saving = document.getElementById('s4Saving');
+  saving.textContent = over > 0.005
+    ? '$' + over.toFixed(2) + ' above the cheapest sourcing'
+    : 'every product on its cheapest source';
+  saving.style.color = over > 0.005 ? '#ff931e' : '#00c765';
+
+  // The cheapest price per product can sit at different terminals, which costs
+  // the driver a second stop. Worth saying out loud before the order is created.
+  var stops = {};
+  s4.lines.forEach(function(l){ stops[s4.picks[l.name].terminal] = true; });
+  var names = Object.keys(stops);
+  var note = document.getElementById('s4Stops');
+  if (names.length > 1) {
+    note.style.display = 'flex';
+    note.innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+      'This load picks up at ' + names.length + ' terminals — ' + names.join(' and ') +
+      '. Put everything on one terminal to save the extra stop.';
+  } else {
+    note.style.display = 'none';
+  }
+}
+
+function pickTerminal(prod, term) {
+  s4.picks[prod] = { terminal:term, account:TERMINALS[term].accounts[0] };
+  renderBestBuy();
+}
+function pickAccount(prod, term, acct) {
+  s4.picks[prod] = { terminal:term, account:acct };
+  renderBestBuy();
+}
+
+function goBackToStep3() {
+  document.getElementById('scrim4').style.display = 'none';
+  document.getElementById('scrim3').style.display = 'flex';
+}
+
+// Creates the delivery order and its load order together
+function createOrderAndLoad() {
+  document.getElementById('scrim4').style.display = 'none';
+  var toast = document.getElementById('successToast');
+  toast.textContent = '✓ ' + _s3DoNum + ' created with its load order';
+  toast.style.background = '#1a3a28';
+  toast.style.borderColor = 'rgba(0,199,101,0.3)';
+  toast.style.color = '#00c765';
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.display = 'none'; }, 3000);
 }
 
 // ── Truck selection ───────────────────────────────────────
