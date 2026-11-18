@@ -304,6 +304,39 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .comment-box{margin:0 14px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:#1d1f23;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 .comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
 .comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
+
+/* ── Step 3 / Load Order wizard step ─────────────────────── */
+#step3{z-index:20;width:980px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
+.s3-body{display:flex;flex:1;overflow:hidden;}
+.s3-main{flex:1;padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);}
+.s3-main::-webkit-scrollbar{width:5px;}
+.s3-main::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+/* Assignment table */
+.assign-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.assign-tbl th{background:#1d1f23;padding:6px 10px;text-align:left;font-size:10px;font-weight:500;color:#9ba3af;letter-spacing:0.3px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.assign-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.07);height:38px;vertical-align:middle;}
+.assign-tbl tr:last-child td{border-bottom:none;}
+.assign-tbl .a-lbl{padding:0 10px;font-size:11px;font-weight:600;color:#9ba3af;}
+.assign-tbl .a-cap{padding:0 10px;font-size:11px;color:#6b7280;}
+.assign-tbl .a-status{padding:0 10px;font-size:10px;white-space:nowrap;}
+
+/* Warning / info banners */
+.warn-banner{margin-top:8px;padding:8px 12px;border-radius:4px;font-size:11px;line-height:1.6;display:flex;flex-direction:column;gap:3px;}
+.warn-banner.overfill{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);}
+.warn-banner.partial{background:rgba(234,179,8,0.07);border:1px solid rgba(234,179,8,0.2);}
+.warn-banner.ok{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);}
+.warn-line-red{color:#ef4444;}
+.warn-line-amber{color:#eab308;}
+.warn-line-green{color:#4ade80;}
+
+/* Cap bar in step 3 */
+.s3-cap-bar-wrap{margin-bottom:8px;padding:8px 12px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;}
+.s3-cap-bar{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-top:6px;}
+.s3-cap-bar-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+
+/* Prod color dot */
+.prod-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -350,6 +383,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         <div class="step-node pending">
           <div class="step-num">2</div>
           <span class="step-label">Create Order</span>
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-node pending">
+          <div class="step-num">3</div>
+          <span class="step-label">Load Order</span>
         </div>
       </div>
 
@@ -444,6 +482,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <div class="step-node active" style="gap:5px;">
             <div class="step-num">2</div>
             <span class="step-label" style="font-size:10px;">Create Order</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node pending" style="gap:5px;">
+            <div class="step-num">3</div>
+            <span class="step-label" style="font-size:10px;">Load Order</span>
           </div>
         </div>
         <button class="modal-close" onclick="closeAll()">×</button>
@@ -640,60 +683,68 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     LOAD ORDER CREATION SCREEN (shown after Create Order)
+     STEP 3: Load Order
      ═══════════════════════════════════════════════════════════ -->
-<div id="scrimLO" class="scrim" style="display:none;align-items:flex-start;">
-  <div class="modal" id="loModal">
+<div class="scrim" id="scrim3" style="display:none;align-items:flex-start;padding:40px 0;">
+  <div id="step3">
 
-    <!-- Modal header -->
-    <div class="modal-header">
-      <div class="mhdr-left">
-        <span class="modal-title">New Load Order</span>
-        <span style="font-size:11px;color:#6b7280;">·</span>
-        <span style="font-size:11px;color:#9ba3af;" id="loOrderRef">Morris PLC</span>
+    <!-- Header -->
+    <div class="co-hdr">
+      <div class="co-breadcrumb">
+        <span>Create Order</span>
+        <span class="co-breadcrumb-sep">›</span>
+        <span class="co-breadcrumb-cust" id="s3CustomerName">Morris PLC</span>
       </div>
-      <div class="mhdr-actions">
-        <button class="btn-mhdr">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          3PL
-        </button>
-        <button class="btn-mhdr">Export</button>
-        <button class="btn-mhdr btn-mhdr-primary">Assign Driver</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="step-trail" style="margin:0;">
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Customer</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Create Order</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node active" style="gap:5px;">
+            <div class="step-num">3</div>
+            <span class="step-label" style="font-size:10px;">Load Order</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeAll()">×</button>
       </div>
-      <button class="modal-close" onclick="closeAll()">×</button>
     </div>
 
-    <!-- Tags bar -->
-    <div class="tag-banner">
-      <span>Tags: <em style="color:#6b7280;">None</em></span>
-      <button class="btn-add-tag">+ Add Tag</button>
+    <!-- Customer info bar -->
+    <div style="padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:4px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        </div>
+        <div>
+          <div id="s3CustomerFull" style="font-size:13px;font-weight:600;color:#fff;">Morris PLC – 112</div>
+          <div id="s3CustomerAddr" style="font-size:11px;color:#6b7280;">Denver, CO, USA</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Customer row -->
-    <div class="customer-row">
-      <span class="badge-new">New</span>
-      <span class="customer-name" id="loCustomerName">Morris PLC · 112 · Denver, CO, USA</span>
-      <button style="padding:5px 10px;border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#ccc;font-weight:500;">View Profile</button>
-    </div>
+    <!-- 2-col body -->
+    <div class="s3-body">
 
-    <!-- Main 2-col body -->
-    <div class="modal-body">
+      <!-- Left main -->
+      <div class="s3-main">
 
-      <!-- Left: main content -->
-      <div class="main-content">
-
-        <!-- Delivery Orders section -->
-        <div class="do-section">
+        <!-- Delivery Orders -->
+        <div class="do-section" style="margin-bottom:12px;">
           <div class="do-hdr">
             <div class="do-title-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
               Delivery Orders
-              <span class="do-count" id="loDoCount">1</span>
+              <span class="do-count" id="s3DoCount">1</span>
             </div>
           </div>
-          <div class="do-list" id="loDoList">
-            <!-- filled by JS on createOrder() -->
-          </div>
+          <div class="do-list" id="s3DoList"><!-- filled by JS --></div>
         </div>
 
         <!-- Load Order section -->
@@ -707,7 +758,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           </div>
           <div class="lo-body">
 
-            <!-- Shift -->
+            <!-- Shift card -->
             <div class="shift-card">
               <div class="shift-top">
                 <div class="shift-icon">
@@ -728,117 +779,87 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
               </div>
             </div>
 
-            <!-- Driver + Equipment row -->
-            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:2px;">
-              <div class="inp-lbl">Driver <span class="inp-req">*</span></div>
-            </div>
-            <div class="driver-shift-row">
-              <div class="driver-col">
-                <select class="inp-sel">
+            <!-- Driver + Truck -->
+            <div class="inp3" style="grid-template-columns:1fr 1fr;">
+              <div class="inp-grp">
+                <label class="inp-lbl">Driver <span class="inp-req">*</span></label>
+                <select class="inp-sel" id="s3DriverSel">
                   <option value="">Select Driver…</option>
-                  <option>Alex Trebek</option>
-                  <option>Ravi Patel</option>
-                  <option>Omar Khalid</option>
-                  <option>Priya Sharma</option>
+                  <option value="alex">Alex Trebek — Day Shift</option>
+                  <option value="ravi">Ravi Patel — Day Shift</option>
+                  <option value="omar">Omar Khalid — Night Shift</option>
+                  <option value="priya">Priya Sharma — Day Shift</option>
+                  <option value="carlos">Carlos Schrader — Afternoon</option>
                 </select>
               </div>
-              <div class="equip-unit">
-                <div class="equip-unit-top">
-                  <div class="equip-unit-hdr">
-                    <div class="equip-icon">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                    </div>
-                    <div>
-                      <div class="equip-id">Select Truck</div>
-                      <div class="equip-model">Tanker / Bobtail</div>
-                    </div>
-                    <div class="equip-unit-summ">
-                      <div class="cap-available">— gal free</div>
-                      <div class="cap-total">— gal total</div>
-                    </div>
-                  </div>
-                  <div>
-                    <select class="inp-sel" style="margin-bottom:6px;">
-                      <option value="">Select Truck…</option>
-                      <option>Hi-12 · Bobtail · 4,000 gal</option>
-                      <option>HV-7 · Tanker · 7,500 gal</option>
-                      <option>TR-22 · Bobtail · 3,500 gal</option>
-                    </select>
-                    <div class="cap-bar-row">
-                      <div class="cap-bar"><div class="cap-bar-committed" style="width:0%"></div></div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-top:3px;">
-                      <div class="cap-committed"><span>0 gal</span> committed</div>
-                      <div class="cap-available">— gal free</div>
-                    </div>
-                  </div>
+              <div class="inp-grp">
+                <label class="inp-lbl">Truck <span class="inp-req">*</span></label>
+                <select class="inp-sel" id="s3TruckSel" onchange="onTruckChange(this)">
+                  <option value="">Select Truck…</option>
+                  <option value="Hi-12">Hi-12 · Bobtail · 5,000 gal (3 comps)</option>
+                  <option value="HV-7">HV-7 · Tanker · 9,000 gal (5 comps)</option>
+                  <option value="TR-22">TR-22 · Bobtail · 3,500 gal (2 comps)</option>
+                  <option value="PB-9">PB-9 · Tanker · 6,000 gal (4 comps)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Truck capacity bar (shown after truck selected) -->
+            <div id="s3TruckCapRow" style="display:none;" class="s3-cap-bar-wrap"></div>
+
+            <!-- Compartment visual + assignment (shown after truck selected) -->
+            <div id="s3CompSection" style="display:none;">
+
+              <!-- Visual compartment plan -->
+              <div style="margin-top:4px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <div class="inp-lbl">Compartment Plan</div>
+                  <button class="btn-link" onclick="autoAssign()" style="font-size:11px;">↺ Auto-assign</button>
                 </div>
-                <div class="equip-unit-sep"></div>
-                <div class="equip-cplan-sec">
-                  <div class="equip-cplan-lbl">Compartment Plan</div>
-                  <div class="cplan-wrap">
-                    <div class="cplan-row">
-                      <div class="comp" style="flex:1.2;">
-                        <div class="comp-cap">3,000 gal</div>
-                        <div class="comp-body"><div class="comp-striped"></div></div>
-                        <div class="comp-foot"><span class="comp-num">C1</span><span class="comp-prod comp-prod-empty">— empty</span></div>
-                      </div>
-                      <div class="comp" style="flex:0.8;">
-                        <div class="comp-cap">1,000 gal</div>
-                        <div class="comp-body"><div class="comp-striped"></div></div>
-                        <div class="comp-foot"><span class="comp-num">C2</span><span class="comp-prod comp-prod-empty">— empty</span></div>
-                      </div>
-                      <div class="comp" style="flex:0.8;">
-                        <div class="comp-cap">1,000 gal</div>
-                        <div class="comp-body"><div class="comp-striped"></div></div>
-                        <div class="comp-foot"><span class="comp-num">C3</span><span class="comp-prod comp-prod-empty">— empty</span></div>
-                      </div>
-                    </div>
-                  </div>
+                <div class="cplan-row" id="s3CplanRow" style="height:96px;">
+                  <!-- filled by JS -->
                 </div>
               </div>
-              <button class="add-trailer-btn">+ Trailer</button>
-            </div>
 
-            <!-- Sourcing / product assignment -->
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <div class="inp-lbl">Product Sourcing</div>
-              <table class="lo-tbl" id="loSrcTbl">
-                <thead>
-                  <tr>
-                    <th class="lo-chkcol"></th>
-                    <th class="lo-prodcol">Product</th>
-                    <th>Qty (gal)</th>
-                    <th>Source</th>
-                  </tr>
-                </thead>
-                <tbody id="loSrcBody">
-                  <!-- filled by JS -->
-                </tbody>
-              </table>
-            </div>
+              <!-- Assignment table -->
+              <div style="margin-top:12px;">
+                <div class="inp-lbl" style="margin-bottom:6px;">Compartment Assignment</div>
+                <table class="assign-tbl">
+                  <thead>
+                    <tr>
+                      <th style="width:52px;">Comp</th>
+                      <th style="width:76px;">Cap (gal)</th>
+                      <th>Product</th>
+                      <th style="width:110px;">Qty (gal)</th>
+                      <th style="width:100px;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="s3AssignBody"><!-- filled by JS --></tbody>
+                </table>
 
-            <!-- Actions -->
-            <div class="lo-actions">
-              <button class="btn-cancel" onclick="closeAll()">Discard</button>
-              <button class="btn-save">Save Load Order</button>
-            </div>
+                <!-- Warning/status banner -->
+                <div id="s3WarnBanner" class="warn-banner" style="display:none;"></div>
+              </div>
+
+              <!-- Add Trailer -->
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+                <button class="add-trailer-btn" onclick="addTrailer()">+ Add Trailer</button>
+                <span id="s3TrailerHint" style="font-size:11px;color:#6b7280;display:none;">Trailer added — assign products to trailer compartments below</span>
+              </div>
+
+            </div><!-- /s3CompSection -->
 
           </div><!-- /lo-body -->
         </div><!-- /lo-section -->
 
-      </div><!-- /main-content -->
+      </div><!-- /s3-main -->
 
       <!-- Right rail -->
-      <div class="right-rail">
-        <!-- Running gallons -->
+      <div class="right-rail" style="width:280px;flex-shrink:0;">
         <div class="rr-card">
           <div class="rr-card-hdr" onclick="toggleRR(this)">Running Gallons<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
-          <div id="rrGallonsBody">
-            <!-- filled by JS -->
-          </div>
+          <div id="s3GallonsBody"></div>
         </div>
-        <!-- Billing -->
         <div class="rr-card">
           <div class="rr-card-hdr" onclick="toggleRR(this)">Billing<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
           <div>
@@ -846,7 +867,6 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <div class="rr-row"><span class="rr-lbl">LOS</span><span class="rr-val" style="color:#6b7280;">—</span></div>
           </div>
         </div>
-        <!-- Notes -->
         <div class="rr-card">
           <div class="rr-card-hdr" onclick="toggleRR(this)">Notes<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
           <div>
@@ -854,13 +874,12 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <div class="rr-note-grp"><div class="rr-note-lbl">Driver</div><div class="rr-note-empty">No driver notes</div></div>
           </div>
         </div>
-        <!-- Activity -->
         <div class="rr-card">
           <div class="rr-card-hdr" onclick="toggleRR(this)">Activity<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
           <div>
             <div class="rr-activity">
               <div class="rrail-ts">Created</div>
-              <div class="rrail-time" id="loCreatedTime">Just now</div>
+              <div class="rrail-time" id="s3CreatedTime">Just now</div>
             </div>
             <div class="comment-box">
               <textarea class="comment-input" rows="2" placeholder="Add a comment…"></textarea>
@@ -873,14 +892,45 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
       </div><!-- /right-rail -->
 
-    </div><!-- /modal-body -->
-  </div><!-- /modal -->
-</div>
+    </div><!-- /s3-body -->
+
+    <!-- Footer -->
+    <div class="co-footer">
+      <div class="co-footer-left">
+        <button class="btn-secondary" onclick="goBackToStep2()">← Back</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" onclick="closeAll()">Discard</button>
+        <button class="btn-save" onclick="saveLoadOrder()">Save Load Order</button>
+      </div>
+    </div>
+
+  </div><!-- /step3 -->
+</div><!-- /scrim3 -->
 
 <!-- Success toast -->
 <div id="successToast">Order created — opening Load Order</div>
 
 <script>
+// ── Product colors (from shipto_map palette) ──────────────
+var PROD_COLORS = {
+  'UNL87':      '#c4a319',
+  'CLR DSL':    '#2f9be0',
+  'HO DSL':     '#e0483f',
+  'UNL93':      '#8a6cff',
+  'Diesel DEF': '#46cf9c',
+  'Biodiesel':  '#7bd14a',
+  'Kerosene':   '#c8ccd2',
+};
+
+// ── Truck fleet data ──────────────────────────────────────
+var TRUCKS = {
+  'Hi-12': { type:'Bobtail', totalCap:5000, comps:[{cap:2000},{cap:2000},{cap:1000}] },
+  'HV-7':  { type:'Tanker',  totalCap:9000, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
+  'TR-22': { type:'Bobtail', totalCap:3500, comps:[{cap:2000},{cap:1500}] },
+  'PB-9':  { type:'Tanker',  totalCap:6000, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+};
+
 // ── Customer / Ship To data ───────────────────────────────
 var SHIP_TOS = {
   morris:   ['Morris Group – Upstairs Hub', 'Morris Group – Downtown Terminal', 'Morris Group – East Depot'],
@@ -891,7 +941,6 @@ var SHIP_TOS = {
   sunbelt:  ['Sunbelt PC268 – Niceville FL', 'Sunbelt Ponte Verde Blvd'],
   acme2:    ['Clearwater Utilities – Portland', 'Clearwater Utilities – Salem'],
 };
-
 var CUST_DATA = {
   morris:   { name: 'Morris PLC',               erpId: '112',      addr: 'Denver, CO, USA' },
   acme:     { name: 'Acme Fuel Co',             erpId: '434',      addr: 'Cupertino, CA, USA' },
@@ -904,50 +953,32 @@ var CUST_DATA = {
 
 var selectedCustomer = null;
 
+// ── Step 3 state ──────────────────────────────────────────
+var s3 = { products: [], truck: null, assignments: [] };
+var _s3DoNum = null;
+
+// ── Customer dropdown ─────────────────────────────────────
 function onCustomerChange(sel) {
   var val = sel.value;
   var stSel = document.getElementById('shipToSel');
   var nextBtn = document.getElementById('nextBtn');
-
-  // Reset Ship To
   stSel.innerHTML = '<option value="">Select Ship To…</option>';
   stSel.disabled = true;
   selectedCustomer = null;
-
-  if (!val) {
-    nextBtn.disabled = true;
-    nextBtn.style.opacity = '0.4';
-    nextBtn.style.cursor = 'not-allowed';
-    return;
-  }
-
+  if (!val) { nextBtn.disabled = true; nextBtn.style.opacity = '0.4'; nextBtn.style.cursor = 'not-allowed'; return; }
   var key = val.split('|')[0];
   var cust = CUST_DATA[key];
   if (!cust) return;
-
   selectedCustomer = cust;
-
-  // Populate Ship To
-  var opts = SHIP_TOS[key] || [];
-  opts.forEach(function(o) {
-    var opt = document.createElement('option');
-    opt.value = o;
-    opt.textContent = o;
-    stSel.appendChild(opt);
+  (SHIP_TOS[key] || []).forEach(function(o) {
+    var opt = document.createElement('option'); opt.value = o; opt.textContent = o; stSel.appendChild(opt);
   });
   stSel.disabled = false;
-
-  // Enable Next
-  nextBtn.disabled = false;
-  nextBtn.style.opacity = '1';
-  nextBtn.style.cursor = 'pointer';
+  nextBtn.disabled = false; nextBtn.style.opacity = '1'; nextBtn.style.cursor = 'pointer';
 }
+function onShipToChange() {}
 
-function onShipToChange() {
-  // Ship To selection is optional — Next already enabled after customer pick
-}
-
-// ── Step navigation ───────────────────────────────────────
+// ── Step 1 → 2 ───────────────────────────────────────────
 function goToStep2() {
   if (!selectedCustomer) return;
   var stSel = document.getElementById('shipToSel');
@@ -958,60 +989,13 @@ function goToStep2() {
   document.getElementById('coCustomerFull').textContent = selectedCustomer.name + ' – ' + selectedCustomer.erpId;
   document.getElementById('coCustomerAddr').textContent = (shipToText ? shipToText + ' · ' : '') + selectedCustomer.addr;
 }
-
 function goBackToStep1() {
   document.getElementById('scrim2').style.display = 'none';
   document.getElementById('scrim1').style.display = 'flex';
 }
 
-function closeAll() {
-  document.getElementById('scrim1').style.display = 'none';
-  document.getElementById('scrim2').style.display = 'none';
-  document.getElementById('scrimLO').style.display = 'none';
-}
-
-// ── Bulk delivery table ───────────────────────────────────
-function addBdRow() {
-  var tbody = document.getElementById('bdBody');
-  var tr = document.createElement('tr');
-  tr.innerHTML = '<td><select class="bd-sel"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
-  tbody.appendChild(tr);
-}
-function delBdRow(btn) {
-  btn.closest('tr').remove();
-}
-
-// ── Tab switch ────────────────────────────────────────────
-function switchTab(btn) {
-  btn.closest('.tab-row').querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-}
-
-// ── Expandable ────────────────────────────────────────────
-function toggleExpand(hdrId) {
-  var hdr = document.getElementById(hdrId);
-  hdr.classList.toggle('open');
-}
-
-// ── Checkbox ──────────────────────────────────────────────
-function toggleCB(label) {
-  var box = label.querySelector('.cb-box');
-  box.classList.toggle('checked');
-  if (box.classList.contains('checked')) {
-    box.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-  } else {
-    box.innerHTML = '';
-  }
-}
-
-// ── Right rail collapse ───────────────────────────────────
-function toggleRR(hdr) {
-  hdr.closest('.rr-card').classList.toggle('collapsed');
-}
-
-// ── Create Order → Load Order ─────────────────────────────
+// ── Step 2 → 3 ───────────────────────────────────────────
 function createOrder() {
-  // Collect products from bulk delivery table
   var rows = document.querySelectorAll('#bdBody tr');
   var products = [];
   rows.forEach(function(tr) {
@@ -1023,71 +1007,298 @@ function createOrder() {
   });
   if (products.length === 0) products = [{ name: 'UNL87', qty: 3000 }, { name: 'CLR DSL', qty: 1500 }];
 
-  // Show toast
-  var toast = document.getElementById('successToast');
-  toast.style.display = 'block';
-  setTimeout(function() { toast.style.display = 'none'; }, 2000);
+  s3.products = products;
+  _s3DoNum = 'D-' + (5157060 + Math.floor(Math.random() * 100));
 
-  // Transition to Load Order screen
-  setTimeout(function() {
-    var cust = selectedCustomer || { name: 'Morris PLC', erpId: '112', addr: 'Denver, CO, USA, Colorado' };
-    document.getElementById('scrim2').style.display = 'none';
-    document.getElementById('scrimLO').style.display = 'flex';
+  document.getElementById('scrim2').style.display = 'none';
+  document.getElementById('scrim3').style.display = 'flex';
 
-    // Update customer info
-    document.getElementById('loOrderRef').textContent = cust.name;
-    document.getElementById('loCustomerName').textContent = cust.name + ' · ' + cust.erpId + ' · ' + cust.addr;
+  var cust = selectedCustomer || { name: 'Morris PLC', erpId: '112', addr: 'Denver, CO, USA' };
+  document.getElementById('s3CustomerName').textContent = cust.name;
+  document.getElementById('s3CustomerFull').textContent = cust.name + ' – ' + cust.erpId;
+  document.getElementById('s3CustomerAddr').textContent = cust.addr;
 
-    // Build DO row
-    var doNum = 'D-' + (5157060 + Math.floor(Math.random() * 100));
-    var planDate = document.querySelector('#step2 input[placeholder="MM/DD/YYYY"]')?.value || '11/18/2026';
-    var planTime = document.querySelector('#step2 input[placeholder="HH:mm"]')?.value || '06:00';
-    var shipToVal = document.getElementById('shipToSel')?.value || '';
-    var shipToText = shipToVal
-      ? document.getElementById('shipToSel').options[document.getElementById('shipToSel').selectedIndex].text
-      : (cust.name + ' · ' + cust.addr.split(',')[0]);
+  buildS3DoList(products, cust);
+  buildS3Gallons(products);
 
-    var chipsHtml = products.map(function(p) {
-      return '<span class="del-prod-chip">' + p.name + ' <span class="del-prod-qty">' + p.qty.toLocaleString() + ' gal</span></span>';
-    }).join('');
+  // Reset truck picker
+  document.getElementById('s3TruckSel').value = '';
+  document.getElementById('s3DriverSel').value = '';
+  document.getElementById('s3TruckCapRow').style.display = 'none';
+  document.getElementById('s3CompSection').style.display = 'none';
+  s3.truck = null;
+  s3.assignments = [];
 
-    document.getElementById('loDoList').innerHTML =
-      '<div class="do-row-static">' +
-        '<div class="do-row-meta">' +
-          '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
-          '<span class="do-num">' + doNum + '</span>' +
-          '<span class="do-sep">·</span>' +
-          '<span class="do-shipto">' + shipToText + '</span>' +
-          '<span class="do-time">' + planDate + ' ' + planTime + '</span>' +
-        '</div>' +
-        '<div class="do-row-prods">' + chipsHtml + '</div>' +
-      '</div>';
-
-    document.getElementById('loDoCount').textContent = '1';
-
-    // Build sourcing rows
-    var srcHtml = products.map(function(p) {
-      return '<tr>' +
-        '<td class="lo-chkcol"><input type="checkbox" checked></td>' +
-        '<td class="lo-prodcol">' + p.name + '</td>' +
-        '<td><input style="width:100%;height:38px;padding:0 10px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.07);color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;" type="number" value="' + p.qty + '"></td>' +
-        '<td><select class="lo-sel"><option value="">Select terminal…</option><option>Denver Terminal</option><option>Phoenix Hub</option><option>Florida Hub</option></select></td>' +
-      '</tr>';
-    }).join('');
-    document.getElementById('loSrcBody').innerHTML = srcHtml;
-
-    // Build running gallons
-    var rgHtml = products.map(function(p) {
-      var pct = Math.round((p.qty / 4500) * 100);
-      return '<div class="rr-row"><span class="rr-lbl">' + p.name + '</span><span class="rr-val" style="color:#818cf8;">' + p.qty.toLocaleString() + ' gal</span></div>';
-    }).join('');
-    document.getElementById('rrGallonsBody').innerHTML = rgHtml;
-
-    // Set created time
-    var now = new Date();
-    document.getElementById('loCreatedTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' today';
-  }, 400);
+  var now = new Date();
+  document.getElementById('s3CreatedTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' today';
 }
+
+function buildS3DoList(products, cust) {
+  var stSel = document.getElementById('shipToSel');
+  var shipTo = stSel && stSel.value
+    ? stSel.options[stSel.selectedIndex].text
+    : cust.name + ' · ' + cust.addr.split(',')[0];
+  var planDate = document.querySelector('#step2 input[placeholder="MM/DD/YYYY"]').value || '11/18/2026';
+  var planTime = document.querySelector('#step2 input[placeholder="HH:mm"]').value || '06:00';
+  var chipsHtml = products.map(function(p) {
+    var col = PROD_COLORS[p.name] || '#9ba3af';
+    return '<span class="del-prod-chip"><span class="prod-dot" style="background:' + col + ';margin-right:3px;"></span>' + p.name + ' <span class="del-prod-qty">' + p.qty.toLocaleString() + ' gal</span></span>';
+  }).join('');
+  document.getElementById('s3DoList').innerHTML =
+    '<div class="do-row-static">' +
+      '<div class="do-row-meta">' +
+        '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
+        '<span class="do-num">' + _s3DoNum + '</span>' +
+        '<span class="do-sep">·</span>' +
+        '<span class="do-shipto">' + shipTo + '</span>' +
+        '<span class="do-time">' + planDate + ' ' + planTime + '</span>' +
+      '</div>' +
+      '<div class="do-row-prods">' + chipsHtml + '</div>' +
+    '</div>';
+  document.getElementById('s3DoCount').textContent = '1';
+}
+
+function buildS3Gallons(products) {
+  var total = products.reduce(function(s,p) { return s + p.qty; }, 0);
+  var html = products.map(function(p) {
+    var col = PROD_COLORS[p.name] || '#9ba3af';
+    return '<div class="rr-row"><span class="rr-lbl" style="display:flex;align-items:center;gap:5px;"><span class="prod-dot" style="background:' + col + ';"></span>' + p.name + '</span><span class="rr-val" style="color:#818cf8;">' + p.qty.toLocaleString() + ' gal</span></div>';
+  }).join('');
+  html += '<div class="rr-row" style="border-top:1px solid rgba(255,255,255,0.07);"><span class="rr-lbl" style="font-weight:600;">Total</span><span class="rr-val">' + total.toLocaleString() + ' gal</span></div>';
+  document.getElementById('s3GallonsBody').innerHTML = html;
+}
+
+// ── Step 3 → 2 ───────────────────────────────────────────
+function goBackToStep2() {
+  document.getElementById('scrim3').style.display = 'none';
+  document.getElementById('scrim2').style.display = 'flex';
+}
+
+function saveLoadOrder() {
+  document.getElementById('scrim3').style.display = 'none';
+  var toast = document.getElementById('successToast');
+  toast.textContent = '✓ Load order saved';
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.display = 'none'; }, 2500);
+}
+
+function closeAll() {
+  document.getElementById('scrim1').style.display = 'none';
+  document.getElementById('scrim2').style.display = 'none';
+  document.getElementById('scrim3').style.display = 'none';
+}
+
+// ── Truck selection ───────────────────────────────────────
+function onTruckChange(sel) {
+  var key = sel.value;
+  if (!key) {
+    document.getElementById('s3TruckCapRow').style.display = 'none';
+    document.getElementById('s3CompSection').style.display = 'none';
+    s3.truck = null; return;
+  }
+  var truck = TRUCKS[key];
+  if (!truck) return;
+  s3.truck = key;
+
+  // Capacity bar
+  var totalNeeded = s3.products.reduce(function(s,p) { return s + p.qty; }, 0);
+  var pct = Math.min(100, Math.round((totalNeeded / truck.totalCap) * 100));
+  var overfill = totalNeeded > truck.totalCap;
+  var barCol = overfill ? '#ef4444' : (pct > 88 ? '#eab308' : '#4ade80');
+  var capRow = document.getElementById('s3TruckCapRow');
+  capRow.style.display = 'block';
+  capRow.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">' +
+      '<span style="font-size:11px;color:#9ba3af;">' + totalNeeded.toLocaleString() + ' gal needed · ' + truck.comps.length + ' compartments</span>' +
+      '<span style="font-size:11px;font-weight:600;color:' + (overfill?'#ef4444':'#4ade80') + '">' + truck.totalCap.toLocaleString() + ' gal total</span>' +
+    '</div>' +
+    '<div class="s3-cap-bar"><div class="s3-cap-bar-fill" style="width:' + pct + '%;background:' + barCol + ';"></div></div>' +
+    (overfill ? '<div style="font-size:10px;color:#ef4444;margin-top:4px;">⚠ ' + (totalNeeded - truck.totalCap).toLocaleString() + ' gal over capacity — add a trailer</div>' : '');
+
+  document.getElementById('s3CompSection').style.display = 'block';
+
+  // Init empty assignments
+  s3.assignments = truck.comps.map(function(c) { return { product: '', qty: 0, cap: c.cap }; });
+
+  autoAssign();
+}
+
+// ── Auto-assign products to compartments ──────────────────
+function autoAssign() {
+  if (!s3.truck) return;
+  var truck = TRUCKS[s3.truck];
+
+  // Reset
+  s3.assignments = truck.comps.map(function(c) { return { product: '', qty: 0, cap: c.cap }; });
+
+  // Track remaining per product
+  var remaining = {};
+  s3.products.forEach(function(p) { remaining[p.name] = p.qty; });
+
+  // Sort products by qty descending
+  var sorted = s3.products.slice().sort(function(a,b) { return b.qty - a.qty; });
+
+  sorted.forEach(function(p) {
+    var rem = remaining[p.name];
+    if (rem <= 0) return;
+    for (var i = 0; i < s3.assignments.length && rem > 0; i++) {
+      var a = s3.assignments[i];
+      if (a.product !== '' && a.product !== p.name) continue;
+      var canFit = a.cap - a.qty;
+      if (canFit <= 0) continue;
+      var load = Math.min(canFit, rem);
+      a.product = p.name;
+      a.qty += load;
+      rem -= load;
+    }
+    remaining[p.name] = rem;
+  });
+
+  renderCompartments();
+}
+
+// ── Render visual + assignment table ─────────────────────
+function renderCompartments() {
+  if (!s3.truck) return;
+  var INNER_H = 58; // usable pixel height for fill bar (96px row - cap label ~18px - foot ~20px)
+
+  // Visual cplan
+  var cplanHtml = s3.assignments.map(function(a, i) {
+    var pct = a.qty > 0 ? (a.qty / a.cap) : 0;
+    var fillPx = Math.round(INNER_H * pct);
+    var col = PROD_COLORS[a.product] || 'transparent';
+    var hasProduct = a.product && a.qty > 0;
+    var sparePx = INNER_H - fillPx;
+
+    var bodyHtml = hasProduct
+      ? '<div style="flex:' + sparePx + ';background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.025),rgba(255,255,255,0.025) 2px,transparent 2px,transparent 7px);"></div>' +
+        '<div style="flex:' + fillPx + ';background:' + col + ';opacity:0.85;display:flex;align-items:center;justify-content:center;min-height:12px;">' +
+          '<span style="font-size:8px;font-weight:600;color:rgba(0,0,0,0.65);white-space:nowrap;overflow:hidden;max-width:90%;text-overflow:ellipsis;">' + a.qty.toLocaleString() + '</span>' +
+        '</div>'
+      : '<div class="comp-striped" style="flex:1;"></div>';
+
+    var prodLbl = hasProduct ? a.product : '— empty';
+    var prodCls = hasProduct ? 'comp-prod' : 'comp-prod comp-prod-empty';
+    var dotHtml = hasProduct ? '<span class="prod-dot" style="background:' + col + ';opacity:0.9;"></span>' : '';
+
+    return '<div class="comp" style="flex:' + (a.cap/1000) + ';">' +
+      '<div class="comp-cap">' + a.cap.toLocaleString() + ' gal</div>' +
+      '<div class="comp-body" style="flex:1;display:flex;flex-direction:column;">' + bodyHtml + '</div>' +
+      '<div class="comp-foot"><span class="comp-num">C' + (i+1) + '</span><span class="' + prodCls + '">' + dotHtml + ' ' + prodLbl + '</span></div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('s3CplanRow').innerHTML = cplanHtml;
+
+  // Assignment table
+  var prodOpts = '<option value="">— empty</option>' +
+    s3.products.map(function(p) { return '<option value="' + p.name + '">' + p.name + '</option>'; }).join('');
+
+  var tblHtml = s3.assignments.map(function(a, i) {
+    var spareAmt = a.cap - a.qty;
+    var statusHtml;
+    if (!a.product) {
+      statusHtml = '<span style="color:#4b5563;">—</span>';
+    } else if (a.qty > a.cap) {
+      statusHtml = '<span style="color:#ef4444;">⚠ Over</span>';
+    } else if (spareAmt > 0) {
+      statusHtml = '<span style="color:#eab308;">+' + spareAmt.toLocaleString() + ' spare</span>';
+    } else {
+      statusHtml = '<span style="color:#4ade80;">✓ Full</span>';
+    }
+    var col = PROD_COLORS[a.product] || '';
+    var selOpts = prodOpts.replace('value="' + a.product + '"', 'value="' + a.product + '" selected');
+    var leftBorder = col ? 'border-left:2px solid ' + col + ';' : '';
+
+    return '<tr style="' + leftBorder + '">' +
+      '<td class="a-lbl">C' + (i+1) + '</td>' +
+      '<td class="a-cap">' + a.cap.toLocaleString() + '</td>' +
+      '<td><select class="lo-sel" onchange="onAssignProd(' + i + ',this)">' + selOpts + '</select></td>' +
+      '<td><input style="width:100%;height:38px;padding:0 10px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.07);color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;" type="number" value="' + (a.qty || '') + '" min="0" max="' + a.cap + '" onchange="onAssignQty(' + i + ',this)" placeholder="0"></td>' +
+      '<td class="a-status">' + statusHtml + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('s3AssignBody').innerHTML = tblHtml;
+
+  checkWarnings();
+}
+
+function checkWarnings() {
+  var truck = TRUCKS[s3.truck];
+  var totalNeeded = s3.products.reduce(function(s,p) { return s + p.qty; }, 0);
+  var assignedByProd = {};
+  s3.assignments.forEach(function(a) {
+    if (a.product) assignedByProd[a.product] = (assignedByProd[a.product] || 0) + a.qty;
+  });
+
+  var lines = [], severity = 'ok';
+
+  if (totalNeeded > truck.totalCap) {
+    lines.push({ cls:'warn-line-red', msg:'⚠ Total needed (' + totalNeeded.toLocaleString() + ' gal) exceeds truck capacity (' + truck.totalCap.toLocaleString() + ' gal) — add a trailer' });
+    severity = 'overfill';
+  }
+
+  s3.products.forEach(function(p) {
+    var assigned = assignedByProd[p.name] || 0;
+    var unloaded = p.qty - assigned;
+    if (unloaded > 0) {
+      lines.push({ cls:'warn-line-amber', msg:'⚠ ' + unloaded.toLocaleString() + ' gal of ' + p.name + ' not assigned to any compartment' });
+      if (severity === 'ok') severity = 'partial';
+    }
+  });
+
+  if (lines.length === 0) {
+    lines.push({ cls:'warn-line-green', msg:'✓ All products fully assigned' });
+  }
+
+  var banner = document.getElementById('s3WarnBanner');
+  banner.className = 'warn-banner ' + severity;
+  banner.style.display = 'block';
+  banner.innerHTML = lines.map(function(l) { return '<div class="' + l.cls + '">' + l.msg + '</div>'; }).join('');
+}
+
+function onAssignProd(idx, sel) {
+  s3.assignments[idx].product = sel.value;
+  if (!sel.value) s3.assignments[idx].qty = 0;
+  renderCompartments();
+}
+function onAssignQty(idx, inp) {
+  s3.assignments[idx].qty = Math.min(parseInt(inp.value) || 0, s3.assignments[idx].cap);
+  renderCompartments();
+}
+
+function addTrailer() {
+  document.getElementById('s3TrailerHint').style.display = 'inline';
+}
+
+// ── Bulk delivery table ───────────────────────────────────
+function addBdRow() {
+  var tbody = document.getElementById('bdBody');
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td><select class="bd-sel"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
+  tbody.appendChild(tr);
+}
+function delBdRow(btn) { btn.closest('tr').remove(); }
+
+// ── Tab switch ────────────────────────────────────────────
+function switchTab(btn) {
+  btn.closest('.tab-row').querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// ── Expandable ────────────────────────────────────────────
+function toggleExpand(hdrId) { document.getElementById(hdrId).classList.toggle('open'); }
+
+// ── Checkbox ──────────────────────────────────────────────
+function toggleCB(label) {
+  var box = label.querySelector('.cb-box');
+  box.classList.toggle('checked');
+  box.innerHTML = box.classList.contains('checked')
+    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '';
+}
+
+// ── Right rail collapse ───────────────────────────────────
+function toggleRR(hdr) { hdr.closest('.rr-card').classList.toggle('collapsed'); }
 </script>
 
 </body>
