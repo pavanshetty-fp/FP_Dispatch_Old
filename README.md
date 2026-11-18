@@ -47,6 +47,13 @@ the width, the other dims and offers to take over, and clicking the dimmed
 column brings it forward. With no load order there is nothing to source, so the
 footer reads **Create order** and best buy drops out of the flow.
 
+## Sourcing sits on its own
+
+On the edit screen, sourcing is not inside the load order column. It is its own
+unit across the bottom, as wide as the delivery order and load order together,
+because a row of product · terminal · supplier · loading account does not fit a
+column. It stays put while those two trade width.
+
 ## Compartment planning
 
 Both `create-order.html` and `shift-planner.html` share the same rules:
