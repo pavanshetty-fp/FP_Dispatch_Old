@@ -73,6 +73,28 @@
       const q = document.querySelector('.do-prod-qty');
       q.value = 2500; q.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    step('sourcing starts as a CTA', () => {
+      if (document.getElementById('srcBody').style.display !== 'none') throw new Error('sourcing already open');
+    });
+    step('create sourcing takes the room', () => {
+      document.querySelector('.src-cta').click();
+      if (document.getElementById('loBody').dataset.split !== 'src') throw new Error('sourcing did not take focus');
+      if (!document.querySelectorAll('#srcBlocks .bb-prod-block').length) throw new Error('no product blocks');
+      if (!document.getElementById('srcTotal').textContent.trim()) throw new Error('no total');
+    });
+    step('three units trade focus', () => {
+      document.getElementById('focusDo').click();
+      if (document.getElementById('loBody').dataset.split !== 'do') throw new Error('delivery focus failed');
+      document.getElementById('focusLo').click();
+      if (document.getElementById('loBody').dataset.split !== 'lo') throw new Error('load focus failed');
+      document.getElementById('focusSrc').click();
+      if (document.getElementById('loBody').dataset.split !== 'src') throw new Error('sourcing focus failed');
+    });
+    step('whole-load terminal re-prices', () => {
+      const before = document.getElementById('srcTotal').textContent;
+      document.querySelectorAll('#srcModes .bb-mode')[3].click();
+      if (document.getElementById('srcTotal').textContent === before) throw new Error('total did not move');
+    });
   }
 
   if (out.page.startsWith('shift-planner')) {

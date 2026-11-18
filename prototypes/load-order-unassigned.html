@@ -54,8 +54,60 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .modal-body[data-split="lo"] .lo-content{flex:1 1 auto;}
 .modal-body .right-rail{flex:0 0 338px;}
 
-/* Sourcing — its own unit, as wide as the two units above it */
-.src-unit{flex-shrink:0;max-height:34%;overflow-y:auto;padding:12px 16px 14px;background:rgba(40,46,53,0.75);border-top:1px solid rgba(255,255,255,0.1);}
+/* Sourcing — its own unit, as wide as the two units above it. It starts as a
+   CTA strip; once created it can take focus like the other two, and then it
+   takes the room so the whole thing can be configured. */
+.src-unit{flex:0 0 86px;overflow-y:auto;padding:12px 16px 14px;background:rgba(40,46,53,0.75);border-top:1px solid rgba(255,255,255,0.1);transition:flex-basis .22s ease;}
+.modal-body.has-src .src-unit{flex-basis:clamp(168px,26%,260px);}
+.modal-body[data-split="src"] .lo-split{flex:0 0 168px;}
+.modal-body[data-split="src"] .src-unit{flex:1 1 auto;}
+.src-unit.dim{background:rgba(0,0,0,0.16);}
+.src-cta-wrap{height:100%;display:flex;align-items:center;justify-content:center;}
+.src-cta{display:flex;align-items:center;gap:9px;padding:11px 20px;border:1px dashed rgba(54,87,245,0.35);border-radius:6px;background:rgba(54,87,245,0.05);color:#34c3ff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.src-cta:hover{background:rgba(54,87,245,0.14);border-color:rgba(54,87,245,0.6);}
+.src-cta-sub{font-weight:400;color:#6b7280;font-size:10.5px;letter-spacing:0;}
+/* ── Step 4: Best buy ─────────────────────────────────────── */
+.bb-body{padding:16px 20px;overflow-y:auto;flex:1;}
+.bb-body::-webkit-scrollbar{width:5px;}
+.bb-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.bb-prod-block{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.bb-prod-hdr{background:rgba(255,255,255,0.03);padding:9px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.bb-prod-name{font-size:12.5px;font-weight:600;color:#e9ebf0;}
+.bb-prod-gal{font-size:11px;color:#9ba3af;}
+.bb-prod-best{margin-left:auto;font-size:10px;color:#00c765;font-weight:600;}
+.bb-tbl{width:100%;border-collapse:collapse;background:#262930;}
+.bb-tbl th{background:#1f2226;padding:5px 10px;text-align:left;font-size:9.5px;font-weight:700;color:#797a7d;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.bb-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.06);height:38px;vertical-align:middle;}
+.bb-tbl tr:last-child td{border-bottom:none;}
+.bb-tbl tr.picked{background:rgba(0,199,101,0.06);}
+.bb-radio-cell{width:36px;padding:0 0 0 11px !important;}
+.bb-radio{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bb-radio.on{border-color:#00c765;}
+.bb-radio.on::after{content:'';width:7px;height:7px;border-radius:50%;background:#00c765;}
+.bb-cell{padding:0 10px;font-size:11.5px;color:#e9ebf0;}
+.bb-cell-sub{font-size:10px;color:#6b7280;}
+.bb-price{padding:0 10px;font-size:12px;font-weight:600;color:#e9ebf0;text-align:right;white-space:nowrap;}
+.bb-price-best{color:#00c765;}
+.bb-delta{padding:0 10px;font-size:10.5px;text-align:right;white-space:nowrap;}
+.bb-acct{width:100%;height:38px;padding:0 20px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.06);font-family:inherit;font-size:11.5px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+/* Whole-load sourcing choice: cheapest per product, or everything at one terminal */
+.bb-modes{display:flex;gap:7px;margin-bottom:13px;}
+.bb-mode{flex:1;min-width:0;padding:9px 11px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:#262930;cursor:pointer;text-align:left;font-family:inherit;}
+.bb-mode:hover{border-color:rgba(255,255,255,0.24);}
+.bb-mode.on{border-color:#3657f5;background:rgba(54,87,245,0.1);}
+.bb-mode:disabled{opacity:0.4;cursor:not-allowed;}
+.bb-mode-name{font-size:11px;font-weight:600;color:#e9ebf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb-mode-total{font-size:13.5px;font-weight:700;color:#e9ebf0;margin-top:4px;}
+.bb-mode-sub{font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb-total{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
+.bb-total-lbl{font-size:11.5px;color:#9ba3af;}
+.bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
+.bb-total-save{font-size:10.5px;color:#00c765;margin-top:2px;}
+.bb-total{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
+.bb-total-lbl{font-size:11.5px;color:#9ba3af;}
+.bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
+.bb-total-save{font-size:10.5px;margin-top:2px;}
+.rule-note{font-size:10px;color:#6b7280;margin-top:7px;display:flex;align-items:center;gap:5px;line-height:1.5;}
 .src-unit::-webkit-scrollbar{width:6px;}
 .src-unit::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
 .src-unit-hdr{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
@@ -630,39 +682,35 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       </div><!-- /lo-split -->
 
       <!-- Sourcing — its own unit, the full width of the two above it -->
-      <div class="src-unit" id="srcUnit">
-        <div class="src-unit-hdr">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ba3af" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span class="src-unit-title">Sourcing</span>
-          <span class="src-unit-sub">Where each product on this load is picked up</span>
+      <div class="src-unit" id="srcUnit" onclick="colClick('src')">
+
+        <!-- Until sourcing is created, this unit is just the CTA -->
+        <div class="src-cta-wrap" id="srcCta">
+          <button class="src-cta" onclick="event.stopPropagation();createSourcing()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Create sourcing
+            <span class="src-cta-sub">Choose where each product is picked up</span>
+          </button>
         </div>
-        <table class="lo-tbl src-unit-tbl">
-          <thead>
-            <tr>
-              <th class="lo-chkcol"></th>
-              <th style="width:24%;">Product</th>
-              <th style="width:25%;">Terminal</th>
-              <th style="width:25%;">Supplier</th>
-              <th style="width:26%;">Loading account</th>
-            </tr>
-          </thead>
-          <tbody>
-                  <tr>
-                    <td class="lo-chkcol"><input type="checkbox" checked></td>
-                    <td class="lo-prodcol"><div class="lo-prod-inner">123 <span class="badge-cmp">≈ UNL87</span></div></td>
-                    <td><select class="lo-sel"><option>Magellan CC</option><option>Buckeye CC</option></select></td>
-                    <td><select class="lo-sel"><option>Kendrick Oil</option><option>Flint Hills</option></select></td>
-                    <td><select class="lo-sel"><option>MCC-7823</option><option>MCC-8841</option></select></td>
-                  </tr>
-                  <tr>
-                    <td class="lo-chkcol"><input type="checkbox" checked></td>
-                    <td class="lo-prodcol"><div class="lo-prod-inner">CLR DSL <span class="badge-blend">Blend</span></div></td>
-                    <td><select class="lo-sel"><option>Magellan CC</option><option>Buckeye CC</option></select></td>
-                    <td><select class="lo-sel"><option>Kendrick Oil</option><option>Flint Hills</option></select></td>
-                    <td><select class="lo-sel"><option>MCC-7824</option><option>MCC-8842</option></select></td>
-                  </tr>
-                </tbody>
-        </table>
+
+        <div id="srcBody" style="display:none;">
+          <div class="col-hdr">Sourcing
+            <button class="col-focus" id="focusSrc" onclick="event.stopPropagation();setSplit('src')">Focus</button>
+          </div>
+          <div style="font-size:10.5px;color:#6b7280;margin-bottom:10px;">
+            Rack prices for the planned date. Source each product wherever it is cheapest, or put the whole load on one terminal to save the driver a stop.
+          </div>
+          <div class="bb-modes" id="srcModes"></div>
+          <div id="srcBlocks"></div>
+          <div id="srcStops" class="rule-note" style="display:none;color:#ff931e;"></div>
+          <div class="bb-total">
+            <div>
+              <div class="bb-total-lbl">Estimated product cost</div>
+              <div class="bb-total-save" id="srcSaving"></div>
+            </div>
+            <div class="bb-total-val" id="srcTotal">—</div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /lo-stack -->
@@ -760,6 +808,238 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 </div><!-- /modal -->
 <script>
 
+
+// ══════════════════════════════════════════════════════════
+//  Sourcing — where each product on this load is picked up
+// ══════════════════════════════════════════════════════════
+// Loading accounts belong to a terminal, so picking a terminal narrows them.
+var SRC_TERMINALS = {
+  'Magellan CC': { supplier:'Kendrick Oil', accounts:['MCC-7823','MCC-8841'], dist:'12 mi' },
+  'Buckeye CC':  { supplier:'Flint Hills',  accounts:['BCC-2290','BCC-2291'], dist:'23 mi' },
+  'Valero West': { supplier:'Valero',       accounts:['VLW-5510'],            dist:'31 mi' },
+};
+// rack price per gallon for the planned date
+var RACK = {
+  '123 (≈ UNL87)': { 'Magellan CC':2.914, 'Buckeye CC':2.887, 'Valero West':2.942 },
+  'CLR DSL':       { 'Magellan CC':3.118, 'Buckeye CC':3.094, 'Valero West':3.151 },
+  'RD DSL':        { 'Magellan CC':2.998, 'Buckeye CC':3.041, 'Valero West':2.971 },
+  'Premium UNL':   { 'Magellan CC':3.302, 'Buckeye CC':3.341, 'Valero West':3.288 },
+  'Heating Oil':   { 'Magellan CC':3.207, 'Buckeye CC':3.244, 'Valero West':3.189 },
+};
+var srcState = { picks:{}, mode:'best', lines:[], created:false };
+
+function createSourcing() {
+  srcState.created = true;
+  document.getElementById('srcCta').style.display = 'none';
+  document.getElementById('srcBody').style.display = '';
+  document.getElementById('loBody').classList.add('has-src');
+  syncSourcing();
+  setSplit('src');          // configuring it is the act that follows
+  touchSrc();
+}
+
+// the lines to source are the order's products
+function syncSourcing() {
+  if (!srcState.created) return;
+  srcState.lines = loPlan.products.map(function(p){ return { name:p.name, qty:p.qty }; });
+  if (srcState.mode === 'custom') {
+    srcState.lines.forEach(function(l) {
+      if (srcState.picks[l.name]) return;
+      var best = cheapestTerminal(l.name);
+      srcState.picks[l.name] = { terminal:best, account:SRC_TERMINALS[best].accounts[0] };
+    });
+  } else {
+    applyMode(srcState.mode, true);
+  }
+  renderSourcing();
+}
+function touchSrc(){ if (typeof touch === 'function') touch(); }
+
+function cheapestTerminal(prod) {
+  var r = RACK[prod];
+  if (!r) return Object.keys(SRC_TERMINALS)[0];
+  return Object.keys(r).sort(function(a,b){ return r[a] - r[b]; })[0];
+}
+
+// What the load costs under a given sourcing choice
+function totalFor(mode) {
+  return srcState.lines.reduce(function(sum, l) {
+    var rack = RACK[l.name] || {};
+    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    return sum + (rack[term] || 0) * l.qty;
+  }, 0);
+}
+
+// A terminal can only take the whole load if it racks every product on it
+function terminalCanSupplyAll(term) {
+  return srcState.lines.every(function(l) {
+    var rack = RACK[l.name] || {};
+    return typeof rack[term] === 'number';
+  });
+}
+
+// Sets every product's source at once. Silent on the first call so the
+// initial default does not re-render before the page is built.
+function applyMode(mode, quiet) {
+  srcState.mode = mode;
+  srcState.lines.forEach(function(l) {
+    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    if (!SRC_TERMINALS[term]) return;
+    var prev = srcState.picks[l.name];
+    // keep the chosen account when the terminal has not moved
+    var acct = (prev && prev.terminal === term) ? prev.account : SRC_TERMINALS[term].accounts[0];
+    srcState.picks[l.name] = { terminal:term, account:acct };
+  });
+  if (!quiet) renderSourcing();
+}
+
+function renderModes() {
+  var bestTotal = totalFor('best');
+  var bestStops = {};
+  srcState.lines.forEach(function(l){ bestStops[cheapestTerminal(l.name)] = true; });
+  var bestStopCount = Object.keys(bestStops).length;
+
+  var money = function(n) {
+    return '$' + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  };
+
+  var chips = ['<button class="bb-mode'+(srcState.mode==='best'?' on':'')+'" onclick="applyMode(\'best\')">'+
+      '<div class="bb-mode-name">Cheapest per product</div>'+
+      '<div class="bb-mode-total">'+money(bestTotal)+'</div>'+
+      '<div class="bb-mode-sub" style="color:'+(bestStopCount>1?'#ff931e':'#00c765')+';">'+
+        bestStopCount+' terminal'+(bestStopCount>1?'s':'')+' to visit</div>'+
+    '</button>'];
+
+  Object.keys(SRC_TERMINALS).forEach(function(t) {
+    var ok = terminalCanSupplyAll(t);
+    var total = totalFor(t);
+    var over = total - bestTotal;
+    var sub = !ok
+      ? '<span style="color:#797a7d;">does not rack every product</span>'
+      : over > 0.005
+        ? '<span style="color:#ff931e;">+'+money(over).slice(1)+' · 1 stop</span>'
+        : '<span style="color:#00c765;">cheapest · 1 stop</span>';
+    chips.push('<button class="bb-mode'+(srcState.mode===t?' on':'')+'"'+(ok?'':' disabled')+
+        ' onclick="applyMode(\''+t+'\')">'+
+      '<div class="bb-mode-name">All at '+t+'</div>'+
+      '<div class="bb-mode-total">'+(ok?money(total):'—')+'</div>'+
+      '<div class="bb-mode-sub">'+sub+'</div>'+
+    '</button>');
+  });
+
+  document.getElementById('srcModes').innerHTML = chips.join('');
+}
+
+function renderSourcing() {
+  var html = srcState.lines.map(function(l) {
+    var col = PROD_COLORS[l.name] || '#9ba3af';
+    var rack = RACK[l.name] || {};
+    var names = Object.keys(SRC_TERMINALS);
+    var best = cheapestTerminal(l.name);
+    var bestPrice = rack[best];
+    var pick = srcState.picks[l.name];
+
+    var rows = names.map(function(t) {
+      var price = rack[t];
+      var term = SRC_TERMINALS[t];
+      var isPick = pick.terminal === t;
+      var delta = price - bestPrice;
+      var deltaHtml = delta === 0
+        ? '<span style="color:#00c765;">best</span>'
+        : '<span style="color:#797a7d;">+$' + delta.toFixed(3) + '</span>';
+      var acctOpts = term.accounts.map(function(a) {
+        return '<option value="'+a+'"'+(isPick && pick.account===a ? ' selected':'')+'>'+a+'</option>';
+      }).join('');
+
+      return '<tr class="'+(isPick?'picked':'')+'" onclick="pickTerminal(\''+l.name+'\',\''+t+'\')" style="cursor:pointer;">'+
+        '<td class="bb-radio-cell"><div class="bb-radio'+(isPick?' on':'')+'"></div></td>'+
+        '<td class="bb-cell">'+t+'<div class="bb-cell-sub">'+term.dist+'</div></td>'+
+        '<td class="bb-cell">'+term.supplier+'</td>'+
+        '<td onclick="event.stopPropagation();"><select class="bb-acct" onchange="pickAccount(\''+l.name+'\',\''+t+'\',this.value)"'+(isPick?'':' disabled style="opacity:0.4;"')+'>'+acctOpts+'</select></td>'+
+        '<td class="bb-price'+(delta===0?' bb-price-best':'')+'">$'+price.toFixed(3)+'</td>'+
+        '<td class="bb-delta">'+deltaHtml+'</td>'+
+        '<td class="bb-price">$'+(price*l.qty).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+      '</tr>';
+    }).join('');
+
+    var onBest = pick.terminal === best;
+
+    return '<div class="bb-prod-block">'+
+      '<div class="bb-prod-hdr">'+
+        '<span class="prod-dot" style="background:'+col+';"></span>'+
+        '<span class="bb-prod-name">'+l.name+'</span>'+
+        '<span class="bb-prod-gal">'+l.qty.toLocaleString()+' gal to load</span>'+
+        '<span class="bb-prod-best">'+(onBest ? '✓ cheapest source' : 'not the cheapest source')+'</span>'+
+      '</div>'+
+      '<table class="bb-tbl"><thead><tr>'+
+        '<th></th><th>Terminal</th><th>Supplier</th><th style="width:150px;">Loading account</th>'+
+        '<th style="width:88px;text-align:right;">$/gal</th>'+
+        '<th style="width:74px;text-align:right;">vs best</th>'+
+        '<th style="width:112px;text-align:right;">Line cost</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>'+
+    '</div>';
+  }).join('');
+
+  document.getElementById('srcBlocks').innerHTML = html ||
+    '<div style="padding:20px;text-align:center;font-size:12px;color:#4b5563;">Nothing is loaded into a compartment yet</div>';
+
+  renderModes();
+
+  // Totals
+  var total = 0, bestTotal = 0;
+  srcState.lines.forEach(function(l) {
+    var rack = RACK[l.name] || {};
+    total     += (rack[srcState.picks[l.name].terminal] || 0) * l.qty;
+    bestTotal += (rack[cheapestTerminal(l.name)]  || 0) * l.qty;
+  });
+  document.getElementById('srcTotal').textContent =
+    '$' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  var over = total - bestTotal;
+  var saving = document.getElementById('srcSaving');
+  saving.textContent = over > 0.005
+    ? '$' + over.toFixed(2) + ' above the cheapest sourcing'
+    : 'every product on its cheapest source';
+  saving.style.color = over > 0.005 ? '#ff931e' : '#00c765';
+
+  // The cheapest price per product can sit at different terminals, which costs
+  // the driver a second stop. Worth saying out loud before the order is created.
+  var stops = {};
+  srcState.lines.forEach(function(l){ stops[srcState.picks[l.name].terminal] = true; });
+  var names = Object.keys(stops);
+  var note = document.getElementById('srcStops');
+  if (names.length > 1) {
+    // What the cheapest single-terminal option would cost instead
+    var single = Object.keys(SRC_TERMINALS)
+      .filter(terminalCanSupplyAll)
+      .sort(function(a,b){ return totalFor(a) - totalFor(b); })[0];
+    var extra = single ? totalFor(single) - total : null;
+    note.style.display = 'flex';
+    note.innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+      'This load picks up at ' + names.length + ' terminals — ' + names.join(' and ') + '.' +
+      (single
+        ? ' All at ' + single + ' is one stop for $' + Math.abs(extra).toFixed(2) +
+          (extra >= 0 ? ' more' : ' less') + '.'
+        : '');
+  } else {
+    note.style.display = 'none';
+  }
+}
+
+// Changing one product on its own drops the whole-load choice
+function pickTerminal(prod, term) {
+  srcState.picks[prod] = { terminal:term, account:SRC_TERMINALS[term].accounts[0] };
+  srcState.mode = 'custom';
+  touchSrc();
+  renderSourcing();
+}
+function pickAccount(prod, term, acct) {
+  srcState.picks[prod] = { terminal:term, account:acct };
+  renderSourcing();
+}
+
+// Creates the delivery order and its load order together
+
 // ── Driver data ─────────────────────────────────────────────────────────────
 const DRIVERS = {
   shriya: {
@@ -805,12 +1085,16 @@ function fmt(n){return n.toLocaleString();}
 // over, and clicking anywhere in the dimmed column brings it forward.
 function setSplit(which) {
   document.getElementById('loBody').setAttribute('data-split', which);
-  document.getElementById('colDo').classList.toggle('dim', which === 'lo');
-  document.getElementById('colLo').classList.toggle('dim', which === 'do');
-  document.getElementById('focusDo').style.display = which === 'lo' ? 'inline-flex' : 'none';
-  document.getElementById('focusLo').style.display = which === 'do' ? 'inline-flex' : 'none';
+  document.getElementById('colDo').classList.toggle('dim', which !== 'do');
+  document.getElementById('colLo').classList.toggle('dim', which !== 'lo');
+  document.getElementById('srcUnit').classList.toggle('dim', which !== 'src' && srcState.created);
+  document.getElementById('focusDo').style.display = which === 'do' ? 'none' : 'inline-flex';
+  document.getElementById('focusLo').style.display = which === 'lo' ? 'none' : 'inline-flex';
+  var fs = document.getElementById('focusSrc');
+  if (fs) fs.style.display = which === 'src' ? 'none' : 'inline-flex';
 }
 function colClick(which) {
+  if (which === 'src' && !srcState.created) return;   // the CTA speaks for itself
   if (document.getElementById('loBody').getAttribute('data-split') !== which) setSplit(which);
 }
 
@@ -951,6 +1235,7 @@ function loComps() {
 
 function replanCompartments() {
   loPlan.products = collectDOProducts();
+  syncSourcing();
   loPlan.assignments = planAssignments(loComps(), loPlan.products);
   renderLoPlan();
 }

@@ -49,10 +49,16 @@ footer reads **Create order** and best buy drops out of the flow.
 
 ## Sourcing sits on its own
 
-On the edit screen, sourcing is not inside the load order column. It is its own
-unit across the bottom, as wide as the delivery order and load order together,
-because a row of product · terminal · supplier · loading account does not fit a
-column. It stays put while those two trade width.
+On the edit screen, sourcing is its own unit across the bottom, as wide as the
+delivery order and load order together, and it is the same unit as create
+order's best buy — per product, each terminal with its supplier, loading
+account, rack price and what it costs against the cheapest, plus the whole-load
+choice across the top.
+
+Like the load order it starts as a CTA, **Create sourcing**, in a strip. Taking
+it up moves focus there and the unit takes the room, with the two units above
+shrinking to a band. All three then trade focus: whichever is in focus takes the
+space, the others dim and offer to take over.
 
 ## Compartment planning
 
