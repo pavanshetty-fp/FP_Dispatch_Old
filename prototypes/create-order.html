@@ -376,6 +376,15 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .bb-price-best{color:#00c765;}
 .bb-delta{padding:0 10px;font-size:10.5px;text-align:right;white-space:nowrap;}
 .bb-acct{width:100%;height:38px;padding:0 20px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.06);font-family:inherit;font-size:11.5px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+/* Whole-load sourcing choice: cheapest per product, or everything at one terminal */
+.bb-modes{display:flex;gap:7px;margin-bottom:13px;}
+.bb-mode{flex:1;min-width:0;padding:9px 11px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:#262930;cursor:pointer;text-align:left;font-family:inherit;}
+.bb-mode:hover{border-color:rgba(255,255,255,0.24);}
+.bb-mode.on{border-color:#3657f5;background:rgba(54,87,245,0.1);}
+.bb-mode:disabled{opacity:0.4;cursor:not-allowed;}
+.bb-mode-name{font-size:11px;font-weight:600;color:#e9ebf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bb-mode-total{font-size:13.5px;font-weight:700;color:#e9ebf0;margin-top:4px;}
+.bb-mode-sub{font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bb-total{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-top:4px;}
 .bb-total-lbl{font-size:11.5px;color:#9ba3af;}
 .bb-total-val{font-size:15px;font-weight:700;color:#e9ebf0;}
@@ -1026,8 +1035,9 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     <!-- Body: one block per product -->
     <div class="bb-body">
       <div style="font-size:11px;color:#6b7280;margin-bottom:11px;">
-        Rack prices for the planned date. The cheapest source for each product is picked for you — change it if a terminal is out of the way or the account is wrong.
+        Rack prices for the planned date. Source each product wherever it is cheapest, or put the whole load on one terminal to save the driver a stop.
       </div>
+      <div class="bb-modes" id="s4Modes"></div>
       <div id="s4Blocks"></div>
       <div id="s4Stops" class="rule-note" style="display:none;color:#ff931e;margin:0 0 8px;"></div>
       <div class="bb-total">
@@ -1331,7 +1341,9 @@ function onDriverChange(sel) {
 // ══════════════════════════════════════════════════════════
 //  Step 4 — Best buy
 // ══════════════════════════════════════════════════════════
-var s4 = { picks: {} };   // product -> { terminal, account }
+// picks: product -> { terminal, account }
+// mode:  'best' (cheapest per product) | a terminal name (whole load there) | 'custom'
+var s4 = { picks: {}, mode: 'best', lines: [] };
 
 function goToStep4() {
   if (!s3.truck) {
@@ -1358,12 +1370,17 @@ function goToStep4() {
   });
   s4.lines = Object.keys(loaded).map(function(n){ return { name:n, qty:loaded[n] }; });
 
-  // Default every product to its cheapest terminal
-  s4.lines.forEach(function(l) {
-    if (s4.picks[l.name]) return;
-    var best = cheapestTerminal(l.name);
-    s4.picks[l.name] = { terminal:best, account:TERMINALS[best].accounts[0] };
-  });
+  // Re-apply whatever sourcing choice is in force. Coming back after editing
+  // the load plan can bring a product that has no source yet, so fill those in.
+  if (s4.mode === 'custom') {
+    s4.lines.forEach(function(l) {
+      if (s4.picks[l.name]) return;
+      var best = cheapestTerminal(l.name);
+      s4.picks[l.name] = { terminal:best, account:TERMINALS[best].accounts[0] };
+    });
+  } else {
+    applyMode(s4.mode, true);
+  }
 
   var drvSel = document.getElementById('s3DriverSel');
   var drv = DRIVERS[drvSel.value];
@@ -1380,6 +1397,75 @@ function cheapestTerminal(prod) {
   var r = RACK[prod];
   if (!r) return Object.keys(TERMINALS)[0];
   return Object.keys(r).sort(function(a,b){ return r[a] - r[b]; })[0];
+}
+
+// What the load costs under a given sourcing choice
+function totalFor(mode) {
+  return s4.lines.reduce(function(sum, l) {
+    var rack = RACK[l.name] || {};
+    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    return sum + (rack[term] || 0) * l.qty;
+  }, 0);
+}
+
+// A terminal can only take the whole load if it racks every product on it
+function terminalCanSupplyAll(term) {
+  return s4.lines.every(function(l) {
+    var rack = RACK[l.name] || {};
+    return typeof rack[term] === 'number';
+  });
+}
+
+// Sets every product's source at once. Silent on the first call so the
+// initial default does not re-render before the page is built.
+function applyMode(mode, quiet) {
+  s4.mode = mode;
+  s4.lines.forEach(function(l) {
+    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    if (!TERMINALS[term]) return;
+    var prev = s4.picks[l.name];
+    // keep the chosen account when the terminal has not moved
+    var acct = (prev && prev.terminal === term) ? prev.account : TERMINALS[term].accounts[0];
+    s4.picks[l.name] = { terminal:term, account:acct };
+  });
+  if (!quiet) renderBestBuy();
+}
+
+function renderModes() {
+  var bestTotal = totalFor('best');
+  var bestStops = {};
+  s4.lines.forEach(function(l){ bestStops[cheapestTerminal(l.name)] = true; });
+  var bestStopCount = Object.keys(bestStops).length;
+
+  var money = function(n) {
+    return '$' + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  };
+
+  var chips = ['<button class="bb-mode'+(s4.mode==='best'?' on':'')+'" onclick="applyMode(\'best\')">'+
+      '<div class="bb-mode-name">Cheapest per product</div>'+
+      '<div class="bb-mode-total">'+money(bestTotal)+'</div>'+
+      '<div class="bb-mode-sub" style="color:'+(bestStopCount>1?'#ff931e':'#00c765')+';">'+
+        bestStopCount+' terminal'+(bestStopCount>1?'s':'')+' to visit</div>'+
+    '</button>'];
+
+  Object.keys(TERMINALS).forEach(function(t) {
+    var ok = terminalCanSupplyAll(t);
+    var total = totalFor(t);
+    var over = total - bestTotal;
+    var sub = !ok
+      ? '<span style="color:#797a7d;">does not rack every product</span>'
+      : over > 0.005
+        ? '<span style="color:#ff931e;">+'+money(over).slice(1)+' · 1 stop</span>'
+        : '<span style="color:#00c765;">cheapest · 1 stop</span>';
+    chips.push('<button class="bb-mode'+(s4.mode===t?' on':'')+'"'+(ok?'':' disabled')+
+        ' onclick="applyMode(\''+t+'\')">'+
+      '<div class="bb-mode-name">All at '+t+'</div>'+
+      '<div class="bb-mode-total">'+(ok?money(total):'—')+'</div>'+
+      '<div class="bb-mode-sub">'+sub+'</div>'+
+    '</button>');
+  });
+
+  document.getElementById('s4Modes').innerHTML = chips.join('');
 }
 
 function renderBestBuy() {
@@ -1435,6 +1521,8 @@ function renderBestBuy() {
   document.getElementById('s4Blocks').innerHTML = html ||
     '<div style="padding:20px;text-align:center;font-size:12px;color:#4b5563;">Nothing is loaded into a compartment yet</div>';
 
+  renderModes();
+
   // Totals
   var total = 0, bestTotal = 0;
   s4.lines.forEach(function(l) {
@@ -1458,18 +1546,28 @@ function renderBestBuy() {
   var names = Object.keys(stops);
   var note = document.getElementById('s4Stops');
   if (names.length > 1) {
+    // What the cheapest single-terminal option would cost instead
+    var single = Object.keys(TERMINALS)
+      .filter(terminalCanSupplyAll)
+      .sort(function(a,b){ return totalFor(a) - totalFor(b); })[0];
+    var extra = single ? totalFor(single) - total : null;
     note.style.display = 'flex';
     note.innerHTML =
       '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-      'This load picks up at ' + names.length + ' terminals — ' + names.join(' and ') +
-      '. Put everything on one terminal to save the extra stop.';
+      'This load picks up at ' + names.length + ' terminals — ' + names.join(' and ') + '.' +
+      (single
+        ? ' All at ' + single + ' is one stop for $' + Math.abs(extra).toFixed(2) +
+          (extra >= 0 ? ' more' : ' less') + '.'
+        : '');
   } else {
     note.style.display = 'none';
   }
 }
 
+// Changing one product on its own drops the whole-load choice
 function pickTerminal(prod, term) {
   s4.picks[prod] = { terminal:term, account:TERMINALS[term].accounts[0] };
+  s4.mode = 'custom';
   renderBestBuy();
 }
 function pickAccount(prod, term, acct) {
