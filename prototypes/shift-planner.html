@@ -186,11 +186,15 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
 .rule-note{font-size:9.5px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
 
 /* Load plan vs sourcing, inside whichever load order the tabs have open */
-.lou-seg{display:flex;background:#1f2226;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px;margin-left:auto;align-self:center;}
-.lou-seg-btn{padding:4px 12px;border:none;background:transparent;color:#797a7d;font-family:inherit;font-size:11px;cursor:pointer;border-radius:4px;white-space:nowrap;}
+.lou-seg{display:flex;background:#1f2226;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px;align-self:center;flex-shrink:0;}
+.lou-seg-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border:none;background:transparent;color:#797a7d;font-family:inherit;font-size:11.5px;cursor:pointer;border-radius:4px;white-space:nowrap;}
 .lou-seg-btn:hover{color:#d5d6d7;}
 .lou-seg-btn.on{background:#3657f5;color:#fff;font-weight:600;}
-.lou-seg-btn .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff931e;margin-left:5px;vertical-align:middle;}
+.lou-seg-n{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(255,255,255,0.1);font-size:8.5px;font-weight:700;}
+.lou-seg-btn.on .lou-seg-n{background:rgba(0,0,0,0.25);}
+.lou-seg-btn.done .lou-seg-n{background:#00c765;color:#0d1a12;}
+.lou-seg-btn .dot{width:6px;height:6px;border-radius:50%;background:#ff931e;}
+.lou-seg-sep{align-self:center;color:#50545b;font-size:11px;padding:0 1px;}
 
 .src-pane{padding:13px 16px;overflow-y:auto;flex:1;min-width:0;}
 .src-pane::-webkit-scrollbar{width:5px;}
@@ -328,11 +332,12 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
       </div>
 
       <!-- Driver tabs, and what you are doing to the load they name -->
-      <div style="display:flex;align-items:stretch;gap:12px;padding-right:16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;" id="louTabRow">
-        <div class="lou-tabs" id="louTabs" style="flex:1;border-bottom:none;"></div>
+      <div style="display:flex;align-items:stretch;gap:14px;padding-right:16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;" id="louTabRow">
+        <div class="lou-tabs" id="louTabs" style="border-bottom:none;"></div>
         <div class="lou-seg" id="louSeg" style="display:none;">
-          <button class="lou-seg-btn on" id="segPlan" onclick="setLouView('plan')">Load plan</button>
-          <button class="lou-seg-btn" id="segSrc" onclick="setLouView('src')">Sourcing</button>
+          <button class="lou-seg-btn on" id="segPlan" onclick="setLouView('plan')"><span class="lou-seg-n">1</span>Load plan</button>
+          <span class="lou-seg-sep">›</span>
+          <button class="lou-seg-btn" id="segSrc" onclick="setLouView('src')"><span class="lou-seg-n">2</span>Sourcing</button>
         </div>
       </div>
 
@@ -347,7 +352,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
         <span class="lou-foot-meta" id="louFootMeta"></span>
         <div style="display:flex;gap:8px;">
           <button class="btn-secondary" onclick="discardUnits()">Discard</button>
-          <button class="btn-primary" id="btnCreateLOs" onclick="createLoadOrders()">Create load orders</button>
+          <button class="btn-primary" id="btnCreateLOs" onclick="advanceLou()">Create load orders</button>
         </div>
       </div>
 
@@ -952,7 +957,11 @@ function renderUnit() {
   // the switch only means something once a load exists to source
   var unsourced = keys.filter(function(k){ return units[k].truck && !units[k].srcCreated; }).length;
   document.getElementById('louSeg').style.display = 'flex';
-  document.getElementById('segSrc').innerHTML = 'Sourcing' +
+  var planDone = keys.every(function(k){ return !!units[k].truck; });
+  document.getElementById('segPlan').classList.toggle('done', planDone && louView !== 'plan');
+  document.getElementById('segSrc').classList.toggle('done', !unsourced && louView !== 'src');
+  document.getElementById('segSrc').innerHTML =
+    '<span class="lou-seg-n">' + (unsourced ? '2' : '✓') + '</span>Sourcing' +
     (unsourced ? '<span class="dot" title="' + unsourced + ' still to source"></span>' : '');
 
   var totalOrders = keys.reduce(function(s,k){ return s + units[k].orders.length; },0);
@@ -992,8 +1001,25 @@ function renderUnit() {
   } else {
     footMeta.innerHTML = '<span style="color:#00c765;">All gallons assigned</span>';
   }
-  document.getElementById('btnCreateLOs').textContent =
-    'Create ' + keys.length + ' load order' + (keys.length>1?'s':'');
+  // Sourcing is a step, not a side branch, so the primary button is the step:
+  // it offers sourcing while any load still needs it, and only then offers to
+  // create. Otherwise the big blue button reads as "done" and sourcing is
+  // invisible at the far edge of the tab row.
+  var btn = document.getElementById('btnCreateLOs');
+  var here = units[activeTab];
+  var hereNeeds = here && here.truck && !here.srcCreated;
+  if (!needSrc) {
+    btn.textContent = 'Create ' + keys.length + ' load order' + (keys.length>1?'s':'');
+  } else if (louView !== 'src') {
+    btn.textContent = 'Next: create sourcing →';
+  } else if (hereNeeds) {
+    btn.textContent = 'Create sourcing for this load';
+  } else {
+    // this one is done; the button moves to whichever still is not
+    var next = keys.filter(function(k){ return units[k].truck && !units[k].srcCreated; })[0];
+    var who = next === UNASSIGNED ? 'Order Well' : DRIVERS[units[next].driver].name;
+    btn.textContent = 'Next: ' + who + ' →';
+  }
 
   updateSelBar();
 }
@@ -1254,6 +1280,27 @@ function removeOrder(id) {
 function discardUnits() {
   units = {}; selected = {}; activeTab = null;
   renderOrders(); renderUnit(); closeUnit();
+}
+
+// The primary button walks the flow: source what is unsourced, then create.
+function advanceLou() {
+  var keys = Object.keys(units);
+  var unsourced = keys.filter(function(k){ return units[k].truck && !units[k].srcCreated; });
+  if (unsourced.length) {
+    if (louView !== 'src') {              // first press: show them what is missing
+      activeTab = unsourced[0];
+      setLouView('src');
+      return;
+    }
+    if (units[activeTab] && units[activeTab].truck && !units[activeTab].srcCreated) {
+      createSourcing();                   // second press: source the one in front of them
+      return;
+    }
+    activeTab = unsourced[0];             // move to the next one still missing
+    renderUnit();
+    return;
+  }
+  createLoadOrders();
 }
 
 function createLoadOrders() {
