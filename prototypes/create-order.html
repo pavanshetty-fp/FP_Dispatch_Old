@@ -337,6 +337,18 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
 /* Prod color dot */
 .prod-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* DO lines table — editable, sits directly above the compartment plan */
+.do-lines-tbl{width:100%;border-collapse:collapse;}
+.do-lines-tbl th{background:rgba(0,0,0,0.2);padding:5px 10px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07);}
+.do-lines-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.05);height:34px;vertical-align:middle;}
+.do-lines-tbl tr:last-child td{border-bottom:none;}
+.dl-prod{padding:0 10px;font-size:11.5px;color:#e9ebf0;display:flex;align-items:center;gap:6px;height:34px;}
+.dl-qty{width:100%;height:34px;padding:0 10px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.06);color:#e9ebf0;font-family:inherit;font-size:11.5px;outline:none;text-align:right;}
+.dl-qty:focus{background:rgba(99,102,241,0.1);}
+.dl-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
+.dl-status{padding:0 10px;font-size:10px;white-space:nowrap;}
+.rule-note{font-size:10px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
 </style>
 </head>
 <body>
@@ -735,14 +747,15 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <!-- Left main -->
       <div class="s3-main">
 
-        <!-- Delivery Orders -->
-        <div class="do-section" style="margin-bottom:12px;">
+        <!-- Delivery Orders — editable, sits directly above the load order -->
+        <div class="do-section" style="margin-bottom:10px;">
           <div class="do-hdr">
             <div class="do-title-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
               Delivery Orders
               <span class="do-count" id="s3DoCount">1</span>
             </div>
+            <span style="font-size:10px;color:#6b7280;">Ordered gallons stay editable — adjust them against the compartment plan below</span>
           </div>
           <div class="do-list" id="s3DoList"><!-- filled by JS --></div>
         </div>
@@ -837,6 +850,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
                   <tbody id="s3AssignBody"><!-- filled by JS --></tbody>
                 </table>
 
+                <div class="rule-note">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  One product per compartment — products can only share a compartment when the product is a blend
+                </div>
+
                 <!-- Warning/status banner -->
                 <div id="s3WarnBanner" class="warn-banner" style="display:none;"></div>
               </div>
@@ -922,6 +940,10 @@ var PROD_COLORS = {
   'Biodiesel':  '#7bd14a',
   'Kerosene':   '#c8ccd2',
 };
+
+// Products that are themselves blends. A compartment holds one product;
+// only a blend may combine components in the same compartment.
+var BLEND_PRODUCTS = [];
 
 // ── Truck fleet data ──────────────────────────────────────
 var TRUCKS = {
@@ -1040,12 +1062,20 @@ function buildS3DoList(products, cust) {
     : cust.name + ' · ' + cust.addr.split(',')[0];
   var planDate = document.querySelector('#step2 input[placeholder="MM/DD/YYYY"]').value || '11/18/2026';
   var planTime = document.querySelector('#step2 input[placeholder="HH:mm"]').value || '06:00';
-  var chipsHtml = products.map(function(p) {
+
+  var rowsHtml = products.map(function(p, i) {
     var col = PROD_COLORS[p.name] || '#9ba3af';
-    return '<span class="del-prod-chip"><span class="prod-dot" style="background:' + col + ';margin-right:3px;"></span>' + p.name + ' <span class="del-prod-qty">' + p.qty.toLocaleString() + ' gal</span></span>';
+    var blendBadge = BLEND_PRODUCTS.indexOf(p.name) >= 0 ? ' <span class="badge-blend">Blend</span>' : '';
+    return '<tr>' +
+      '<td><div class="dl-prod"><span class="prod-dot" style="background:' + col + ';"></span>' + p.name + blendBadge + '</div></td>' +
+      '<td><input class="dl-qty" type="number" min="0" step="50" value="' + p.qty + '" onchange="onDoQtyChange(' + i + ',this)"></td>' +
+      '<td class="dl-loaded" id="s3DoLoaded' + i + '">—</td>' +
+      '<td class="dl-status" id="s3DoStatus' + i + '"><span style="color:#4b5563;">Pick a truck</span></td>' +
+    '</tr>';
   }).join('');
+
   document.getElementById('s3DoList').innerHTML =
-    '<div class="do-row-static">' +
+    '<div class="do-row-static" style="padding-bottom:9px;">' +
       '<div class="do-row-meta">' +
         '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
         '<span class="do-num">' + _s3DoNum + '</span>' +
@@ -1053,9 +1083,57 @@ function buildS3DoList(products, cust) {
         '<span class="do-shipto">' + shipTo + '</span>' +
         '<span class="do-time">' + planDate + ' ' + planTime + '</span>' +
       '</div>' +
-      '<div class="do-row-prods">' + chipsHtml + '</div>' +
-    '</div>';
+    '</div>' +
+    '<table class="do-lines-tbl">' +
+      '<thead><tr>' +
+        '<th>Product</th>' +
+        '<th style="text-align:right;width:118px;">Ordered (gal)</th>' +
+        '<th style="text-align:right;width:84px;">Loaded</th>' +
+        '<th style="width:132px;">Status</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rowsHtml + '</tbody>' +
+    '</table>';
+
   document.getElementById('s3DoCount').textContent = '1';
+}
+
+// Editing an ordered quantity re-plans the compartments immediately
+function onDoQtyChange(idx, inp) {
+  s3.products[idx].qty = Math.max(0, parseInt(inp.value) || 0);
+  buildS3Gallons(s3.products);
+  if (s3.truck) {
+    onTruckChange(document.getElementById('s3TruckSel'));
+  } else {
+    updateS3DoStatuses();
+  }
+}
+
+// Updates only the Loaded + Status cells so the qty input keeps focus
+function updateS3DoStatuses() {
+  var assignedByProd = {};
+  s3.assignments.forEach(function(a) {
+    if (a.product) assignedByProd[a.product] = (assignedByProd[a.product] || 0) + a.qty;
+  });
+  s3.products.forEach(function(p, i) {
+    var loadedEl = document.getElementById('s3DoLoaded' + i);
+    var statusEl = document.getElementById('s3DoStatus' + i);
+    if (!loadedEl || !statusEl) return;
+    if (!s3.truck) {
+      loadedEl.textContent = '—';
+      statusEl.innerHTML = '<span style="color:#4b5563;">Pick a truck</span>';
+      return;
+    }
+    var loaded = assignedByProd[p.name] || 0;
+    var short = p.qty - loaded;
+    loadedEl.textContent = loaded.toLocaleString();
+    if (short > 0) {
+      statusEl.innerHTML = '<span style="color:#eab308;">⚠ ' + short.toLocaleString() + ' gal won\'t fit</span>';
+    } else if (p.qty === 0) {
+      statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:#4ade80;">✓ Fully loaded</span>';
+    }
+  });
 }
 
 function buildS3Gallons(products) {
@@ -1094,7 +1172,9 @@ function onTruckChange(sel) {
   if (!key) {
     document.getElementById('s3TruckCapRow').style.display = 'none';
     document.getElementById('s3CompSection').style.display = 'none';
-    s3.truck = null; return;
+    s3.truck = null; s3.assignments = [];
+    updateS3DoStatuses();
+    return;
   }
   var truck = TRUCKS[key];
   if (!truck) return;
@@ -1220,6 +1300,7 @@ function renderCompartments() {
   document.getElementById('s3AssignBody').innerHTML = tblHtml;
 
   checkWarnings();
+  updateS3DoStatuses();
 }
 
 function checkWarnings() {
