@@ -4,11 +4,15 @@ Interactive prototypes for FleetPanda flows. Standalone HTML files — open in a
 
 ## Prototypes
 
-| File | Flow | Status |
-|------|------|--------|
-| `prototypes/load-order-unassigned.html` | Load Order — unassigned delivery order | In progress |
-| `prototypes/create-order.html` | Create Order — 4 steps: customer, order details, load planning, best buy | In progress |
-| `prototypes/shift-planner.html` | Shift Planner — select orders, group into load orders by driver | In progress |
+| File | Tab | Flow |
+|------|-----|------|
+| `prototypes/create-order.html` | Create order | 4 steps: customer, order details, load planning, best buy |
+| `prototypes/load-order-unassigned.html` | Edit order | An existing unassigned delivery order, planned onto a truck |
+| `prototypes/shift-planner.html` | Shift planner | Select orders, grouped into one load order per driver |
+
+Open any one of them and a switcher sits at the top to move between all three —
+there is no index page to go back to. Press **H** (or the ×) to hide it before
+taking screenshots; the sliver at the top edge brings it back.
 
 ## Compartment planning
 

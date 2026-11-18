@@ -1854,5 +1854,55 @@ function toggleCB(label) {
 function toggleRR(hdr) { hdr.closest('.rr-card').classList.toggle('collapsed'); }
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════
+     Prototype switcher — a testing aid, not part of any screen.
+     Sits above the modals so it stays reachable. Hide it with × (or
+     the H key) before taking screenshots; the sliver at the top edge
+     brings it back.
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+#protoSwitch{position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;padding:4px 5px 4px 11px;background:rgba(18,22,28,0.93);border:1px solid rgba(255,255,255,0.14);border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,0.55);font-family:'Montserrat',sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+#protoSwitch.off{display:none;}
+.ps-lbl{font-size:8.5px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.7px;margin-right:5px;white-space:nowrap;}
+.ps-tab{font-size:11px;color:#9ba3af;text-decoration:none;padding:4px 11px;border-radius:14px;white-space:nowrap;transition:background .12s,color .12s;}
+.ps-tab:hover{background:rgba(255,255,255,0.07);color:#e9ebf0;}
+.ps-tab.on{background:#3657f5;color:#fff;font-weight:600;}
+.ps-hide{width:20px;height:20px;margin-left:3px;border:none;background:transparent;color:#5a6472;cursor:pointer;border-radius:50%;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+.ps-hide:hover{background:rgba(255,255,255,0.08);color:#e9ebf0;}
+#protoShow{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;width:48px;height:7px;padding:0;border:none;border-radius:0 0 6px 6px;background:rgba(54,87,245,0.5);cursor:pointer;display:none;}
+#protoShow:hover{background:#3657f5;}
+#protoShow.on{display:block;}
+</style>
+
+<div id="protoSwitch">
+  <span class="ps-lbl">Prototype</span>
+  <a class="ps-tab" href="create-order.html">Create order</a>
+  <a class="ps-tab" href="load-order-unassigned.html">Edit order</a>
+  <a class="ps-tab" href="shift-planner.html">Shift planner</a>
+  <button class="ps-hide" onclick="psToggle(false)" title="Hide (H)">&times;</button>
+</div>
+<button id="protoShow" onclick="psToggle(true)" title="Show prototype switcher"></button>
+
+<script>
+function psToggle(show) {
+  document.getElementById('protoSwitch').classList.toggle('off', !show);
+  document.getElementById('protoShow').classList.toggle('on', !show);
+}
+(function () {
+  // mark whichever prototype is open
+  var file = location.pathname.split('/').pop() || 'create-order.html';
+  var here = document.querySelector('#protoSwitch a[href="' + file + '"]');
+  if (here) here.classList.add('on');
+
+  // H hides and shows it, so screenshots stay clean
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'h' && e.key !== 'H') return;
+    var t = e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    psToggle(document.getElementById('protoSwitch').classList.contains('off'));
+  });
+})();
+</script>
+
 </body>
 </html>
