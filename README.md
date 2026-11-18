@@ -37,6 +37,16 @@ It is the only way to catch what static checks miss. Syntax checks and tag
 balance passed happily while the comment icons were rendering 113px square and
 product names were cut to "CLR D".
 
+## The load order is optional
+
+Create Order does not assume one. The delivery order holds the width and the
+load order column is a strip carrying **Add a load order**, locked until the
+delivery order has a product on it. Adding one widens that column and moves
+focus to it; after that the two trade places — the unit in focus takes most of
+the width, the other dims and offers to take over, and clicking the dimmed
+column brings it forward. With no load order there is nothing to source, so the
+footer reads **Create order** and best buy drops out of the flow.
+
 ## Compartment planning
 
 Both `create-order.html` and `shift-planner.html` share the same rules:
@@ -69,9 +79,6 @@ Aligned against `FP-DS-2026/docs/context/` rather than invented:
   against the 14 h HOS on-duty window that sits behind them.
 - **Truck classes** — the documented bands: Bobtail under 3,500 · Tank wagon
   3,500–7,999 · Transport 8,000–11,500 gal, with a meter gpm per class.
-- **Delivery window** — the shared timeline, as every module uses: one day drawn
-  once, the window as a range on the track, preferred times as bars under it
-  that drag, resize, never overlap and stop at the window's edges.
 - **Comparable products** — a substitute a line may fall back to. Surfaced on a
   line that cannot be fully loaded. The `≈` already on `123 (≈ UNL87)` is this.
 - **Top off** — fills the tank instead of a stated quantity, so the two are
