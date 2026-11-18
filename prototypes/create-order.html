@@ -312,12 +312,38 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 /* ── Step 3 / Load Order wizard step ─────────────────────── */
 #step3{z-index:20;width:min(1480px,calc(100vw - 40px));background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 70px);display:flex;flex-direction:column;}
 .s3-body{display:flex;flex:1;overflow:hidden;}
-/* delivery order on the left, load order on the right */
-.s3-do{width:clamp(432px,34%,512px);flex-shrink:0;padding:14px 16px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
+
+/* The two units share the width, and the one in focus takes most of it.
+   A load order is optional, so until one is added its column is just a
+   strip holding the CTA. data-split on .s3-body is the whole state. */
+.s3-do,.s3-lo{transition:flex-basis .22s ease;min-width:0;}
+.s3-body[data-split="none"] .s3-do{flex:1 1 auto;}
+.s3-body[data-split="none"] .s3-lo{flex:0 0 212px;}
+.s3-body[data-split="do"]   .s3-do{flex:1 1 auto;}
+.s3-body[data-split="do"]   .s3-lo{flex:0 0 clamp(380px,31%,460px);}
+.s3-body[data-split="lo"]   .s3-do{flex:0 0 clamp(392px,30%,448px);}
+.s3-body[data-split="lo"]   .s3-lo{flex:1 1 auto;}
+
+/* the column out of focus dims a little and offers to take over */
+.s3-col{position:relative;}
+.s3-col.dim{background:rgba(0,0,0,0.12);}
+.s3-col.dim .s3-col-lbl{color:#4b5563;}
+.s3-focus{margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:#9ba3af;font-family:inherit;font-size:9px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;cursor:pointer;white-space:nowrap;}
+.s3-focus:hover{background:rgba(54,87,245,0.16);border-color:rgba(54,87,245,0.4);color:#6fd4ff;}
+.s3-col-lbl{text-transform:none;}
+
+/* the load order CTA, while there is no load order */
+.lo-cta-wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;padding:16px 10px;text-align:center;}
+.lo-cta{display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 14px;width:100%;border:1px dashed rgba(54,87,245,0.35);border-radius:6px;background:rgba(54,87,245,0.05);color:#34c3ff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.lo-cta:hover:not(:disabled){background:rgba(54,87,245,0.14);border-color:rgba(54,87,245,0.6);}
+.lo-cta:disabled{opacity:0.45;cursor:not-allowed;color:#6b7280;border-color:rgba(255,255,255,0.1);background:transparent;}
+.lo-cta-sub{font-size:10px;font-weight:400;color:#6b7280;line-height:1.5;letter-spacing:0;text-transform:none;}
+
+.s3-do{padding:14px 16px;overflow-y:auto;background:rgba(56,64,71,0.6);border-right:1px solid rgba(255,255,255,0.08);}
 .s3-col-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
 .s3-col-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
 .s3-do-id{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
-.s3-lo{flex:1;min-width:0;padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);}
+.s3-lo{padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);}
 .s3-do::-webkit-scrollbar,.s3-lo::-webkit-scrollbar{width:5px;}
 .s3-do::-webkit-scrollbar-thumb,.s3-lo::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
 
@@ -358,39 +384,6 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .dl-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
 .dl-status{padding:0 10px;font-size:10px;white-space:nowrap;}
 .rule-note{font-size:10px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
-/* ── Delivery window & preferred time ──────────────────────
-   One day, drawn once, full width. The window is the range on the track;
-   each preferred time is a bar under it on the same scale, with dashed
-   lines up to the track and its times under its ends. Drag a bar to move
-   it, drag an end to size it, ✕ removes it, and the + hanging off the box
-   puts a new one in the window's next free stretch. Bars never overlap —
-   each stops at its neighbours. Matches DeliveryWindowTimeline in
-   prototypes/unified-view. */
-.dwt{margin-bottom:12px;}
-.dwt-lbl{font-size:10px;font-weight:600;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;display:block;}
-.dwt-box{position:relative;border:1px solid rgba(255,255,255,0.14);border-radius:4px;background:#2c3034;padding:10px 12px 6px;}
-.dwt-track{position:relative;height:22px;background:#1d1f23;border-radius:3px;overflow:hidden;cursor:crosshair;}
-.dwt-win{position:absolute;top:0;bottom:0;background:rgba(54,87,245,0.3);border-left:2px solid #3657f5;border-right:2px solid #3657f5;}
-.dwt-h{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:3;}
-.dwt-h::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:11px;background:#fff;border-radius:1px;opacity:.85;}
-.dwt-ticks{position:relative;height:13px;margin-top:2px;}
-.dwt-tick{position:absolute;top:0;font-size:8px;color:#5a6472;transform:translateX(-50%);white-space:nowrap;}
-.dwt-bars{position:relative;margin-top:3px;}
-.dwt-lane{position:relative;height:17px;}
-.dwt-bar{position:absolute;top:0;height:17px;background:rgba(111,212,255,0.28);border:1px solid #6fd4ff;border-radius:3px;cursor:grab;display:flex;align-items:center;justify-content:center;min-width:8px;}
-.dwt-bar:active{cursor:grabbing;}
-.dwt-bar-e{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;}
-.dwt-bar-x{position:absolute;right:-6px;top:-6px;width:13px;height:13px;border-radius:50%;background:#2c3034;border:1px solid rgba(255,255,255,0.22);color:#9ba3af;font-size:9px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;padding:0;font-family:inherit;}
-.dwt-bar-x:hover{background:#cc0200;border-color:#cc0200;color:#fff;}
-.dwt-dash{position:absolute;top:-3px;width:0;border-left:1px dashed rgba(111,212,255,0.45);height:3px;}
-.dwt-times{position:relative;height:12px;margin-top:1px;}
-.dwt-t{position:absolute;font-size:8px;color:#6fd4ff;transform:translateX(-50%);white-space:nowrap;cursor:pointer;}
-.dwt-t:hover{color:#fff;text-decoration:underline;}
-.dwt-add{position:absolute;left:12px;bottom:-11px;display:flex;align-items:center;gap:4px;height:21px;padding:0 9px;border-radius:11px;border:1px dashed rgba(54,87,245,0.45);background:#1e242c;color:#34c3ff;font-family:inherit;font-size:10px;cursor:pointer;}
-.dwt-add:hover{background:rgba(54,87,245,0.14);}
-.dwt-add:disabled{opacity:.4;cursor:not-allowed;}
-.dwt-foot{display:flex;align-items:center;gap:8px;margin-top:13px;font-size:10px;color:#6b7280;padding-left:92px;}
-.dwt-span{color:#d5d6d7;}
 
 /* ── Step 4: Best buy ─────────────────────────────────────── */
 #step4{z-index:20;width:900px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
@@ -603,12 +596,14 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
     </div>
 
     <!-- 2-col body -->
-    <div class="s3-body">
+    <div class="s3-body" id="s3Body" data-split="none">
 
       <!-- Left: the delivery order -->
-      <div class="s3-do">
+      <div class="s3-do s3-col" id="s3ColDo" onclick="colClick('do')">
 
-        <div class="s3-col-lbl">Delivery order</div>
+        <div class="s3-col-lbl">Delivery order
+          <button class="s3-focus" id="s3FocusDo" onclick="event.stopPropagation();setFocus('do')">Focus</button>
+        </div>
         <div class="s3-do-id">
           <span class="do-pill do-pill-unassigned">Unassigned</span>
           <span class="do-num" id="s3DoNum">D-5157060</span>
@@ -637,9 +632,6 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           <button class="btn-ghost-sm">Mark as a Recurrence</button>
         </div>
       </div>
-
-      <!-- Delivery window & preferred time -->
-      <div class="dwt" id="s3Win"></div>
 
       <!-- Order type + Common Carrier -->
       <div class="form-row" style="align-items:center;margin-bottom:14px;">
@@ -784,12 +776,23 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       </div><!-- /s3-do -->
 
       <!-- Right: the load order -->
-      <div class="s3-lo">
+      <div class="s3-lo s3-col" id="s3ColLo" onclick="colClick('lo')">
 
-        <div class="s3-col-lbl">Load order</div>
+        <div class="s3-col-lbl">Load order
+          <button class="s3-focus" id="s3FocusLo" onclick="event.stopPropagation();setFocus('lo')">Focus</button>
+        </div>
+
+        <!-- Until a load order is added, this column is just the CTA -->
+        <div class="lo-cta-wrap" id="s3LoCta">
+          <button class="lo-cta" id="s3LoAdd" onclick="event.stopPropagation();addLoadOrder()" disabled>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Add a load order
+            <span class="lo-cta-sub" id="s3LoAddSub">Add a product to the delivery order first</span>
+          </button>
+        </div>
 
         <!-- Load Order section -->
-        <div class="lo-section">
+        <div class="lo-section" id="s3LoSection" style="display:none;">
           <div class="lo-hdr">
             <div class="lo-title-wrap">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -934,7 +937,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-secondary" onclick="closeAll()">Discard</button>
-        <button class="btn-save" onclick="goToStep4()">Next: best buy →</button>
+        <button class="btn-save" id="s3NextBtn" onclick="goToStep4()">Next: best buy →</button>
       </div>
     </div>
 
@@ -1022,163 +1025,6 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 <div id="successToast"></div>
 
 <script>
-/* Delivery window & preferred time — the shared timeline, in plain JS.
-   state: { start, end, preferred:[{start,end}] }, minutes from midnight. */
-var DWT_DAY = 1440, DWT_STEP = 30;
-
-function dwtShort(m) {
-  m = ((m % DWT_DAY) + DWT_DAY) % DWT_DAY;
-  var h24 = Math.floor(m / 60), mm = m % 60, h = h24 % 12 === 0 ? 12 : h24 % 12;
-  return h + (mm ? ':' + String(mm).padStart(2, '0') : '') + (h24 < 12 ? 'a' : 'p');
-}
-function dwtSpan(a, b) {
-  var t = b - a, h = Math.floor(t / 60), m = t % 60;
-  return (h ? h + 'h' : '') + (m ? (h ? ' ' : '') + m + 'm' : (h ? '' : '0m'));
-}
-function dwtSnap(m) { return Math.round(m / DWT_STEP) * DWT_STEP; }
-
-// every hour labelled, 12a to 12a
-function dwtRender(id, st) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var pct = function (m) { return (m / DWT_DAY) * 100 + '%'; };
-
-  var ticks = '';
-  for (var h = 0; h <= 24; h++) {
-    ticks += '<span class="dwt-tick" style="left:' + ((h * 60) / DWT_DAY) * 100 + '%">' +
-      (h === 0 || h === 24 ? '12a' : h === 12 ? '12p' : (h % 12)) + '</span>';
-  }
-
-  var bars = '', times = '';
-  st.preferred.forEach(function (p, i) {
-    bars += '<div class="dwt-bar" data-i="' + i + '" style="left:' + pct(p.start) + ';width:' + pct(p.end - p.start) + '">' +
-      '<span class="dwt-bar-e" data-i="' + i + '" data-mode="start" style="left:0"></span>' +
-      '<span class="dwt-bar-e" data-i="' + i + '" data-mode="end" style="right:0"></span>' +
-      '<button class="dwt-bar-x" data-rm="' + i + '" title="Remove preferred time">&times;</button>' +
-      '</div>';
-    times += '<span class="dwt-t" data-edit="' + i + '" data-side="start" style="left:' + pct(p.start) + '">' + dwtShort(p.start) + '</span>' +
-             '<span class="dwt-t" data-edit="' + i + '" data-side="end"   style="left:' + pct(p.end) + '">' + dwtShort(p.end) + '</span>';
-  });
-
-  var full = st.preferred.length > 0 && !dwtFreeSlot(st);
-
-  el.innerHTML =
-    '<span class="dwt-lbl">Delivery window &amp; preferred time</span>' +
-    '<div class="dwt-box">' +
-      '<div class="dwt-track" data-track>' +
-        '<div class="dwt-win" style="left:' + pct(st.start) + ';width:' + pct(st.end - st.start) + '"></div>' +
-        '<span class="dwt-h" data-win="start" style="left:calc(' + pct(st.start) + ' - 4px)"></span>' +
-        '<span class="dwt-h" data-win="end"   style="left:calc(' + pct(st.end) + ' - 5px)"></span>' +
-      '</div>' +
-      '<div class="dwt-ticks">' + ticks + '</div>' +
-      '<div class="dwt-bars"><div class="dwt-lane">' + bars + '</div><div class="dwt-times">' + times + '</div></div>' +
-      '<button class="dwt-add" data-add' + (full ? ' disabled title="Delete or adjust a preferred time first"' : '') + '>+ Preferred time</button>' +
-      '<div class="dwt-foot">Window <span class="dwt-span">' + dwtShort(st.start) + ' – ' + dwtShort(st.end) +
-        '</span> · ' + dwtSpan(st.start, st.end) +
-        (st.preferred.length ? ' · ' + st.preferred.length + ' preferred' : '') + '</div>' +
-    '</div>';
-
-  dwtWire(el, id, st);
-}
-
-// the window's next free half hour, or null when there is none
-function dwtFreeSlot(st) {
-  var busy = st.preferred.slice().sort(function (a, b) { return a.start - b.start; });
-  var cur = st.start;
-  for (var i = 0; i < busy.length; i++) {
-    if (busy[i].start - cur >= 60) return { start: cur, end: Math.min(cur + 60, busy[i].start) };
-    cur = Math.max(cur, busy[i].end);
-  }
-  if (st.end - cur >= 60) return { start: cur, end: Math.min(cur + 60, st.end) };
-  return null;
-}
-
-function dwtWire(el, id, st) {
-  var track = el.querySelector('[data-track]');
-  var rerender = function () { dwtRender(id, st); if (st.onChange) st.onChange(st); };
-
-  el.querySelectorAll('[data-rm]').forEach(function (b) {
-    b.onclick = function (e) { e.stopPropagation(); st.preferred.splice(+b.dataset.rm, 1); rerender(); };
-  });
-  var add = el.querySelector('[data-add]');
-  if (add) add.onclick = function () {
-    var slot = dwtFreeSlot(st);
-    if (slot) { st.preferred.push(slot); st.preferred.sort(function(a,b){return a.start-b.start;}); rerender(); }
-  };
-  el.querySelectorAll('[data-edit]').forEach(function (t) {
-    t.onclick = function () {
-      var i = +t.dataset.edit, side = t.dataset.side, p = st.preferred[i];
-      var cur = side === 'start' ? p.start : p.end;
-      var v = prompt('Preferred ' + side + ' time (HH:MM)',
-        String(Math.floor(cur / 60)).padStart(2, '0') + ':' + String(cur % 60).padStart(2, '0'));
-      if (!v) return;
-      var m = v.match(/^(\d{1,2}):(\d{2})$/); if (!m) return;
-      var mins = Math.min(DWT_DAY, Math.max(0, +m[1] * 60 + +m[2]));
-      if (side === 'start') p.start = Math.min(mins, p.end - DWT_STEP);
-      else p.end = Math.max(mins, p.start + DWT_STEP);
-      dwtClamp(st, i); rerender();
-    };
-  });
-
-  function pointerMin(e) {
-    var r = track.getBoundingClientRect();
-    return dwtSnap(Math.min(DWT_DAY, Math.max(0, ((e.clientX - r.left) / r.width) * DWT_DAY)));
-  }
-  function drag(onMove) {
-    function mv(e) { onMove(pointerMin(e)); rerender(); }
-    function up() { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); }
-    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
-  }
-
-  el.querySelectorAll('[data-win]').forEach(function (h) {
-    h.onpointerdown = function (e) {
-      e.preventDefault();
-      var which = h.dataset.win;
-      drag(function (m) {
-        if (which === 'start') st.start = Math.min(m, st.end - 60);
-        else st.end = Math.max(m, st.start + 60);
-        st.preferred = st.preferred.filter(function (p) { return p.start >= st.start && p.end <= st.end; });
-      });
-    };
-  });
-
-  el.querySelectorAll('.dwt-bar').forEach(function (bar) {
-    bar.onpointerdown = function (e) {
-      if (e.target.dataset.mode || e.target.dataset.rm) return;
-      e.preventDefault();
-      var i = +bar.dataset.i, p = st.preferred[i], grab = pointerMin(e) - p.start, len = p.end - p.start;
-      drag(function (m) {
-        p.start = m - grab; p.end = p.start + len; dwtClamp(st, i);
-      });
-    };
-  });
-  el.querySelectorAll('.dwt-bar-e').forEach(function (h) {
-    h.onpointerdown = function (e) {
-      e.preventDefault(); e.stopPropagation();
-      var i = +h.dataset.i, mode = h.dataset.mode, p = st.preferred[i];
-      drag(function (m) {
-        if (mode === 'start') p.start = Math.min(m, p.end - DWT_STEP);
-        else p.end = Math.max(m, p.start + DWT_STEP);
-        dwtClamp(st, i);
-      });
-    };
-  });
-}
-
-// a bar stops at the window and at its neighbours, whichever way it is moved
-function dwtClamp(st, i) {
-  var p = st.preferred[i], len = p.end - p.start;
-  var others = st.preferred.filter(function (_, j) { return j !== i; })
-                           .sort(function (a, b) { return a.start - b.start; });
-  var lo = st.start, hi = st.end;
-  others.forEach(function (o) {
-    if (o.end <= p.start) lo = Math.max(lo, o.end);
-    if (o.start >= p.end) hi = Math.min(hi, o.start);
-  });
-  if (p.start < lo) { p.start = lo; p.end = Math.min(hi, lo + len); }
-  if (p.end > hi)   { p.end = hi;   p.start = Math.max(lo, hi - len); }
-  if (p.end - p.start < DWT_STEP) p.end = Math.min(hi, p.start + DWT_STEP);
-}
 
 // ── Product colors (from shipto_map palette) ──────────────
 var PROD_COLORS = {
@@ -1328,6 +1174,11 @@ function goToOrderPlanning() {
   document.getElementById('s3CompSection').style.display = 'none';
   s3.truck = null;
   s3.assignments = [];
+  s3HasLoadOrder = false;
+  document.getElementById('s3LoCta').style.display = '';
+  document.getElementById('s3LoSection').style.display = 'none';
+  setSplit('none');
+  updateFooter();
 
   var now = new Date();
   document.getElementById('s3CreatedTime').textContent =
@@ -1370,6 +1221,7 @@ function syncProducts() {
   });
   s3.products = products;
   buildS3Gallons(products);
+  updateLoadOrderCta();
   if (s3.truck) autoAssign(); else updateS3DoStatuses();
 }
 
@@ -1448,6 +1300,57 @@ function closeAll() {
 // ── Driver picks the truck ────────────────────────────────
 // Every driver has a truck mapped to them, so selecting the driver selects
 // the truck and plans its compartments. It stays changeable.
+// ══════════════════════════════════════════════════════════
+//  The two units share the width
+// ══════════════════════════════════════════════════════════
+// A load order is optional — the tenant may buy the product itself, or the
+// order may just be a delivery. So the load order column starts as a CTA and
+// only becomes a planning surface once one is added. After that, whichever
+// unit is in focus takes most of the width.
+var s3HasLoadOrder = false;
+
+function setSplit(mode) {
+  document.getElementById('s3Body').setAttribute('data-split', mode);
+  document.getElementById('s3ColDo').classList.toggle('dim', mode === 'lo');
+  document.getElementById('s3ColLo').classList.toggle('dim', mode === 'do' || mode === 'none');
+  // only the column out of focus offers to take over
+  document.getElementById('s3FocusDo').style.display = mode === 'lo' ? 'inline-flex' : 'none';
+  document.getElementById('s3FocusLo').style.display = (mode === 'do' && s3HasLoadOrder) ? 'inline-flex' : 'none';
+}
+function setFocus(which) { if (s3HasLoadOrder) setSplit(which); }
+
+// clicking anywhere in the column that is not in focus brings it forward
+function colClick(which) {
+  if (!s3HasLoadOrder) return;
+  if (document.getElementById('s3Body').getAttribute('data-split') !== which) setSplit(which);
+}
+
+function addLoadOrder() {
+  s3HasLoadOrder = true;
+  document.getElementById('s3LoCta').style.display = 'none';
+  document.getElementById('s3LoSection').style.display = '';
+  setSplit('lo');                       // planning the load order is the next act
+  updateFooter();
+}
+
+// The CTA only opens once the delivery order has something to load.
+function updateLoadOrderCta() {
+  if (s3HasLoadOrder) return;
+  var ready = s3.products.length > 0;
+  document.getElementById('s3LoAdd').disabled = !ready;
+  document.getElementById('s3LoAddSub').textContent = ready
+    ? 'Plan which truck carries these ' + s3.products.reduce(function(a,p){return a+p.qty;},0).toLocaleString() + ' gal'
+    : 'Add a product to the delivery order first';
+}
+
+// Without a load order there is nothing to source, so best buy drops out.
+function updateFooter() {
+  var btn = document.getElementById('s3NextBtn');
+  if (!btn) return;
+  btn.textContent = s3HasLoadOrder ? 'Next: best buy →' : 'Create order';
+  btn.onclick = s3HasLoadOrder ? goToStep4 : createOrderAndLoad;
+}
+
 function buildFleetSelects() {
   var ds = document.getElementById('s3DriverSel');
   ds.innerHTML = '<option value="">Select Driver…</option>' + Object.keys(DRIVERS).map(function(k) {
@@ -1998,11 +1901,8 @@ function toggleCB(label) {
 function toggleRR(hdr) { hdr.closest('.rr-card').classList.toggle('collapsed'); }
 
 // ── Delivery window ───────────────────────────────────────
-// Every window field in every module uses the shared timeline.
-var s3Window = { start: 7 * 60, end: 17 * 60, preferred: [{ start: 9 * 60, end: 11 * 60 }] };
 
 buildFleetSelects();
-dwtRender('s3Win', s3Window);
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════

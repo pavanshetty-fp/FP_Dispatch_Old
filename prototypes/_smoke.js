@@ -16,6 +16,19 @@
       s.value = 'morris|112|Denver, CO, USA'; fire(s, 'change');
     });
     step('next to order planning', () => goToOrderPlanning());
+    step('load order starts as a CTA', () => {
+      if (document.getElementById('s3LoSection').style.display !== 'none') throw new Error('load order already open');
+      if (document.getElementById('s3LoAdd').disabled) throw new Error('CTA locked though lines exist');
+    });
+    step('add a load order', () => {
+      document.getElementById('s3LoAdd').click();
+      if (document.getElementById('s3Body').dataset.split !== 'lo') throw new Error('did not focus the load order');
+    });
+    step('focus switches back to delivery', () => {
+      document.getElementById('s3FocusDo').click();
+      if (document.getElementById('s3Body').dataset.split !== 'do') throw new Error('focus did not move');
+      document.getElementById('s3FocusLo').click();
+    });
     step('pick driver (auto-picks truck)', () => {
       const d = document.getElementById('s3DriverSel'); d.value = 'alex'; fire(d, 'change');
     });
