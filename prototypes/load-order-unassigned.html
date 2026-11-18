@@ -32,7 +32,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .btn-add-tag{background:#3b6fe0;color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.3px;}
 .customer-row{padding:8px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
 .badge-status{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;}
-.badge-unassigned{background:rgba(234,179,8,0.12);color:#eab308;border:1px solid rgba(234,179,8,0.25);}
+.badge-unassigned{background:rgba(255,147,30,0.12);color:#ff931e;border:1px solid rgba(255,147,30,0.25);}
 .badge-caret{font-size:8px;opacity:0.7;}
 .customer-name{font-size:14px;font-weight:500;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .btn-ticket{padding:5px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:inherit;cursor:pointer;letter-spacing:0.3px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#ccc;}
@@ -64,25 +64,25 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .fedit{color:rgba(255,255,255,0.2);font-size:10px;cursor:pointer;flex-shrink:0;}
 
 /* Load Order section */
-.lo-section{border:1px solid rgba(99,102,241,0.3);border-radius:4px;overflow:hidden;}
-.lo-hdr{background:rgba(99,102,241,0.08);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(99,102,241,0.2);}
-.lo-title-wrap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#a5b4fc;letter-spacing:0.3px;}
-.lo-new-badge{font-size:10px;font-weight:600;background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px;}
+.lo-section{border:1px solid rgba(54,87,245,0.3);border-radius:4px;overflow:hidden;}
+.lo-hdr{background:rgba(54,87,245,0.08);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(54,87,245,0.2);}
+.lo-title-wrap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#6fd4ff;letter-spacing:0.3px;}
+.lo-new-badge{font-size:10px;font-weight:600;background:rgba(54,87,245,0.2);color:#34c3ff;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px;}
 .lo-body{background:#262930;padding:14px;display:flex;flex-direction:column;gap:14px;}
 
 /* Input grid */
 .inp3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .inp-grp{display:flex;flex-direction:column;gap:4px;}
 .inp-lbl{font-size:10px;font-weight:500;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
-.inp-req{color:#ef4444;}
+.inp-req{color:#cc0200;}
 .inp-sel{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#fff;font-family:inherit;font-size:12px;padding:0 28px 0 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;}
 .inp-sel:hover{border-color:rgba(255,255,255,0.25);}
-.inp-sel:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.15);}
+.inp-sel:focus{border-color:#3657f5;box-shadow:0 0 0 2px rgba(54,87,245,0.15);}
 
 /* Shift card */
 .shift-card{background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;}
 .shift-top{display:flex;align-items:center;gap:10px;}
-.shift-icon{width:28px;height:28px;border-radius:50%;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.shift-icon{width:28px;height:28px;border-radius:50%;background:rgba(255,147,30,0.1);border:1px solid rgba(255,147,30,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .shift-name{font-size:12px;font-weight:600;color:#e9ebf0;letter-spacing:0.3px;}
 .shift-time{font-size:11px;color:#9ba3af;margin-top:1px;}
 .shift-right{margin-left:auto;text-align:right;}
@@ -90,27 +90,27 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .shift-remaining-lbl{font-size:10px;color:#6b7280;}
 .shift-bar-row{display:flex;align-items:center;gap:8px;}
 .shift-bar{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
-.shift-bar-fill{height:100%;border-radius:2px;background:#eab308;transition:width 0.4s ease;}
+.shift-bar-fill{height:100%;border-radius:2px;background:#ff931e;transition:width 0.4s ease;}
 .shift-bar-pct{font-size:10px;color:#6b7280;white-space:nowrap;}
 
 /* Equipment row */
 .equip-row{display:flex;gap:12px;align-items:flex-start;}
 .equip-card{flex:1;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
 .equip-card-hdr{padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);}
-.equip-icon{width:24px;height:24px;border-radius:3px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.equip-icon{width:24px;height:24px;border-radius:3px;background:rgba(54,87,245,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .equip-id{font-size:12px;font-weight:600;color:#e9ebf0;letter-spacing:0.3px;}
 .equip-model{font-size:10px;color:#9ba3af;margin-top:1px;}
 .equip-card-body{padding:10px 12px;display:flex;flex-direction:column;gap:7px;}
 .cap-bar-row{display:flex;align-items:center;gap:8px;}
 .cap-bar{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
-.cap-bar-committed{height:100%;border-radius:3px;background:rgba(99,102,241,0.6);}
+.cap-bar-committed{height:100%;border-radius:3px;background:rgba(54,87,245,0.6);}
 .cap-nums{display:flex;justify-content:space-between;align-items:center;}
 .cap-committed{font-size:10px;color:#9ba3af;}
-.cap-committed span{color:#a5b4fc;font-weight:600;}
-.cap-available{font-size:10px;font-weight:600;color:#4ade80;}
+.cap-committed span{color:#6fd4ff;font-weight:600;}
+.cap-available{font-size:10px;font-weight:600;color:#00c765;}
 .cap-total{font-size:10px;color:#6b7280;}
-.add-trailer-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border:1px dashed rgba(99,102,241,0.3);border-radius:4px;background:rgba(99,102,241,0.04);color:#818cf8;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;align-self:center;}
-.add-trailer-btn:hover{background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.5);}
+.add-trailer-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border:1px dashed rgba(54,87,245,0.3);border-radius:4px;background:rgba(54,87,245,0.04);color:#34c3ff;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;align-self:center;}
+.add-trailer-btn:hover{background:rgba(54,87,245,0.08);border-color:rgba(54,87,245,0.5);}
 
 /* Driver + shift inline row */
 .driver-shift-row{display:flex;align-items:flex-start;gap:12px;}
@@ -159,13 +159,13 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .lo-prodcol{padding:0 10px !important;font-size:12px;color:#fff;}
 .lo-prod-inner{display:flex;align-items:center;gap:5px;}
 .lo-sel{width:100%;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
-.lo-sel:focus{background-color:rgba(99,102,241,0.08);}
+.lo-sel:focus{background-color:rgba(54,87,245,0.08);}
 
 /* Action buttons */
 .lo-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:2px;}
 .btn-cancel{padding:7px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500;}
-.btn-save{padding:7px 18px;border-radius:4px;border:none;background:#6366f1;color:#fff;font-family:inherit;font-size:12px;cursor:pointer;font-weight:600;letter-spacing:0.3px;}
-.btn-save:hover{background:#5254cc;}
+.btn-save{padding:7px 18px;border-radius:4px;border:none;background:#3657f5;color:#fff;font-family:inherit;font-size:12px;cursor:pointer;font-weight:600;letter-spacing:0.3px;}
+.btn-save:hover{background:#2845d8;}
 
 /* Delivery reference bar */
 .del-ref{display:flex;align-items:stretch;gap:0;background:#1d2129;border:1px solid rgba(255,255,255,0.08);border-radius:4px;margin-bottom:12px;overflow:hidden;flex-shrink:0;}
@@ -193,11 +193,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .rg-prod{font-size:12px;color:#e9ebf0;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
 .rg-bar-wrap{margin-bottom:5px;}
 .rg-bar{height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;}
-.rg-bar-fill{height:100%;border-radius:2px;background:#818cf8;transition:width 0.4s;}
+.rg-bar-fill{height:100%;border-radius:2px;background:#34c3ff;transition:width 0.4s;}
 .rg-nums{display:flex;justify-content:space-between;}
-.rg-committed{font-size:10px;color:#818cf8;font-weight:600;}
+.rg-committed{font-size:10px;color:#34c3ff;font-weight:600;}
 .rg-ordered{font-size:10px;color:#6b7280;}
-.rg-remaining{font-size:10px;color:#4ade80;font-weight:600;}
+.rg-remaining{font-size:10px;color:#00c765;font-weight:600;}
 
 /* Notes */
 .rr-notes-wrap{padding:0;}
@@ -206,13 +206,13 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .rr-note-lbl{font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
 .rr-note-text{font-size:12px;color:#9ba3af;line-height:1.5;}
 .rr-note-empty{font-size:11px;color:#4b5563;font-style:italic;}
-.rr-note-add{font-size:11px;color:#818cf8;cursor:pointer;margin-top:4px;display:inline-block;}
+.rr-note-add{font-size:11px;color:#34c3ff;cursor:pointer;margin-top:4px;display:inline-block;}
 
 /* Activity */
 .rr-activity{padding:10px 14px;flex-shrink:0;}
 .rrail-ts{font-size:10px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
 .rrail-time{font-size:12px;color:#9ba3af;margin-top:3px;}
-.rrail-updates{font-size:12px;color:#818cf8;margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.rrail-updates{font-size:12px;color:#34c3ff;margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:4px;}
 .comment-box{margin:0 14px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:#1d1f23;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 .comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
 .comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
@@ -234,7 +234,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .do-form-3col{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
 .do-form-field{display:flex;flex-direction:column;gap:4px;}
 .inp-text{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;width:100%;box-sizing:border-box;}
-.inp-text:focus{border-color:rgba(99,102,241,0.5);}
+.inp-text:focus{border-color:rgba(54,87,245,0.5);}
 .do-prod-wrap{display:flex;flex-direction:column;gap:6px;}
 .do-prod-lbl{font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;}
 .do-prod-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
@@ -243,17 +243,17 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .do-prod-qty{width:100%;height:38px;padding:0 10px;background:transparent;border:none;color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;}
 .do-prod-qty:focus{background:rgba(255,255,255,0.03);}
 .do-del-btn{width:36px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;padding:0;}
-.do-del-btn:hover{color:#ef4444;}
-.do-add-prod-btn{background:none;border:none;color:#818cf8;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;}
-.do-add-prod-btn:hover{color:#a5b4fc;}
+.do-del-btn:hover{color:#cc0200;}
+.do-add-prod-btn{background:none;border:none;color:#34c3ff;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.do-add-prod-btn:hover{color:#6fd4ff;}
 
 /* ── Delivery Orders section ──────────────────────────────── */
 .do-section{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;flex-shrink:0;}
 .do-hdr{background:rgba(255,255,255,0.03);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07);}
 .do-title-wrap{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:#9ba3af;}
 .do-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(255,255,255,0.08);font-size:9px;font-weight:600;color:#9ba3af;}
-.do-add-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:#818cf8;font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;letter-spacing:0.2px;}
-.do-add-btn:hover{background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.4);}
+.do-add-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:#34c3ff;font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;letter-spacing:0.2px;}
+.do-add-btn:hover{background:rgba(54,87,245,0.08);border-color:rgba(54,87,245,0.4);}
 .do-list{background:#262930;}
 .do-row{padding:0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;}
 .do-row:last-child{border-bottom:none;}
@@ -261,7 +261,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .do-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;flex-shrink:0;}
 .do-pill-unassigned{background:rgba(107,114,128,0.15);color:#9ba3af;border:1px solid rgba(107,114,128,0.2);}
 .do-pill-scheduled{background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);}
-.do-pill-delivered{background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.2);}
+.do-pill-delivered{background:rgba(0,199,101,0.12);color:#00c765;border:1px solid rgba(0,199,101,0.2);}
 .do-num{font-size:11px;font-weight:600;color:#e9ebf0;white-space:nowrap;flex-shrink:0;}
 .do-sep{color:#3d4454;font-size:11px;flex-shrink:0;}
 .do-shipto{font-size:11px;color:#9ba3af;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
@@ -279,7 +279,23 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .act-who{font-weight:600;color:#c9cdd6;}
 .act-time{font-size:10px;color:#4b5563;margin-top:2px;}
 .act-more-row{padding:8px 14px 10px;border-top:1px solid rgba(255,255,255,0.05);}
-.act-more{font-size:11px;color:#818cf8;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.act-more{font-size:11px;color:#34c3ff;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+
+/* ── Compartment assignment ───────────────────────────────── */
+.btn-link-sm{background:none;border:none;color:#34c3ff;font-size:10.5px;font-family:inherit;cursor:pointer;padding:0;}
+.btn-link-sm:hover{color:#6fd4ff;}
+.ca-lbl{padding:0 9px;font-size:10.5px;font-weight:600;color:#9ba3af;white-space:nowrap;}
+.ca-unit{padding:0 9px;font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.ca-cap{padding:0 9px;font-size:10.5px;color:#6b7280;}
+.ca-status{padding:0 9px;font-size:9.5px;white-space:nowrap;}
+.ca-qty{width:100%;height:34px;padding:0 9px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.06);color:#e9ebf0;font-family:inherit;font-size:11px;outline:none;text-align:right;}
+.ca-qty:focus{background:rgba(54,87,245,0.08);}
+.rule-note{font-size:9.5px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
+.warn-banner{margin-top:8px;padding:7px 11px;border-radius:4px;font-size:10.5px;line-height:1.6;display:flex;flex-direction:column;gap:2px;}
+.warn-banner.overfill{background:rgba(204,2,0,0.08);border:1px solid rgba(204,2,0,0.2);}
+.warn-banner.partial{background:rgba(255,147,30,0.07);border:1px solid rgba(255,147,30,0.2);}
+.warn-banner.ok{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);}
+.prod-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -501,7 +517,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <div id="shiftCard" class="shift-card lo-reveal" style="display:none;flex:1;">
               <div class="shift-top">
                 <div class="shift-icon">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff931e" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 </div>
                 <div>
                   <div class="shift-name" id="shiftName">Morning Shift</div>
@@ -524,6 +540,32 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
             <!-- Equipment row: each is a unified card (identity + capacity + compartments) -->
             <div class="equip-row" id="equipRow"></div>
+
+            <!-- Compartment assignment — derived from the order lines above, fully editable -->
+            <div class="src-wrap lo-reveal" id="compAssignWrap" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+                <span class="src-lbl" style="margin:0;">Compartment assignment</span>
+                <button class="btn-link-sm" onclick="replanCompartments()">↺ Auto-assign</button>
+              </div>
+              <table class="lo-tbl">
+                <thead>
+                  <tr>
+                    <th style="width:52px;">Comp</th>
+                    <th style="width:66px;">Unit</th>
+                    <th style="width:72px;">Cap</th>
+                    <th>Product</th>
+                    <th style="width:108px;">Qty (gal)</th>
+                    <th style="width:100px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="compAssignBody"></tbody>
+              </table>
+              <div class="rule-note">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                One product per compartment — products can only share a compartment when the product is a blend
+              </div>
+              <div id="compWarnBanner" class="warn-banner" style="display:none;"></div>
+            </div>
 
             <!-- Sourcing table -->
             <div class="src-wrap lo-reveal">
@@ -575,26 +617,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
       <!-- Running gallons -->
       <div class="rr-card">
         <div class="rr-card-hdr" onclick="toggleRRCard(this)">Running gallons<svg class="rr-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
-        <div class="rr-card-body">
-          <div class="rg-row">
-            <div class="rg-prod">123 <span class="badge-cmp">≈ UNL87</span></div>
-            <div class="rg-bar-wrap"><div class="rg-bar"><div class="rg-bar-fill" id="rgBar123" style="width:0%"></div></div></div>
-            <div class="rg-nums">
-              <span class="rg-committed" id="rgComm123">0 gal committed</span>
-              <span class="rg-ordered">of 3,000 ordered</span>
-            </div>
-            <div style="margin-top:3px;font-size:10px;color:#4ade80;font-weight:600;" id="rgRem123">3,000 gal remaining</div>
-          </div>
-          <div class="rg-row">
-            <div class="rg-prod">CLR DSL <span class="badge-blend">Blend</span></div>
-            <div class="rg-bar-wrap"><div class="rg-bar"><div class="rg-bar-fill" id="rgBarDsl" style="width:0%"></div></div></div>
-            <div class="rg-nums">
-              <span class="rg-committed" id="rgCommDsl">0 gal committed</span>
-              <span class="rg-ordered">of 1,500 ordered</span>
-            </div>
-            <div style="margin-top:3px;font-size:10px;color:#4ade80;font-weight:600;" id="rgRemDsl">1,500 gal remaining</div>
-          </div>
-        </div>
+        <div class="rr-card-body" id="rgBody"></div>
       </div>
 
       <!-- Billing -->
@@ -689,22 +712,24 @@ const DRIVERS = {
     shift: { name:'Morning Shift', time:'6:00 AM – 2:00 PM · Nov 18, 2026', totalMins:480, usedMins:200 },
     truck: { id:'T-1042', model:'Peterbilt 389', capacity:6500, committed:600 },
     trailer: { id:'TR-204', model:'2-compartment · 4,500 gal', capacity:4500, committed:0,
-      comps:[{n:'C4',cap:2500,prod:'',fill:0},{n:'C5',cap:2000,prod:'',fill:0}] },
+      comps:[{n:'C4',cap:2500},{n:'C5',cap:2000}] },
+    // C1 and C2 come back from the last run with product still in them, so the
+    // plan has to work around what is already aboard.
     truckComps:[
-      {n:'C1',cap:3000,prod:'123',prodColor:'#fb923c',fillPct:8.3,fillGal:250},
-      {n:'C2',cap:1500,prod:'CLR DSL',prodColor:'#60a5fa',blend:true,fillPct:23.3,fillGal:350},
-      {n:'C3',cap:2000,prod:'',fillPct:0,fillGal:0}
+      {n:'C1',cap:3000,prod:'123 (≈ UNL87)',loaded:250},
+      {n:'C2',cap:1500,prod:'CLR DSL',loaded:350},
+      {n:'C3',cap:2000}
     ]
   },
   shriya2: {
     shift: { name:'Morning Shift', time:'6:00 AM – 2:00 PM · Nov 18, 2026', totalMins:480, usedMins:200 },
     truck: { id:'T-1055', model:'Freightliner 122SD', capacity:7000, committed:0 },
     trailer: { id:'TR-208', model:'3-compartment · 6,000 gal', capacity:6000, committed:0,
-      comps:[{n:'C4',cap:2000,prod:'',fill:0},{n:'C5',cap:2000,prod:'',fill:0},{n:'C6',cap:2000,prod:'',fill:0}] },
+      comps:[{n:'C4',cap:2000},{n:'C5',cap:2000},{n:'C6',cap:2000}] },
     truckComps:[
-      {n:'C1',cap:2500,prod:'',fillPct:0,fillGal:0},
-      {n:'C2',cap:2500,prod:'',fillPct:0,fillGal:0},
-      {n:'C3',cap:2000,prod:'',fillPct:0,fillGal:0}
+      {n:'C1',cap:2500},
+      {n:'C2',cap:2500},
+      {n:'C3',cap:2000}
     ]
   },
   aakash: {
@@ -712,14 +737,155 @@ const DRIVERS = {
     truck: { id:'T-1038', model:'Kenworth T800', capacity:5000, committed:2500 },
     trailer: null,
     truckComps:[
-      {n:'C1',cap:2000,prod:'',fillPct:0,fillGal:0},
-      {n:'C2',cap:1800,prod:'',fillPct:0,fillGal:0},
-      {n:'C3',cap:1200,prod:'',fillPct:0,fillGal:0}
+      {n:'C1',cap:2000},
+      {n:'C2',cap:1800},
+      {n:'C3',cap:1200}
     ]
   }
 };
 
 function fmt(n){return n.toLocaleString();}
+
+// ══════════════════════════════════════════════════════════
+//  Compartment planning — shared rules with the other flows
+// ══════════════════════════════════════════════════════════
+var PROD_COLORS = {
+  '123 (≈ UNL87)': '#c4a319',
+  'CLR DSL':       '#2f9be0',
+  'RD DSL':        '#e0483f',
+  'Premium UNL':   '#8a6cff',
+  'Heating Oil':   '#fb923c',
+};
+// Products that are themselves blends. A compartment holds one product;
+// only a blend may combine components in the same compartment.
+var BLEND_PRODUCTS = ['CLR DSL'];
+
+var loPlan = { driver:null, products:[], assignments:[] };
+
+// Best guess at a compartment plan. A compartment never holds two products,
+// so this is a packing problem with no single winning strategy: filling the
+// biggest product first wastes least space, but it can strand a small product
+// with nowhere to go. We run both orderings plus a seeded variant that gives
+// every product one compartment before any product takes a second, and keep
+// whichever plan loads the most gallons.
+function planAssignments(comps, products) {
+  function run(order, seed) {
+    // a compartment may arrive with product already aboard — keep it and plan around it
+    var as = comps.map(function(c) {
+      return Object.assign({ product:'', qty:0 }, c);
+    });
+    // product already aboard counts toward the order, so only the shortfall
+    // still has to be loaded at the terminal
+    var aboard = {};
+    comps.forEach(function(c) {
+      if (c.product && c.qty) aboard[c.product] = (aboard[c.product]||0) + c.qty;
+    });
+    var rem = {};
+    products.forEach(function(p){ rem[p.name] = Math.max(0, p.qty - (aboard[p.name]||0)); });
+    var list = products.slice().sort(function(a,b) {
+      return order === 'asc' ? a.qty - b.qty : b.qty - a.qty;
+    });
+
+    if (seed) {
+      list.forEach(function(p) {
+        var r = rem[p.name];
+        if (r <= 0) return;
+        // prefer the compartment that takes the whole line with least spare;
+        // if none can, take the roomiest one going
+        var fit = -1, fitWaste = Infinity, big = -1, bigCap = -1;
+        for (var i=0;i<as.length;i++) {
+          if (as[i].product !== '') continue;
+          if (as[i].cap >= r) {
+            var w = as[i].cap - r;
+            if (w < fitWaste) { fitWaste = w; fit = i; }
+          } else if (as[i].cap > bigCap) { bigCap = as[i].cap; big = i; }
+        }
+        var pick = fit >= 0 ? fit : big;
+        if (pick < 0) return;
+        var load = Math.min(as[pick].cap, r);
+        as[pick].product = p.name;
+        as[pick].qty = load;
+        rem[p.name] = r - load;
+      });
+    }
+
+    list.forEach(function(p) {
+      var r = rem[p.name];
+      for (var i=0; i<as.length && r>0; i++) {
+        var a = as[i];
+        if (a.product !== '' && a.product !== p.name) continue;   // no mixing
+        var space = a.cap - a.qty;
+        if (space <= 0) continue;
+        var load = Math.min(space, r);
+        a.product = p.name;
+        a.qty += load;
+        r -= load;
+      }
+      rem[p.name] = r;
+    });
+
+    return { as: as, loaded: as.reduce(function(s,a){ return s+a.qty; },0) };
+  }
+
+  var best = null;
+  [['desc',true], ['asc',true], ['desc',false]].forEach(function(cfg) {
+    var r = run(cfg[0], cfg[1]);
+    if (!best || r.loaded > best.loaded) best = r;
+  });
+  return best.as;
+}
+
+// Order lines combined across every delivery order on this load
+function collectDOProducts() {
+  var map = {}, order = [];
+  document.querySelectorAll('.do-prod-tbl tbody tr').forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    var qty = tr.querySelector('input');
+    if (!sel || !qty) return;
+    var opt = sel.options[sel.selectedIndex];
+    var name = opt ? opt.text : '';
+    var v = parseInt(qty.value) || 0;
+    if (!name || name === '— Select' || v <= 0) return;
+    if (!(name in map)) { map[name] = 0; order.push(name); }
+    map[name] += v;
+  });
+  return order.map(function(n){ return { name:n, qty:map[n] }; });
+}
+
+// Truck compartments plus any trailer's, labelled as the driver's units
+function loComps() {
+  var d = DRIVERS[loPlan.driver];
+  if (!d) return [];
+  var comps = d.truckComps.map(function(c) {
+    return { cap:c.cap, label:c.n, unit:d.truck.id, isTrailer:false,
+             product:c.prod || '', qty:c.loaded || 0 };
+  });
+  if (d.trailer) {
+    d.trailer.comps.forEach(function(c) {
+      comps.push({ cap:c.cap, label:c.n, unit:d.trailer.id, isTrailer:true,
+                   product:c.prod || '', qty:c.loaded || 0 });
+    });
+  }
+  return comps;
+}
+
+function replanCompartments() {
+  loPlan.products = collectDOProducts();
+  loPlan.assignments = planAssignments(loComps(), loPlan.products);
+  renderLoPlan();
+}
+
+function setCompProd(i, sel) {
+  var a = loPlan.assignments[i];
+  a.product = sel.value;
+  if (!sel.value) a.qty = 0;
+  renderLoPlan();
+}
+function setCompQty(i, inp) {
+  var a = loPlan.assignments[i];
+  a.qty = Math.min(Math.max(0, parseInt(inp.value) || 0), a.cap);
+  renderLoPlan();
+}
 
 // ── DO toggle ─────────────────────────────────────────────────
 function toggleDO(id) {
@@ -757,6 +923,9 @@ function syncDOChips(id) {
     html += '<span class="del-prod-chip">' + name + ' <span class="del-prod-qty">' + gal + ' gal</span></span>';
   });
   chipsEl.innerHTML = html || '<span style="font-size:11px;color:#4b5563;font-style:italic;">No products</span>';
+
+  // Order lines drive the compartment plan, so re-plan as they change
+  if (loPlan.driver) replanCompartments();
 }
 
 // ── Product rows ───────────────────────────────────────────────
@@ -855,18 +1024,19 @@ function addDeliveryOrder() {
   row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function buildComp(c){
-  const hasProduct=c.prod&&c.prod.length>0;
-  const fillColor=c.blend?'rgba(96,165,250,0.4)':(c.prodColor?c.prodColor.replace('#','rgba(').replace('fb923c','251,146,60,0.4)').replace('60a5fa','96,165,250,0.4)'):'rgba(251,146,60,0.4)');
-  const badgeHtml=c.blend?'<span class="badge-blend">Blend</span>':'';
-  const capColor=hasProduct?'#6b7280':'#3d4454';
-  const body=hasProduct
-    ?'<div class="comp-body"><div class="comp-empty"></div><div class="comp-fill" style="height:'+c.fillPct+'%;background:'+fillColor+';"><span class="comp-fill-lbl">'+fmt(c.fillGal)+' gal</span></div></div>'
+function buildComp(a){
+  const has = a.product && a.qty > 0;
+  const col = PROD_COLORS[a.product] || '#9ba3af';
+  const pct = has ? Math.round(a.qty / a.cap * 100) : 0;
+  const badgeHtml = BLEND_PRODUCTS.indexOf(a.product) >= 0 ? '<span class="badge-blend">Blend</span>' : '';
+  const capColor = has ? '#6b7280' : '#3d4454';
+  const body = has
+    ?'<div class="comp-body"><div class="comp-empty"></div><div class="comp-fill" style="height:'+pct+'%;background:'+col+';opacity:0.8;"><span class="comp-fill-lbl">'+fmt(a.qty)+' gal</span></div></div>'
     :'<div class="comp-body"><div class="comp-striped"></div></div>';
-  const foot=hasProduct
-    ?'<div class="comp-foot"><span class="comp-num">'+c.n+'</span><span class="comp-prod" style="color:'+(c.prodColor||'#9ba3af')+';">'+c.prod+badgeHtml+'</span></div>'
-    :'<div class="comp-foot"><span class="comp-num">'+c.n+'</span><span class="comp-prod comp-prod-empty">Empty</span></div>';
-  return '<div class="comp" style="flex:'+c.cap+'"><div class="comp-cap" style="color:'+capColor+';">'+fmt(c.cap)+' gal</div>'+body+foot+'</div>';
+  const foot = has
+    ?'<div class="comp-foot"><span class="comp-num">'+a.label+'</span><span class="comp-prod" style="color:'+col+';">'+a.product+badgeHtml+'</span></div>'
+    :'<div class="comp-foot"><span class="comp-num">'+a.label+'</span><span class="comp-prod comp-prod-empty">Empty</span></div>';
+  return '<div class="comp" style="flex:'+a.cap+'"><div class="comp-cap" style="color:'+capColor+';">'+fmt(a.cap)+' gal</div>'+body+foot+'</div>';
 }
 
 function buildUnifiedEquipCard(data, isTrailer, comps) {
@@ -874,8 +1044,8 @@ function buildUnifiedEquipCard(data, isTrailer, comps) {
   const avail = data.capacity - data.committed;
   const totalCap = comps.reduce(function(s, c) { return s + c.cap; }, 0);
   const icon = isTrailer
-    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="1" y="8" width="22" height="11" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>'
-    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m0 0h3l3 3v4h-6V8"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>';
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><rect x="1" y="8" width="22" height="11" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m0 0h3l3 3v4h-6V8"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>';
   const compsHTML = comps.map(buildComp).join('');
   return '<div class="equip-unit lo-reveal">' +
     '<div class="equip-unit-top">' +
@@ -929,37 +1099,127 @@ function onDriverChange(val) {
   document.getElementById('shiftBarFill').style.width   = usedPct + '%';
   document.getElementById('shiftBarPct').textContent    = usedPct + '% used';
 
-  // Show equipment + sourcing
+  // Show equipment + sourcing, then plan the compartments from the order lines
   expanded.style.display = 'flex';
+  loPlan.driver = val;
+  replanCompartments();
+}
 
-  // Build unified truck card (capacity + compartments together)
-  const truckHTML = buildUnifiedEquipCard(d.truck, false, d.truckComps);
+// Redraws the equipment cards, the assignment table and the running gallons
+// from whatever the current plan says.
+function renderLoPlan() {
+  const d = DRIVERS[loPlan.driver];
+  if (!d) return;
 
-  // Build unified trailer card or add-trailer placeholder
-  let trailerHTML = '';
+  const truckAs   = loPlan.assignments.filter(function(a){ return !a.isTrailer; });
+  const trailerAs = loPlan.assignments.filter(function(a){ return a.isTrailer; });
+  const sum = function(list){ return list.reduce(function(s,a){ return s+a.qty; },0); };
+
+  let html = buildUnifiedEquipCard(
+    { id:d.truck.id, model:d.truck.model, capacity:d.truck.capacity, committed:sum(truckAs) },
+    false, truckAs);
+
   if (d.trailer) {
-    const trailerComps = d.trailer.comps.map(function(c) {
-      return { n: c.n, cap: c.cap, prod: c.prod || '', fillPct: c.fill || 0, fillGal: 0 };
-    });
-    trailerHTML = buildUnifiedEquipCard(
-      { id: d.trailer.id, model: d.trailer.model, capacity: d.trailer.capacity, committed: d.trailer.committed },
-      true,
-      trailerComps
-    );
+    html += buildUnifiedEquipCard(
+      { id:d.trailer.id, model:d.trailer.model, capacity:d.trailer.capacity, committed:sum(trailerAs) },
+      true, trailerAs);
   } else {
-    trailerHTML = '<button class="add-trailer-btn lo-reveal" onclick="addTrailer()">' +
+    html += '<button class="add-trailer-btn lo-reveal" onclick="addTrailer()">' +
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>' +
       ' Add trailer</button>';
   }
-  document.getElementById('equipRow').innerHTML = truckHTML + trailerHTML;
+  document.getElementById('equipRow').innerHTML = html;
+
+  renderAssignTable();
+  renderRunningGallons();
+}
+
+function renderAssignTable() {
+  const wrap = document.getElementById('compAssignWrap');
+  if (!loPlan.assignments.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const opts = '<option value="">— empty</option>' +
+    loPlan.products.map(function(p){ return '<option value="'+p.name+'">'+p.name+'</option>'; }).join('');
+
+  document.getElementById('compAssignBody').innerHTML = loPlan.assignments.map(function(a,i) {
+    const spare = a.cap - a.qty;
+    const status = !a.product ? '<span style="color:#4b5563;">—</span>'
+      : spare > 0 ? '<span style="color:#ff931e;">+'+fmt(spare)+' spare</span>'
+      : '<span style="color:#00c765;">✓ Full</span>';
+    const col = PROD_COLORS[a.product] || '';
+    const sel = opts.replace('value="'+a.product+'"', 'value="'+a.product+'" selected');
+    return '<tr style="'+(col?'border-left:2px solid '+col+';':'')+'">' +
+      '<td class="ca-lbl">'+a.label+'</td>' +
+      '<td class="ca-unit">'+(a.isTrailer?'Trailer':'Truck')+'</td>' +
+      '<td class="ca-cap">'+fmt(a.cap)+'</td>' +
+      '<td><select class="lo-sel" onchange="setCompProd('+i+',this)">'+sel+'</select></td>' +
+      '<td><input class="ca-qty" type="number" min="0" max="'+a.cap+'" value="'+(a.qty||'')+'" placeholder="0" onchange="setCompQty('+i+',this)"></td>' +
+      '<td class="ca-status">'+status+'</td>' +
+    '</tr>';
+  }).join('');
+
+  // Banner
+  const totalCap = loPlan.assignments.reduce(function(s,a){ return s+a.cap; },0);
+  const needed   = loPlan.products.reduce(function(s,p){ return s+p.qty; },0);
+  const byProd = {};
+  loPlan.assignments.forEach(function(a){ if (a.product) byProd[a.product] = (byProd[a.product]||0)+a.qty; });
+
+  let lines = [], sev = 'ok';
+  if (needed > totalCap) {
+    lines.push(['#cc0200','⚠ '+fmt(needed-totalCap)+' gal over capacity — add a trailer or reduce an order line']);
+    sev = 'overfill';
+  }
+  loPlan.products.forEach(function(p) {
+    const short = p.qty - (byProd[p.name]||0);
+    if (short > 0) {
+      lines.push(['#ff931e','⚠ '+fmt(short)+' gal of '+p.name+' not assigned to a compartment']);
+      if (sev === 'ok') sev = 'partial';
+    }
+  });
+  if (!lines.length) lines.push(['#00c765','✓ Every ordered gallon is assigned to a compartment']);
+
+  const banner = document.getElementById('compWarnBanner');
+  banner.className = 'warn-banner ' + sev;
+  banner.style.display = '';
+  banner.innerHTML = lines.map(function(l){ return '<div style="color:'+l[0]+';">'+l[1]+'</div>'; }).join('');
+}
+
+function renderRunningGallons() {
+  const byProd = {};
+  loPlan.assignments.forEach(function(a){ if (a.product) byProd[a.product] = (byProd[a.product]||0)+a.qty; });
+  const body = document.getElementById('rgBody');
+  if (!body) return;
+  if (!loPlan.products.length) {
+    body.innerHTML = '<div style="padding:10px 14px;font-size:11px;color:#4b5563;font-style:italic;">No order lines yet</div>';
+    return;
+  }
+  body.innerHTML = loPlan.products.map(function(p) {
+    const committed = byProd[p.name] || 0;
+    const rem = p.qty - committed;
+    const pct = p.qty ? Math.round(committed / p.qty * 100) : 0;
+    const col = PROD_COLORS[p.name] || '#9ba3af';
+    const blend = BLEND_PRODUCTS.indexOf(p.name) >= 0 ? ' <span class="badge-blend">Blend</span>' : '';
+    return '<div class="rg-row">' +
+      '<div class="rg-prod"><span class="prod-dot" style="background:'+col+';margin-right:5px;"></span>'+p.name+blend+'</div>' +
+      '<div class="rg-bar-wrap"><div class="rg-bar"><div class="rg-bar-fill" style="width:'+pct+'%"></div></div></div>' +
+      '<div class="rg-nums">' +
+        '<span class="rg-committed">'+fmt(committed)+' gal committed</span>' +
+        '<span class="rg-ordered">of '+fmt(p.qty)+' ordered</span>' +
+      '</div>' +
+      '<div style="margin-top:3px;font-size:10px;font-weight:600;color:'+(rem>0?'#ff931e':'#00c765')+';">' +
+        (rem > 0 ? fmt(rem)+' gal remaining' : 'fully committed') +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function addTrailer() {
   const equipRow = document.getElementById('equipRow');
   const lastEl   = equipRow.lastElementChild;
-  const icon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="1" y="8" width="22" height="11" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>';
+  const icon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34c3ff" stroke-width="2"><rect x="1" y="8" width="22" height="11" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>';
   lastEl.outerHTML =
-    '<div class="equip-unit lo-reveal" style="border-style:dashed;border-color:rgba(99,102,241,0.3);">' +
+    '<div class="equip-unit lo-reveal" style="border-style:dashed;border-color:rgba(54,87,245,0.3);">' +
       '<div class="equip-unit-top">' +
         '<div class="equip-unit-hdr">' +
           '<div class="equip-icon">' + icon + '</div>' +
@@ -982,7 +1242,7 @@ function onTrailerSelect(val) {
   const t = trailers[val]; if (!t) return;
   const driverKey = document.getElementById('driverSel').value;
   DRIVERS[driverKey].trailer = t;
-  onDriverChange(driverKey);
+  replanCompartments();
 }
 </script>
 </body>
