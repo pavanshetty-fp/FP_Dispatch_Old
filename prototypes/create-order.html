@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Create Order — FleetPanda Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-height:100vh;overflow:hidden;}
+
+/* Background */
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(30,40,55,0.8) 0%,#0a0d13 70%);}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:48px 48px;opacity:0.5;}
+
+/* Dispatch board (behind) */
+.dispatch-board{position:fixed;inset:0;padding:16px;display:flex;flex-direction:column;gap:10px;opacity:0.25;pointer-events:none;}
+.db-topbar{height:44px;background:#1d2229;border-radius:6px;display:flex;align-items:center;gap:10px;padding:0 14px;}
+.db-dot{width:8px;height:8px;border-radius:50%;background:#3d4454;}
+.db-dot.active{background:#6366f1;}
+.db-cols{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.db-col{background:#1d2229;border-radius:4px;padding:10px;}
+.db-col-hdr{height:12px;background:#2d3340;border-radius:2px;width:60%;margin-bottom:8px;}
+.db-card{height:52px;background:#262c35;border-radius:3px;margin-bottom:6px;border-left:3px solid;}
+.db-card.c1{border-color:#6366f1;}
+.db-card.c2{border-color:#eab308;}
+.db-card.c3{border-color:#34d399;}
+.db-card.c4{border-color:#60a5fa;}
+
+/* ── Overlay scrim ─────────────────────────────────────────── */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10;display:flex;align-items:center;justify-content:center;}
+
+/* ── Wizard step indicator ────────────────────────────────── */
+.step-trail{display:flex;align-items:center;gap:0;margin-bottom:20px;}
+.step-node{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:0.3px;}
+.step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.step-node.done .step-num{background:#34d399;color:#0f1a14;}
+.step-node.active .step-num{background:#6366f1;color:#fff;}
+.step-node.pending .step-num{background:rgba(255,255,255,0.08);color:#6b7280;}
+.step-node.done .step-label{color:#34d399;}
+.step-node.active .step-label{color:#fff;}
+.step-node.pending .step-label{color:#4b5563;}
+.step-arrow{margin:0 10px;color:#3d4454;font-size:14px;}
+
+/* ── Step 1 modal: Select Customer ───────────────────────── */
+#step1{z-index:20;width:560px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);}
+.wiz-hdr{background:#252d36;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07);}
+.wiz-title{font-size:14px;font-weight:600;color:#fff;letter-spacing:0.4px;}
+.wiz-close{width:28px;height:28px;border:none;background:transparent;color:#6b7280;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.wiz-close:hover{background:rgba(255,255,255,0.06);color:#ccc;}
+.wiz-body{padding:20px 20px 16px;}
+.wiz-footer{padding:12px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,0.07);}
+
+/* ── Step 2 modal: Create Order ───────────────────────────── */
+#step2{z-index:20;width:820px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 60px);display:flex;flex-direction:column;}
+.co-hdr{background:#252d36;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.co-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:#9ba3af;}
+.co-breadcrumb-sep{color:#3d4454;}
+.co-breadcrumb-cust{color:#fff;font-weight:600;}
+.co-body{padding:16px 20px;overflow-y:auto;flex:1;}
+.co-body::-webkit-scrollbar{width:5px;}
+.co-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.co-cust-info{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:4px;margin-bottom:16px;}
+.co-cust-icon{width:28px;height:28px;border-radius:4px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.co-cust-name{font-size:13px;font-weight:600;color:#fff;letter-spacing:0.3px;}
+.co-cust-addr{font-size:11px;color:#6b7280;margin-top:1px;}
+.co-footer{padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.co-footer-left{display:flex;align-items:center;gap:10px;}
+
+/* ── Shared form fields ───────────────────────────────────── */
+.form-row{display:flex;gap:12px;margin-bottom:12px;}
+.form-row:last-child{margin-bottom:0;}
+.f-col{flex:1;display:flex;flex-direction:column;gap:4px;}
+.f-col-2{flex:2;}
+.f-lbl{font-size:10px;font-weight:600;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
+.f-req{color:#ef4444;}
+.f-inp{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;width:100%;}
+.f-inp:focus{border-color:rgba(99,102,241,0.5);box-shadow:0 0 0 2px rgba(99,102,241,0.12);}
+.f-inp::placeholder{color:#4b5563;}
+.f-sel{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 28px 0 10px;outline:none;cursor:pointer;appearance:none;width:100%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;}
+.f-sel:focus{border-color:rgba(99,102,241,0.5);}
+.f-sel-placeholder{color:#4b5563;}
+/* React-select style search input */
+.rs-wrap{position:relative;}
+.rs-inp{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;width:100%;}
+.rs-inp:focus{border-color:rgba(99,102,241,0.5);}
+.rs-inp::placeholder{color:#4b5563;}
+.rs-dropdown{position:absolute;top:40px;left:0;right:0;background:#2c3034;border:1px solid rgba(255,255,255,0.18);border-radius:4px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.5);max-height:180px;overflow-y:auto;display:none;}
+.rs-wrap.open .rs-dropdown{display:block;}
+.rs-opt{padding:8px 12px;font-size:12px;color:#e9ebf0;cursor:pointer;display:flex;flex-direction:column;gap:1px;}
+.rs-opt:hover,.rs-opt.selected{background:rgba(99,102,241,0.15);}
+.rs-opt-sub{font-size:10px;color:#6b7280;}
+
+/* ── Checkbox / toggle ────────────────────────────────────── */
+.cb-row{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
+.cb-box{width:16px;height:16px;border:1.5px solid rgba(255,255,255,0.2);border-radius:3px;background:#2c3034;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cb-box.checked{background:#6366f1;border-color:#6366f1;}
+.cb-lbl{font-size:12px;color:#9ba3af;}
+.toggle-wrap{display:flex;align-items:center;gap:8px;}
+.toggle{position:relative;width:32px;height:18px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:9px;transition:background 0.2s;}
+.toggle input:checked ~ .toggle-track{background:#6366f1;}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.2s;}
+.toggle input:checked ~ .toggle-thumb{left:17px;}
+.toggle-lbl{font-size:12px;color:#9ba3af;}
+
+/* ── Tab switcher ─────────────────────────────────────────── */
+.tab-row{display:flex;gap:0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.tab-btn{flex:1;padding:7px 12px;border:none;background:transparent;color:#6b7280;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;letter-spacing:0.2px;transition:all 0.15s;}
+.tab-btn.active{background:#6366f1;color:#fff;}
+.tab-btn:not(.active):hover{background:rgba(255,255,255,0.05);color:#ccc;}
+
+/* ── Section divider ──────────────────────────────────────── */
+.sec-divider{margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.07);}
+.sec-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+
+/* ── Bulk Delivery table ──────────────────────────────────── */
+.bd-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.bd-tbl th{background:rgba(0,0,0,0.25);padding:6px 10px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
+.bd-tbl td{border-top:1px solid rgba(255,255,255,0.07);height:38px;vertical-align:middle;}
+.bd-sel{width:100%;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.bd-sel:focus{background-color:rgba(99,102,241,0.08);}
+.bd-qty{width:100%;height:38px;padding:0 10px;background:transparent;border:none;color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;}
+.bd-topoff{padding:0 10px;display:flex;align-items:center;justify-content:center;}
+.bd-del{width:36px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;}
+.bd-del:hover{color:#ef4444;}
+.bd-add{background:none;border:none;color:#818cf8;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;margin-top:6px;}
+.bd-add:hover{color:#a5b4fc;}
+
+/* ── Delivery instructions textarea ──────────────────────── */
+.di-area{width:100%;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:9px 10px;outline:none;resize:none;min-height:64px;line-height:1.5;}
+.di-area:focus{border-color:rgba(99,102,241,0.5);}
+.di-area::placeholder{color:#4b5563;}
+
+/* ── Expandable section ───────────────────────────────────── */
+.expand-hdr{display:flex;align-items:center;gap:6px;cursor:pointer;padding:7px 0;user-select:none;}
+.expand-hdr:hover .expand-lbl{color:#ccc;}
+.expand-lbl{font-size:11px;font-weight:600;color:#818cf8;letter-spacing:0.3px;}
+.expand-chev{width:12px;height:12px;color:#818cf8;transition:transform 0.15s;}
+.expand-hdr.open .expand-chev{transform:rotate(180deg);}
+.expand-body{display:none;padding-top:10px;}
+.expand-hdr.open + .expand-body{display:block;}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-primary{padding:8px 20px;border-radius:4px;border:none;background:#6366f1;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.3px;}
+.btn-primary:hover{background:#5254cc;}
+.btn-secondary{padding:8px 16px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500;}
+.btn-secondary:hover{background:rgba(255,255,255,0.05);}
+.btn-ghost-sm{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-size:11px;font-family:inherit;cursor:pointer;letter-spacing:0.3px;}
+.btn-link{background:none;border:none;color:#818cf8;font-size:11px;font-family:inherit;cursor:pointer;padding:0;text-decoration:none;}
+.btn-link:hover{color:#a5b4fc;}
+
+/* ── Success flash ────────────────────────────────────────── */
+#successToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a28;border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:10px 20px;font-size:13px;color:#34d399;font-weight:500;z-index:100;display:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+
+/* ══════════════════════════════════════════════════════════
+   LOAD ORDER MODAL (same as existing prototype)
+   ══════════════════════════════════════════════════════════ */
+.modal{position:fixed;top:30px;left:50%;transform:translateX(-50%);width:min(1350px,calc(100vw - 80px));max-height:calc(100vh - 50px);background:transparent;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:20;}
+.modal-header{background:#2b343a;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;border-radius:10px 10px 0 0;}
+.mhdr-left{display:flex;align-items:center;gap:10px;}
+.modal-title{font-size:14px;font-weight:600;color:#fff;letter-spacing:0.4px;}
+.mhdr-actions{display:flex;gap:6px;}
+.btn-mhdr{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#ccc;font-size:11px;font-family:inherit;cursor:pointer;letter-spacing:0.3px;}
+.btn-mhdr-primary{background:#4a9eff;border-color:#4a9eff;color:#fff;font-weight:500;}
+.modal-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:none;background:transparent;color:#aaa;cursor:pointer;font-size:14px;}
+.modal-close:hover{background:rgba(255,255,255,0.08);}
+.tag-banner{background:rgba(42,52,60,0.9);border-bottom:1px solid rgba(255,255,255,0.07);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#9ba3af;flex-shrink:0;}
+.btn-add-tag{background:#3b6fe0;color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;}
+.customer-row{padding:8px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.badge-new{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.25);}
+.customer-name{font-size:14px;font-weight:500;color:#fff;flex:1;}
+.modal-body{display:grid;grid-template-columns:1fr 338px;overflow:hidden;flex:1;}
+.main-content{padding:14px;overflow-y:auto;background:rgba(56,64,71,0.6);}
+.main-content::-webkit-scrollbar{width:6px;}
+.main-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+/* DO section */
+.do-section{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.do-hdr{background:rgba(255,255,255,0.03);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07);}
+.do-title-wrap{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:#9ba3af;}
+.do-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(255,255,255,0.08);font-size:9px;font-weight:600;color:#9ba3af;}
+.do-list{background:#262930;}
+.do-row-static{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;gap:7px;}
+.do-row-static:last-child{border-bottom:none;}
+.do-row-meta{display:flex;align-items:center;gap:8px;}
+.do-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;flex-shrink:0;}
+.do-pill-unassigned{background:rgba(107,114,128,0.15);color:#9ba3af;border:1px solid rgba(107,114,128,0.2);}
+.do-num{font-size:11px;font-weight:600;color:#e9ebf0;}
+.do-sep{color:#3d4454;font-size:11px;}
+.do-shipto{font-size:11px;color:#9ba3af;flex:1;}
+.do-time{font-size:10px;color:#6b7280;margin-left:auto;}
+.do-row-prods{display:flex;flex-wrap:wrap;gap:6px;}
+.del-prod-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:11px;color:#e9ebf0;}
+.del-prod-qty{font-size:10px;color:#9ba3af;}
+
+/* Load Order creation section */
+.lo-section{border:1px solid rgba(99,102,241,0.3);border-radius:4px;overflow:hidden;}
+.lo-hdr{background:rgba(99,102,241,0.08);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(99,102,241,0.2);}
+.lo-title-wrap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#a5b4fc;letter-spacing:0.3px;}
+.lo-new-badge{font-size:10px;font-weight:600;background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px;}
+.lo-body{background:#262930;padding:14px;display:flex;flex-direction:column;gap:14px;}
+.inp3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.inp-grp{display:flex;flex-direction:column;gap:4px;}
+.inp-lbl{font-size:10px;font-weight:500;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
+.inp-req{color:#ef4444;}
+.inp-sel{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 28px 0 10px;outline:none;cursor:pointer;appearance:none;width:100%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;}
+.inp-sel:hover{border-color:rgba(255,255,255,0.25);}
+.inp-sel:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.15);}
+
+/* Shift card */
+.shift-card{background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;}
+.shift-top{display:flex;align-items:center;gap:10px;}
+.shift-icon{width:28px;height:28px;border-radius:50%;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.shift-name{font-size:12px;font-weight:600;color:#e9ebf0;}
+.shift-time{font-size:11px;color:#9ba3af;margin-top:1px;}
+.shift-right{margin-left:auto;text-align:right;}
+.shift-remaining{font-size:11px;font-weight:600;color:#e9ebf0;}
+.shift-remaining-lbl{font-size:10px;color:#6b7280;}
+.shift-bar-row{display:flex;align-items:center;gap:8px;}
+.shift-bar{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.shift-bar-fill{height:100%;border-radius:2px;background:#eab308;}
+.shift-bar-pct{font-size:10px;color:#6b7280;white-space:nowrap;}
+
+/* Equipment unit */
+.equip-unit{flex:1;background:#1e2229;border:1px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;display:flex;flex-direction:column;}
+.equip-unit-top{padding:10px 12px;display:flex;flex-direction:column;gap:7px;}
+.equip-unit-hdr{display:flex;align-items:center;gap:8px;}
+.equip-icon{width:24px;height:24px;border-radius:3px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.equip-id{font-size:12px;font-weight:600;color:#e9ebf0;}
+.equip-model{font-size:10px;color:#9ba3af;margin-top:1px;}
+.equip-unit-summ{margin-left:auto;text-align:right;}
+.cap-committed{font-size:10px;color:#9ba3af;}
+.cap-committed span{color:#a5b4fc;font-weight:600;}
+.cap-available{font-size:10px;font-weight:600;color:#4ade80;}
+.cap-total{font-size:10px;color:#6b7280;}
+.cap-bar-row{display:flex;align-items:center;gap:8px;}
+.cap-bar{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
+.cap-bar-committed{height:100%;border-radius:3px;background:rgba(99,102,241,0.6);}
+.equip-unit-sep{height:1px;background:rgba(255,255,255,0.07);}
+.equip-cplan-sec{padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;}
+.equip-cplan-lbl{font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;}
+.driver-shift-row{display:flex;align-items:flex-start;gap:12px;}
+.driver-col{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;}
+.add-trailer-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border:1px dashed rgba(99,102,241,0.3);border-radius:4px;background:rgba(99,102,241,0.04);color:#818cf8;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;align-self:center;}
+
+/* Compartment plan */
+.cplan-wrap{display:flex;flex-direction:column;gap:6px;}
+.cplan-lbl{font-size:10px;font-weight:500;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;}
+.cplan-row{display:flex;height:88px;border:1px solid rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;background:#1a1d22;}
+.comp{display:flex;flex-direction:column;min-width:0;position:relative;}
+.comp+.comp{border-left:1px solid rgba(255,255,255,0.08);}
+.comp-cap{font-size:8.5px;font-weight:500;color:#6b7280;padding:3px 7px 2px;}
+.comp-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.comp-empty{flex:1;}
+.comp-striped{flex:1;background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.025),rgba(255,255,255,0.025) 2px,transparent 2px,transparent 7px);}
+.comp-fill{flex-shrink:0;display:flex;align-items:flex-end;padding:0 5px 2px;min-height:12px;}
+.comp-fill-lbl{font-size:8.5px;font-weight:600;color:rgba(0,0,0,0.6);white-space:nowrap;}
+.comp-foot{flex-shrink:0;display:flex;align-items:center;gap:3px;padding:3px 7px;border-top:1px solid rgba(255,255,255,0.07);}
+.comp-num{font-size:9px;font-weight:600;color:#9ba3af;}
+.comp-prod{font-size:9.5px;color:#9ba3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:3px;}
+.comp-prod-empty{color:#4b5563;font-style:italic;}
+.badge-blend{display:inline-flex;align-items:center;padding:1px 4px;border-radius:2px;font-size:7.5px;font-weight:700;background:rgba(96,165,250,0.12);color:#60a5fa;text-transform:uppercase;letter-spacing:0.04em;}
+.badge-cmp{display:inline-flex;align-items:center;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:500;background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.2);white-space:nowrap;}
+
+/* Sourcing table */
+.lo-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.lo-tbl th{background:#1d1f23;padding:6px 10px;text-align:left;font-size:10px;font-weight:500;color:#9ba3af;letter-spacing:0.3px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.lo-tbl td{padding:0;border-bottom:1px solid rgba(255,255,255,0.07);height:38px;vertical-align:middle;}
+.lo-tbl tr:last-child td{border-bottom:none;}
+.lo-chkcol{width:36px;padding:0 10px !important;}
+.lo-prodcol{padding:0 10px !important;font-size:12px;color:#fff;}
+.lo-sel{width:100%;height:38px;padding:0 22px 0 10px;border:none;border-left:1px solid rgba(255,255,255,0.07);font-family:inherit;font-size:12px;color:#e9ebf0;background:#262930;appearance:none;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.lo-sel:focus{background-color:rgba(99,102,241,0.08);}
+
+/* Actions */
+.lo-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:2px;}
+.btn-cancel{padding:7px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#9ba3af;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500;}
+.btn-save{padding:7px 18px;border-radius:4px;border:none;background:#6366f1;color:#fff;font-family:inherit;font-size:12px;cursor:pointer;font-weight:600;letter-spacing:0.3px;}
+.btn-save:hover{background:#5254cc;}
+
+/* Right rail */
+.right-rail{background:#2b343a;border-left:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.right-rail::-webkit-scrollbar{width:4px;}
+.right-rail::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+.rr-card{border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.rr-card-hdr{padding:8px 14px 7px;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;background:rgba(0,0,0,0.12);border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.rr-chevron{width:12px;height:12px;transition:transform 0.15s ease;color:#4b5563;flex-shrink:0;}
+.rr-card.collapsed > :not(.rr-card-hdr){display:none !important;}
+.rr-card.collapsed .rr-card-hdr{border-bottom:none;}
+.rr-card.collapsed .rr-chevron{transform:rotate(-90deg);}
+.rr-row{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;}
+.rr-row:last-child{border-bottom:none;}
+.rr-lbl{color:#9ba3af;}
+.rr-val{color:#e9ebf0;font-weight:500;}
+.rr-note-grp{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.rr-note-lbl{font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+.rr-note-empty{font-size:11px;color:#4b5563;font-style:italic;}
+.rr-activity{padding:10px 14px;}
+.rrail-ts{font-size:10px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.rrail-time{font-size:12px;color:#9ba3af;margin-top:3px;}
+.comment-box{margin:0 14px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:#1d1f23;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
+.comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg"></div>
+<div class="bg-grid"></div>
+
+<!-- Faked dispatch board (depth cue) -->
+<div class="dispatch-board">
+  <div class="db-topbar">
+    <div class="db-dot active"></div><div class="db-dot active"></div><div class="db-dot"></div>
+    <div style="width:80px;height:10px;background:#2d3340;border-radius:2px;margin-left:12px;"></div>
+    <div style="width:60px;height:10px;background:#2d3340;border-radius:2px;"></div>
+  </div>
+  <div class="db-cols">
+    <div class="db-col"><div class="db-col-hdr"></div><div class="db-card c2"></div><div class="db-card c1"></div><div class="db-card c2"></div></div>
+    <div class="db-col"><div class="db-col-hdr"></div><div class="db-card c4"></div><div class="db-card c1"></div></div>
+    <div class="db-col"><div class="db-col-hdr"></div><div class="db-card c3"></div><div class="db-card c4"></div><div class="db-card c3"></div></div>
+    <div class="db-col"><div class="db-col-hdr"></div><div class="db-card c1"></div></div>
+    <div class="db-col"><div class="db-col-hdr"></div><div class="db-card c3"></div><div class="db-card c2"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 1: Select Customer
+     ═══════════════════════════════════════════════════════════ -->
+<div class="scrim" id="scrim1">
+  <div id="step1">
+    <!-- Header -->
+    <div class="wiz-hdr">
+      <span class="wiz-title">Create Order</span>
+      <button class="wiz-close" title="Close">×</button>
+    </div>
+    <!-- Body -->
+    <div class="wiz-body">
+      <!-- Step trail -->
+      <div class="step-trail">
+        <div class="step-node active">
+          <div class="step-num">1</div>
+          <span class="step-label">Select Customer</span>
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-node pending">
+          <div class="step-num">2</div>
+          <span class="step-label">Create Order</span>
+        </div>
+      </div>
+
+      <!-- Search By -->
+      <div class="form-row">
+        <div class="f-col">
+          <label class="f-lbl">Search By</label>
+          <select class="f-sel">
+            <option selected>Customer</option>
+            <option>ERP ID</option>
+            <option>Ship To</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Customer search (react-select style) -->
+      <div class="form-row">
+        <div class="f-col">
+          <label class="f-lbl">Customer Name or ERP ID <span class="f-req">*</span></label>
+          <div class="rs-wrap" id="rsWrap">
+            <input class="rs-inp" id="custSearch" type="text" placeholder="Search customer…" autocomplete="off" oninput="filterCustomers(this.value)" onfocus="openRS()" onblur="closeRS()">
+            <div class="rs-dropdown" id="rsDropdown">
+              <div class="rs-opt" onmousedown="selectCustomer('Morris PLC','112','Denver, CO, USA, Colorado')">
+                <span>Morris PLC</span><span class="rs-opt-sub">112 · Denver, CO, USA</span>
+              </div>
+              <div class="rs-opt" onmousedown="selectCustomer('Acme Fuel Co','434','Cupertino, CA, USA')">
+                <span>Acme Fuel Co</span><span class="rs-opt-sub">434 · Cupertino, CA</span>
+              </div>
+              <div class="rs-opt" onmousedown="selectCustomer('Dean Ltd','517083','San Jose, CA, USA')">
+                <span>Dean Ltd</span><span class="rs-opt-sub">517083 · San Jose, CA</span>
+              </div>
+              <div class="rs-opt" onmousedown="selectCustomer('Jeff\'s Jalopies','12','Tucson, AZ, USA')">
+                <span>Jeff's Jalopies</span><span class="rs-opt-sub">12 · Tucson, AZ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ship To -->
+      <div class="form-row">
+        <div class="f-col">
+          <label class="f-lbl">Ship To</label>
+          <select class="f-sel f-sel-placeholder" id="shipToSel" disabled>
+            <option value="">Select Ship To</option>
+            <option>Morris Group – Upstairs Hub</option>
+            <option>Morris Group – Downtown Terminal</option>
+            <option>Morris Group – East Depot</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tags + Auto Populate -->
+      <div class="form-row">
+        <div class="f-col">
+          <label class="f-lbl">Tags</label>
+          <select class="f-sel">
+            <option value="">Select Tags…</option>
+            <option>Florida</option>
+            <option>Holiday</option>
+            <option>Priority</option>
+          </select>
+        </div>
+        <div class="f-col">
+          <label class="f-lbl">Auto Populate By</label>
+          <select class="f-sel">
+            <option value="">None</option>
+            <option>Last Order</option>
+            <option>Standing Order</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="wiz-footer">
+      <button class="btn-secondary">Cancel</button>
+      <button class="btn-primary" id="nextBtn" onclick="goToStep2()" disabled style="opacity:0.4;cursor:not-allowed;">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 2: Create Order
+     ═══════════════════════════════════════════════════════════ -->
+<div class="scrim" id="scrim2" style="display:none;">
+  <div id="step2">
+    <!-- Header -->
+    <div class="co-hdr">
+      <div class="co-breadcrumb">
+        <span>Create Order</span>
+        <span class="co-breadcrumb-sep">›</span>
+        <span class="co-breadcrumb-cust" id="coCustomerName">Morris PLC</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Step trail compact -->
+        <div class="step-trail" style="margin:0;">
+          <div class="step-node done" style="gap:5px;">
+            <div class="step-num">✓</div>
+            <span class="step-label" style="font-size:10px;">Customer</span>
+          </div>
+          <span class="step-arrow" style="margin:0 6px;">›</span>
+          <div class="step-node active" style="gap:5px;">
+            <div class="step-num">2</div>
+            <span class="step-label" style="font-size:10px;">Create Order</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeAll()">×</button>
+      </div>
+    </div>
+
+    <!-- Customer info bar -->
+    <div style="padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:4px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        </div>
+        <div>
+          <div id="coCustomerFull" style="font-size:13px;font-weight:600;color:#fff;">Morris PLC – 112</div>
+          <div id="coCustomerAddr" style="font-size:11px;color:#6b7280;margin-top:1px;">Denver, CO, USA, Colorado</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-ghost-sm">See Quote</button>
+        <button class="btn-ghost-sm">Lock Pricing</button>
+      </div>
+    </div>
+
+    <!-- Form body -->
+    <div class="co-body">
+
+      <!-- Date + Time + Urgent -->
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f-col">
+          <label class="f-lbl">Planned Date <span class="f-req">*</span></label>
+          <input class="f-inp" type="text" placeholder="MM/DD/YYYY" value="11/18/2026">
+        </div>
+        <div class="f-col">
+          <label class="f-lbl">Planned Time</label>
+          <input class="f-inp" type="text" placeholder="HH:mm" value="06:00">
+        </div>
+        <div class="f-col" style="justify-content:flex-end;padding-bottom:9px;">
+          <label class="cb-row" onclick="toggleCB(this)">
+            <div class="cb-box"></div>
+            <span class="cb-lbl">Mark Order as Urgent</span>
+          </label>
+        </div>
+        <div class="f-col" style="justify-content:flex-end;padding-bottom:9px;">
+          <button class="btn-ghost-sm">Mark as a Recurrence</button>
+        </div>
+      </div>
+
+      <!-- Order type + Common Carrier -->
+      <div class="form-row" style="align-items:center;margin-bottom:14px;">
+        <div style="flex:1;">
+          <div class="tab-row" style="max-width:280px;">
+            <button class="tab-btn active" onclick="switchTab(this,'Delivery Order')">Delivery Order</button>
+            <button class="tab-btn" onclick="switchTab(this,'Extraction Order')">Extraction Order</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
+          <label class="toggle-wrap">
+            <span class="toggle-lbl">Common Carrier</span>
+            <label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </label>
+          <button class="btn-ghost-sm">+ Add Asset</button>
+        </div>
+      </div>
+
+      <!-- Bulk Delivery section -->
+      <div class="sec-label">Bulk Delivery</div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <label class="toggle-wrap">
+          <label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          <span class="toggle-lbl">Top Off</span>
+        </label>
+      </div>
+
+      <!-- Products & quantities table -->
+      <table class="bd-tbl" id="bdTbl">
+        <thead>
+          <tr>
+            <th style="width:40%">Product</th>
+            <th style="width:35%;text-align:right;">Ordered (gal)</th>
+            <th style="width:10%;text-align:center;">Top Off</th>
+            <th style="width:15%"></th>
+          </tr>
+        </thead>
+        <tbody id="bdBody">
+          <tr>
+            <td>
+              <select class="bd-sel">
+                <option value="">Select product…</option>
+                <option selected>UNL87</option>
+                <option>CLR DSL</option>
+                <option>HO DSL</option>
+                <option>UNL93</option>
+                <option>Diesel DEF</option>
+              </select>
+            </td>
+            <td><input class="bd-qty" type="number" value="3000" min="0" placeholder="0"></td>
+            <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
+          </tr>
+          <tr>
+            <td>
+              <select class="bd-sel">
+                <option value="">Select product…</option>
+                <option>UNL87</option>
+                <option selected>CLR DSL</option>
+                <option>HO DSL</option>
+                <option>UNL93</option>
+                <option>Diesel DEF</option>
+              </select>
+            </td>
+            <td><input class="bd-qty" type="number" value="1500" min="0" placeholder="0"></td>
+            <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="bd-add" onclick="addBdRow()">+ Add product</button>
+
+      <!-- Delivery Instructions -->
+      <div style="margin-top:14px;">
+        <div class="sec-label">Delivery Instructions</div>
+        <textarea class="di-area" placeholder="Enter any special delivery instructions…"></textarea>
+      </div>
+
+      <!-- More Options (expandable) -->
+      <div style="margin-top:12px;">
+        <div class="expand-hdr" id="moreOptHdr" onclick="toggleExpand('moreOptHdr')">
+          <svg class="expand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          <span class="expand-lbl">More Options</span>
+        </div>
+        <div class="expand-body" id="moreOptBody">
+          <div class="form-row">
+            <div class="f-col">
+              <label class="f-lbl">PO #</label>
+              <input class="f-inp" type="text" placeholder="Enter PO number">
+            </div>
+            <div class="f-col">
+              <label class="f-lbl">Diversion #</label>
+              <input class="f-inp" type="text" placeholder="Enter diversion number">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="f-col">
+              <label class="f-lbl">PO Type</label>
+              <select class="f-sel">
+                <option value="">Select PO Type</option>
+                <option>Open</option>
+                <option>Blanket</option>
+                <option>Standard</option>
+              </select>
+            </div>
+            <div class="f-col">
+              <label class="f-lbl">Carrier #</label>
+              <input class="f-inp" type="text" placeholder="Enter carrier number">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="f-col">
+              <label class="f-lbl">Assign Driver</label>
+              <select class="f-sel">
+                <option value="">Select Driver</option>
+                <option>Alex Trebek</option>
+                <option>Ravi Patel</option>
+                <option>Omar Khalid</option>
+              </select>
+            </div>
+            <div class="f-col">
+              <label class="f-lbl">Assign Hub</label>
+              <select class="f-sel">
+                <option value="">Select Hub</option>
+                <option>Florida Hub</option>
+                <option>Denver Hub</option>
+                <option>Phoenix Hub</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /co-body -->
+
+    <!-- Footer -->
+    <div class="co-footer">
+      <div class="co-footer-left">
+        <button class="btn-secondary" onclick="goBackToStep1()">← Back</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" onclick="closeAll()">Cancel</button>
+        <button class="btn-primary" onclick="createOrder()">Create Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LOAD ORDER CREATION SCREEN (shown after Create Order)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="scrimLO" class="scrim" style="display:none;align-items:flex-start;">
+  <div class="modal" id="loModal">
+
+    <!-- Modal header -->
+    <div class="modal-header">
+      <div class="mhdr-left">
+        <span class="modal-title">New Load Order</span>
+        <span style="font-size:11px;color:#6b7280;">·</span>
+        <span style="font-size:11px;color:#9ba3af;" id="loOrderRef">Morris PLC</span>
+      </div>
+      <div class="mhdr-actions">
+        <button class="btn-mhdr">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          3PL
+        </button>
+        <button class="btn-mhdr">Export</button>
+        <button class="btn-mhdr btn-mhdr-primary">Assign Driver</button>
+      </div>
+      <button class="modal-close" onclick="closeAll()">×</button>
+    </div>
+
+    <!-- Tags bar -->
+    <div class="tag-banner">
+      <span>Tags: <em style="color:#6b7280;">None</em></span>
+      <button class="btn-add-tag">+ Add Tag</button>
+    </div>
+
+    <!-- Customer row -->
+    <div class="customer-row">
+      <span class="badge-new">New</span>
+      <span class="customer-name" id="loCustomerName">Morris PLC · 112 · Denver, CO, USA</span>
+      <button style="padding:5px 10px;border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#ccc;font-weight:500;">View Profile</button>
+    </div>
+
+    <!-- Main 2-col body -->
+    <div class="modal-body">
+
+      <!-- Left: main content -->
+      <div class="main-content">
+
+        <!-- Delivery Orders section -->
+        <div class="do-section">
+          <div class="do-hdr">
+            <div class="do-title-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Delivery Orders
+              <span class="do-count" id="loDoCount">1</span>
+            </div>
+          </div>
+          <div class="do-list" id="loDoList">
+            <!-- filled by JS on createOrder() -->
+          </div>
+        </div>
+
+        <!-- Load Order section -->
+        <div class="lo-section">
+          <div class="lo-hdr">
+            <div class="lo-title-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Load Order
+              <span class="lo-new-badge">New</span>
+            </div>
+          </div>
+          <div class="lo-body">
+
+            <!-- Shift -->
+            <div class="shift-card">
+              <div class="shift-top">
+                <div class="shift-icon">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <div class="shift-name">Day Shift</div>
+                  <div class="shift-time">06:00 – 18:00</div>
+                </div>
+                <div class="shift-right">
+                  <div class="shift-remaining">12 h 0 m</div>
+                  <div class="shift-remaining-lbl">remaining</div>
+                </div>
+              </div>
+              <div class="shift-bar-row">
+                <div class="shift-bar"><div class="shift-bar-fill" style="width:0%"></div></div>
+                <span class="shift-bar-pct">0% elapsed</span>
+              </div>
+            </div>
+
+            <!-- Driver + Equipment row -->
+            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:2px;">
+              <div class="inp-lbl">Driver <span class="inp-req">*</span></div>
+            </div>
+            <div class="driver-shift-row">
+              <div class="driver-col">
+                <select class="inp-sel">
+                  <option value="">Select Driver…</option>
+                  <option>Alex Trebek</option>
+                  <option>Ravi Patel</option>
+                  <option>Omar Khalid</option>
+                  <option>Priya Sharma</option>
+                </select>
+              </div>
+              <div class="equip-unit">
+                <div class="equip-unit-top">
+                  <div class="equip-unit-hdr">
+                    <div class="equip-icon">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    </div>
+                    <div>
+                      <div class="equip-id">Select Truck</div>
+                      <div class="equip-model">Tanker / Bobtail</div>
+                    </div>
+                    <div class="equip-unit-summ">
+                      <div class="cap-available">— gal free</div>
+                      <div class="cap-total">— gal total</div>
+                    </div>
+                  </div>
+                  <div>
+                    <select class="inp-sel" style="margin-bottom:6px;">
+                      <option value="">Select Truck…</option>
+                      <option>Hi-12 · Bobtail · 4,000 gal</option>
+                      <option>HV-7 · Tanker · 7,500 gal</option>
+                      <option>TR-22 · Bobtail · 3,500 gal</option>
+                    </select>
+                    <div class="cap-bar-row">
+                      <div class="cap-bar"><div class="cap-bar-committed" style="width:0%"></div></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:3px;">
+                      <div class="cap-committed"><span>0 gal</span> committed</div>
+                      <div class="cap-available">— gal free</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="equip-unit-sep"></div>
+                <div class="equip-cplan-sec">
+                  <div class="equip-cplan-lbl">Compartment Plan</div>
+                  <div class="cplan-wrap">
+                    <div class="cplan-row">
+                      <div class="comp" style="flex:1.2;">
+                        <div class="comp-cap">3,000 gal</div>
+                        <div class="comp-body"><div class="comp-striped"></div></div>
+                        <div class="comp-foot"><span class="comp-num">C1</span><span class="comp-prod comp-prod-empty">— empty</span></div>
+                      </div>
+                      <div class="comp" style="flex:0.8;">
+                        <div class="comp-cap">1,000 gal</div>
+                        <div class="comp-body"><div class="comp-striped"></div></div>
+                        <div class="comp-foot"><span class="comp-num">C2</span><span class="comp-prod comp-prod-empty">— empty</span></div>
+                      </div>
+                      <div class="comp" style="flex:0.8;">
+                        <div class="comp-cap">1,000 gal</div>
+                        <div class="comp-body"><div class="comp-striped"></div></div>
+                        <div class="comp-foot"><span class="comp-num">C3</span><span class="comp-prod comp-prod-empty">— empty</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="add-trailer-btn">+ Trailer</button>
+            </div>
+
+            <!-- Sourcing / product assignment -->
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div class="inp-lbl">Product Sourcing</div>
+              <table class="lo-tbl" id="loSrcTbl">
+                <thead>
+                  <tr>
+                    <th class="lo-chkcol"></th>
+                    <th class="lo-prodcol">Product</th>
+                    <th>Qty (gal)</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="loSrcBody">
+                  <!-- filled by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Actions -->
+            <div class="lo-actions">
+              <button class="btn-cancel" onclick="closeAll()">Discard</button>
+              <button class="btn-save">Save Load Order</button>
+            </div>
+
+          </div><!-- /lo-body -->
+        </div><!-- /lo-section -->
+
+      </div><!-- /main-content -->
+
+      <!-- Right rail -->
+      <div class="right-rail">
+        <!-- Running gallons -->
+        <div class="rr-card">
+          <div class="rr-card-hdr" onclick="toggleRR(this)">Running Gallons<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div id="rrGallonsBody">
+            <!-- filled by JS -->
+          </div>
+        </div>
+        <!-- Billing -->
+        <div class="rr-card">
+          <div class="rr-card-hdr" onclick="toggleRR(this)">Billing<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div>
+            <div class="rr-row"><span class="rr-lbl">Payment Term</span><span class="rr-val" style="color:#6b7280;">—</span></div>
+            <div class="rr-row"><span class="rr-lbl">LOS</span><span class="rr-val" style="color:#6b7280;">—</span></div>
+          </div>
+        </div>
+        <!-- Notes -->
+        <div class="rr-card">
+          <div class="rr-card-hdr" onclick="toggleRR(this)">Notes<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div>
+            <div class="rr-note-grp"><div class="rr-note-lbl">Internal</div><div class="rr-note-empty">No notes yet</div></div>
+            <div class="rr-note-grp"><div class="rr-note-lbl">Driver</div><div class="rr-note-empty">No driver notes</div></div>
+          </div>
+        </div>
+        <!-- Activity -->
+        <div class="rr-card">
+          <div class="rr-card-hdr" onclick="toggleRR(this)">Activity<svg class="rr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div>
+            <div class="rr-activity">
+              <div class="rrail-ts">Created</div>
+              <div class="rrail-time" id="loCreatedTime">Just now</div>
+            </div>
+            <div class="comment-box">
+              <textarea class="comment-input" rows="2" placeholder="Add a comment…"></textarea>
+              <div class="comment-actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /right-rail -->
+
+    </div><!-- /modal-body -->
+  </div><!-- /modal -->
+</div>
+
+<!-- Success toast -->
+<div id="successToast">Order created — opening Load Order</div>
+
+<script>
+// ── Customer search ───────────────────────────────────────
+var selectedCustomer = null;
+
+function openRS() {
+  document.getElementById('rsWrap').classList.add('open');
+}
+function closeRS() {
+  setTimeout(function() {
+    document.getElementById('rsWrap').classList.remove('open');
+  }, 150);
+}
+function filterCustomers(val) {
+  var opts = document.querySelectorAll('#rsDropdown .rs-opt');
+  opts.forEach(function(o) {
+    o.style.display = o.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+  if (val.length > 0) document.getElementById('rsWrap').classList.add('open');
+}
+function selectCustomer(name, erpId, addr) {
+  selectedCustomer = { name: name, erpId: erpId, addr: addr };
+  document.getElementById('custSearch').value = name + ' – ' + erpId;
+  document.getElementById('rsWrap').classList.remove('open');
+  // Enable Ship To
+  var st = document.getElementById('shipToSel');
+  st.disabled = false;
+  st.style.color = '';
+  // Enable Next
+  var btn = document.getElementById('nextBtn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+}
+
+// ── Step navigation ───────────────────────────────────────
+function goToStep2() {
+  if (!selectedCustomer) return;
+  document.getElementById('scrim1').style.display = 'none';
+  document.getElementById('scrim2').style.display = 'flex';
+  document.getElementById('coCustomerName').textContent = selectedCustomer.name;
+  document.getElementById('coCustomerFull').textContent = selectedCustomer.name + ' – ' + selectedCustomer.erpId;
+  document.getElementById('coCustomerAddr').textContent = selectedCustomer.addr;
+}
+
+function goBackToStep1() {
+  document.getElementById('scrim2').style.display = 'none';
+  document.getElementById('scrim1').style.display = 'flex';
+}
+
+function closeAll() {
+  document.getElementById('scrim1').style.display = 'none';
+  document.getElementById('scrim2').style.display = 'none';
+  document.getElementById('scrimLO').style.display = 'none';
+}
+
+// ── Bulk delivery table ───────────────────────────────────
+function addBdRow() {
+  var tbody = document.getElementById('bdBody');
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td><select class="bd-sel"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
+  tbody.appendChild(tr);
+}
+function delBdRow(btn) {
+  btn.closest('tr').remove();
+}
+
+// ── Tab switch ────────────────────────────────────────────
+function switchTab(btn) {
+  btn.closest('.tab-row').querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// ── Expandable ────────────────────────────────────────────
+function toggleExpand(hdrId) {
+  var hdr = document.getElementById(hdrId);
+  hdr.classList.toggle('open');
+}
+
+// ── Checkbox ──────────────────────────────────────────────
+function toggleCB(label) {
+  var box = label.querySelector('.cb-box');
+  box.classList.toggle('checked');
+  if (box.classList.contains('checked')) {
+    box.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+  } else {
+    box.innerHTML = '';
+  }
+}
+
+// ── Right rail collapse ───────────────────────────────────
+function toggleRR(hdr) {
+  hdr.closest('.rr-card').classList.toggle('collapsed');
+}
+
+// ── Create Order → Load Order ─────────────────────────────
+function createOrder() {
+  // Collect products from bulk delivery table
+  var rows = document.querySelectorAll('#bdBody tr');
+  var products = [];
+  rows.forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    var qty = tr.querySelector('input[type="number"]');
+    if (sel && qty && sel.value && qty.value) {
+      products.push({ name: sel.options[sel.selectedIndex].text, qty: parseInt(qty.value) });
+    }
+  });
+  if (products.length === 0) products = [{ name: 'UNL87', qty: 3000 }, { name: 'CLR DSL', qty: 1500 }];
+
+  // Show toast
+  var toast = document.getElementById('successToast');
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.display = 'none'; }, 2000);
+
+  // Transition to Load Order screen
+  setTimeout(function() {
+    var cust = selectedCustomer || { name: 'Morris PLC', erpId: '112', addr: 'Denver, CO, USA, Colorado' };
+    document.getElementById('scrim2').style.display = 'none';
+    document.getElementById('scrimLO').style.display = 'flex';
+
+    // Update customer info
+    document.getElementById('loOrderRef').textContent = cust.name;
+    document.getElementById('loCustomerName').textContent = cust.name + ' · ' + cust.erpId + ' · ' + cust.addr;
+
+    // Build DO row
+    var doNum = 'D-' + (5157060 + Math.floor(Math.random() * 100));
+    var planDate = document.querySelector('#step2 input[placeholder="MM/DD/YYYY"]')?.value || '11/18/2026';
+    var planTime = document.querySelector('#step2 input[placeholder="HH:mm"]')?.value || '06:00';
+    var shipToVal = document.getElementById('shipToSel')?.value || '';
+    var shipToText = shipToVal
+      ? document.getElementById('shipToSel').options[document.getElementById('shipToSel').selectedIndex].text
+      : (cust.name + ' · ' + cust.addr.split(',')[0]);
+
+    var chipsHtml = products.map(function(p) {
+      return '<span class="del-prod-chip">' + p.name + ' <span class="del-prod-qty">' + p.qty.toLocaleString() + ' gal</span></span>';
+    }).join('');
+
+    document.getElementById('loDoList').innerHTML =
+      '<div class="do-row-static">' +
+        '<div class="do-row-meta">' +
+          '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
+          '<span class="do-num">' + doNum + '</span>' +
+          '<span class="do-sep">·</span>' +
+          '<span class="do-shipto">' + shipToText + '</span>' +
+          '<span class="do-time">' + planDate + ' ' + planTime + '</span>' +
+        '</div>' +
+        '<div class="do-row-prods">' + chipsHtml + '</div>' +
+      '</div>';
+
+    document.getElementById('loDoCount').textContent = '1';
+
+    // Build sourcing rows
+    var srcHtml = products.map(function(p) {
+      return '<tr>' +
+        '<td class="lo-chkcol"><input type="checkbox" checked></td>' +
+        '<td class="lo-prodcol">' + p.name + '</td>' +
+        '<td><input style="width:100%;height:38px;padding:0 10px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.07);color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;" type="number" value="' + p.qty + '"></td>' +
+        '<td><select class="lo-sel"><option value="">Select terminal…</option><option>Denver Terminal</option><option>Phoenix Hub</option><option>Florida Hub</option></select></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('loSrcBody').innerHTML = srcHtml;
+
+    // Build running gallons
+    var rgHtml = products.map(function(p) {
+      var pct = Math.round((p.qty / 4500) * 100);
+      return '<div class="rr-row"><span class="rr-lbl">' + p.name + '</span><span class="rr-val" style="color:#818cf8;">' + p.qty.toLocaleString() + ' gal</span></div>';
+    }).join('');
+    document.getElementById('rrGallonsBody').innerHTML = rgHtml;
+
+    // Set created time
+    var now = new Date();
+    document.getElementById('loCreatedTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' today';
+  }, 400);
+}
+</script>
+
+</body>
+</html>
