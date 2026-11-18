@@ -14,7 +14,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);}
 
 /* Modal */
-.modal{position:fixed;top:30px;left:40px;width:1350px;max-height:calc(100vh - 50px);background:transparent;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+.modal{position:fixed;top:30px;left:50%;transform:translateX(-50%);width:min(1350px,calc(100vw - 80px));max-height:calc(100vh - 50px);background:transparent;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
 
 /* Modal header (dark bar) */
 .modal-header{background:#2b343a;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;border-radius:10px 10px 0 0;}
@@ -184,7 +184,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
 /* Rail cards */
 .rr-card{border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
-.rr-card-hdr{padding:8px 14px 7px;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;background:rgba(0,0,0,0.12);border-bottom:1px solid rgba(255,255,255,0.05);}
+.rr-card-hdr{padding:8px 14px 7px;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;background:rgba(0,0,0,0.12);border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
 .rr-card-body{padding:0;}
 
 /* Running gallons */
@@ -217,6 +217,35 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .comment-input{width:100%;background:transparent;border:none;color:#9ba3af;font-family:inherit;font-size:12px;outline:none;resize:none;}
 .comment-actions{display:flex;justify-content:flex-end;gap:4px;opacity:0.5;}
 .comment-actions svg{width:14px;height:14px;}
+/* ── RR collapse ───────────────────────────────────────────── */
+.rr-chevron{width:12px;height:12px;transition:transform 0.15s ease;color:#4b5563;flex-shrink:0;}
+.rr-card.collapsed > :not(.rr-card-hdr){display:none !important;}
+.rr-card.collapsed .rr-card-hdr{border-bottom:none;}
+.rr-card.collapsed .rr-chevron{transform:rotate(-90deg);}
+/* ── DO row expand ─────────────────────────────────────────── */
+.do-row-toggle{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;cursor:pointer;padding:10px 14px;}
+.do-row-toggle:hover{background:rgba(255,255,255,0.015);}
+.do-row-left{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0;}
+.do-chevron{width:14px;height:14px;transition:transform 0.15s ease;color:#4b5563;flex-shrink:0;margin-top:1px;}
+.do-row.open .do-chevron{transform:rotate(180deg);}
+.do-body{padding:12px 14px 14px;border-top:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;gap:12px;}
+/* ── DO form ──────────────────────────────────────────────── */
+.do-form-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.do-form-3col{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
+.do-form-field{display:flex;flex-direction:column;gap:4px;}
+.inp-text{height:38px;background:#2c3034;border:1px solid rgba(255,255,255,0.14);border-radius:4px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;width:100%;box-sizing:border-box;}
+.inp-text:focus{border-color:rgba(99,102,241,0.5);}
+.do-prod-wrap{display:flex;flex-direction:column;gap:6px;}
+.do-prod-lbl{font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;}
+.do-prod-tbl{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+.do-prod-tbl th{background:rgba(0,0,0,0.2);padding:5px 10px;text-align:left;font-size:9.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.do-prod-tbl td{border-top:1px solid rgba(255,255,255,0.07);height:38px;}
+.do-prod-qty{width:100%;height:38px;padding:0 10px;background:transparent;border:none;color:#e9ebf0;font-family:inherit;font-size:12px;outline:none;text-align:right;}
+.do-prod-qty:focus{background:rgba(255,255,255,0.03);}
+.do-del-btn{width:36px;height:38px;background:none;border:none;color:#4b5563;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;padding:0;}
+.do-del-btn:hover{color:#ef4444;}
+.do-add-prod-btn{background:none;border:none;color:#818cf8;font-size:11px;cursor:pointer;padding:5px 0;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.do-add-prod-btn:hover{color:#a5b4fc;}
 
 /* ── Delivery Orders section ──────────────────────────────── */
 .do-section{border:1px solid rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:12px;flex-shrink:0;}
@@ -226,7 +255,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .do-add-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:#818cf8;font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;letter-spacing:0.2px;}
 .do-add-btn:hover{background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.4);}
 .do-list{background:#262930;}
-.do-row{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;gap:7px;}
+.do-row{padding:0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;}
 .do-row:last-child{border-bottom:none;}
 .do-row-meta{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;}
 .do-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;flex-shrink:0;}
@@ -366,17 +395,80 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           </button>
         </div>
         <div class="do-list" id="doList">
-          <div class="do-row">
-            <div class="do-row-meta">
-              <span class="do-pill do-pill-unassigned">Unassigned</span>
-              <span class="do-num">D-5157058</span>
-              <span class="do-sep">·</span>
-              <span class="do-shipto">Upstairs Hub · Bagmati Province</span>
-              <span class="do-time">Nov 18, 00:00</span>
+          <div class="do-row" id="do-1">
+            <div class="do-row-toggle" onclick="toggleDO('do-1')">
+              <div class="do-row-left">
+                <div class="do-row-meta">
+                  <span class="do-pill do-pill-unassigned">Unassigned</span>
+                  <span class="do-num">D-5157058</span>
+                  <span class="do-sep">·</span>
+                  <span class="do-shipto" id="do-1-shipto">Upstairs Hub · Bagmati Province</span>
+                  <span class="do-time" id="do-1-time">Nov 18, 00:00</span>
+                </div>
+                <div class="do-row-prods" id="do-1-chips">
+                  <span class="del-prod-chip">123 <span class="badge-cmp">≈ UNL87</span> <span class="del-prod-qty">3,000 gal</span></span>
+                  <span class="del-prod-chip">CLR DSL <span class="badge-blend">Blend</span> <span class="del-prod-qty">1,500 gal</span></span>
+                </div>
+              </div>
+              <svg class="do-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-            <div class="do-row-prods">
-              <span class="del-prod-chip">123 <span class="badge-cmp">≈ UNL87</span> <span class="del-prod-qty">3,000 gal</span></span>
-              <span class="del-prod-chip">CLR DSL <span class="badge-blend">Blend</span> <span class="del-prod-qty">1,500 gal</span></span>
+            <div class="do-body" id="do-1-body" style="display:none;">
+              <div class="do-form-3col">
+                <div class="do-form-field" style="grid-column:1/3;">
+                  <label class="inp-lbl">Ship to <span class="inp-req">*</span></label>
+                  <select class="inp-sel" id="do-1-st-sel" onchange="syncDOSummary('do-1')">
+                    <option value="upstairs-hub" selected>Upstairs Hub · Bagmati Province</option>
+                    <option value="chitwan">Chitwan Distribution Center</option>
+                    <option value="dharan">Dharan Fuel Depot · Province 1</option>
+                    <option value="birgunj">Birgunj Terminal · Madhesh</option>
+                  </select>
+                </div>
+                <div class="do-form-field">
+                  <label class="inp-lbl">Planned start</label>
+                  <input class="inp-text" type="text" id="do-1-time-inp" value="Nov 18 2026, 00:00" onchange="syncDOSummary('do-1')">
+                </div>
+              </div>
+              <div class="do-form-2col">
+                <div class="do-form-field">
+                  <label class="inp-lbl">LOS</label>
+                  <select class="inp-sel">
+                    <option>Chitwan Ops, Fuel</option>
+                    <option>Standard Delivery</option>
+                    <option>Express</option>
+                  </select>
+                </div>
+                <div class="do-form-field">
+                  <label class="inp-lbl">Payment term</label>
+                  <select class="inp-sel">
+                    <option value="">— Select</option>
+                    <option>Net 30</option>
+                    <option>Net 15</option>
+                    <option>COD</option>
+                  </select>
+                </div>
+              </div>
+              <div class="do-prod-wrap">
+                <div class="do-prod-lbl">Products &amp; quantities</div>
+                <table class="do-prod-tbl">
+                  <thead><tr><th style="width:55%">Product</th><th style="width:35%;text-align:right;">Ordered (gal)</th><th style="width:10%"></th></tr></thead>
+                  <tbody id="do-1-prods">
+                    <tr>
+                      <td><select class="lo-sel" onchange="syncDOChips('do-1')"><option selected>123 (≈ UNL87)</option><option>CLR DSL</option><option>RD DSL</option><option>Premium UNL</option><option>Heating Oil</option></select></td>
+                      <td><input class="do-prod-qty" type="number" value="3000" min="0" oninput="syncDOChips('do-1')"></td>
+                      <td><button class="do-del-btn" onclick="delProdRow(this,'do-1')">×</button></td>
+                    </tr>
+                    <tr>
+                      <td><select class="lo-sel" onchange="syncDOChips('do-1')"><option>123 (≈ UNL87)</option><option selected>CLR DSL</option><option>RD DSL</option><option>Premium UNL</option><option>Heating Oil</option></select></td>
+                      <td><input class="do-prod-qty" type="number" value="1500" min="0" oninput="syncDOChips('do-1')"></td>
+                      <td><button class="do-del-btn" onclick="delProdRow(this,'do-1')">×</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button class="do-add-prod-btn" onclick="addProdRow('do-1-prods','do-1')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  Add product
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -482,7 +574,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
       <!-- Running gallons -->
       <div class="rr-card">
-        <div class="rr-card-hdr">Running gallons</div>
+        <div class="rr-card-hdr" onclick="toggleRRCard(this)">Running gallons<svg class="rr-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
         <div class="rr-card-body">
           <div class="rg-row">
             <div class="rg-prod">123 <span class="badge-cmp">≈ UNL87</span></div>
@@ -507,7 +599,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
       <!-- Billing -->
       <div class="rr-card">
-        <div class="rr-card-hdr">Billing</div>
+        <div class="rr-card-hdr" onclick="toggleRRCard(this)">Billing<svg class="rr-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
         <div class="rr-card-body">
           <div class="frow"><span class="flbl">Invoice to</span><span class="fval">Morris Group</span></div>
           <div class="frow"><span class="flbl">PO required</span><span class="fval">No</span></div>
@@ -519,7 +611,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
       <!-- Notes -->
       <div class="rr-card">
-        <div class="rr-card-hdr">Notes</div>
+        <div class="rr-card-hdr" onclick="toggleRRCard(this)">Notes<svg class="rr-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
         <div class="rr-notes-wrap">
           <div class="rr-note-grp">
             <div class="rr-note-lbl">Customer</div>
@@ -540,7 +632,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 
       <!-- Activity -->
       <div class="rr-card">
-        <div class="rr-card-hdr">Activity</div>
+        <div class="rr-card-hdr" onclick="toggleRRCard(this)">Activity<svg class="rr-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
         <div class="rr-card-body rr-act-body">
           <div class="act-entry">
             <div class="act-col"><div class="act-dot"></div><div class="act-line"></div></div>
@@ -629,24 +721,138 @@ const DRIVERS = {
 
 function fmt(n){return n.toLocaleString();}
 
+// ── DO toggle ─────────────────────────────────────────────────
+function toggleDO(id) {
+  const row = document.getElementById(id);
+  const body = document.getElementById(id + '-body');
+  if (!row || !body) return;
+  const isOpen = row.classList.contains('open');
+  row.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : '';
+}
+
+// ── Sync collapsed summary ─────────────────────────────────────
+function syncDOSummary(id) {
+  const stSel  = document.getElementById(id + '-st-sel');
+  const timeInp = document.getElementById(id + '-time-inp');
+  const shiptoEl = document.getElementById(id + '-shipto');
+  const timeEl   = document.getElementById(id + '-time');
+  if (stSel && shiptoEl) shiptoEl.textContent = stSel.options[stSel.selectedIndex].text;
+  if (timeInp && timeEl) timeEl.textContent = timeInp.value || '—';
+  syncDOChips(id);
+}
+
+function syncDOChips(id) {
+  const tbody  = document.getElementById(id + '-prods');
+  const chipsEl = document.getElementById(id + '-chips');
+  if (!tbody || !chipsEl) return;
+  const rows = tbody.querySelectorAll('tr');
+  let html = '';
+  rows.forEach(function(tr) {
+    const sel = tr.querySelector('select');
+    const qty = tr.querySelector('input');
+    if (!sel || !qty || !qty.value) return;
+    const name = sel.options[sel.selectedIndex].text;
+    const gal  = parseInt(qty.value).toLocaleString();
+    html += '<span class="del-prod-chip">' + name + ' <span class="del-prod-qty">' + gal + ' gal</span></span>';
+  });
+  chipsEl.innerHTML = html || '<span style="font-size:11px;color:#4b5563;font-style:italic;">No products</span>';
+}
+
+// ── Product rows ───────────────────────────────────────────────
+function addProdRow(tbodyId, doId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td><select class="lo-sel" onchange="syncDOChips(\'' + doId + '\')">' +
+      '<option value="">— Select</option>' +
+      '<option>123 (≈ UNL87)</option><option>CLR DSL</option>' +
+      '<option>RD DSL</option><option>Premium UNL</option><option>Heating Oil</option>' +
+    '</select></td>' +
+    '<td><input class="do-prod-qty" type="number" placeholder="0" min="0" oninput="syncDOChips(\'' + doId + '\')"></td>' +
+    '<td><button class="do-del-btn" onclick="delProdRow(this,\'' + doId + '\')">×</button></td>';
+  tbody.appendChild(tr);
+}
+
+function delProdRow(btn, doId) {
+  btn.closest('tr').remove();
+  syncDOChips(doId);
+}
+
+// ── Right rail collapse ────────────────────────────────────────
+function toggleRRCard(hdr) {
+  const card = hdr.closest('.rr-card');
+  if (card) card.classList.toggle('collapsed');
+}
+
+// ── Add Delivery Order ─────────────────────────────────────────
 let _doSeq = 2;
 function addDeliveryOrder() {
-  const list = document.getElementById('doList');
+  const list    = document.getElementById('doList');
   const countEl = document.getElementById('doCount');
-  const num = 5157058 + _doSeq++;
+  const id      = 'do-' + _doSeq;
+  const tbodyId = id + '-prods';
+  const num     = 5157058 + _doSeq;
+  _doSeq++;
+  const CHEV = '<svg class="do-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
+  const PLUS = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+
   const row = document.createElement('div');
-  row.className = 'do-row';
+  row.className = 'do-row open';
+  row.id = id;
   row.innerHTML =
-    '<div class="do-row-meta">' +
-      '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
-      '<span class="do-num">D-' + num + '</span>' +
-      '<span class="do-sep">·</span>' +
-      '<span class="do-shipto">— Select ship-to</span>' +
-      '<span class="do-time">Nov 18, 00:00</span>' +
+    '<div class="do-row-toggle" onclick="toggleDO(\'' + id + '\')">' +
+      '<div class="do-row-left">' +
+        '<div class="do-row-meta">' +
+          '<span class="do-pill do-pill-unassigned">Unassigned</span>' +
+          '<span class="do-num">D-' + num + '</span>' +
+          '<span class="do-sep">·</span>' +
+          '<span class="do-shipto" id="' + id + '-shipto">— Select ship-to</span>' +
+          '<span class="do-time" id="' + id + '-time">Nov 18, 00:00</span>' +
+        '</div>' +
+        '<div class="do-row-prods" id="' + id + '-chips"><span class="do-empty-prod">No products added</span></div>' +
+      '</div>' +
+      CHEV +
     '</div>' +
-    '<div class="do-row-prods"><span class="do-empty-prod">No products added yet</span></div>';
+    '<div class="do-body" id="' + id + '-body">' +
+      '<div class="do-form-3col">' +
+        '<div class="do-form-field" style="grid-column:1/3;">' +
+          '<label class="inp-lbl">Ship to <span class="inp-req">*</span></label>' +
+          '<select class="inp-sel" id="' + id + '-st-sel" onchange="syncDOSummary(\'' + id + '\')">' +
+            '<option value="">— Select ship-to</option>' +
+            '<option value="upstairs-hub">Upstairs Hub · Bagmati Province</option>' +
+            '<option value="chitwan">Chitwan Distribution Center</option>' +
+            '<option value="dharan">Dharan Fuel Depot · Province 1</option>' +
+            '<option value="birgunj">Birgunj Terminal · Madhesh</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="do-form-field">' +
+          '<label class="inp-lbl">Planned start</label>' +
+          '<input class="inp-text" type="text" id="' + id + '-time-inp" value="Nov 18 2026, 00:00" onchange="syncDOSummary(\'' + id + '\')">' +
+        '</div>' +
+      '</div>' +
+      '<div class="do-form-2col">' +
+        '<div class="do-form-field"><label class="inp-lbl">LOS</label>' +
+          '<select class="inp-sel"><option value="">— Select</option><option>Chitwan Ops, Fuel</option><option>Standard Delivery</option><option>Express</option></select>' +
+        '</div>' +
+        '<div class="do-form-field"><label class="inp-lbl">Payment term</label>' +
+          '<select class="inp-sel"><option value="">— Select</option><option>Net 30</option><option>Net 15</option><option>COD</option></select>' +
+        '</div>' +
+      '</div>' +
+      '<div class="do-prod-wrap">' +
+        '<div class="do-prod-lbl">Products &amp; quantities</div>' +
+        '<table class="do-prod-tbl">' +
+          '<thead><tr><th style="width:55%">Product</th><th style="width:35%;text-align:right;">Ordered (gal)</th><th style="width:10%"></th></tr></thead>' +
+          '<tbody id="' + tbodyId + '"></tbody>' +
+        '</table>' +
+        '<button class="do-add-prod-btn" onclick="addProdRow(\'' + tbodyId + '\',\'' + id + '\')">' + PLUS + ' Add product</button>' +
+      '</div>' +
+    '</div>';
+
   list.appendChild(row);
   if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+  row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function buildComp(c){
