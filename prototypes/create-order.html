@@ -358,6 +358,39 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 .dl-loaded{padding:0 10px;font-size:11px;color:#9ba3af;text-align:right;border-left:1px solid rgba(255,255,255,0.06);}
 .dl-status{padding:0 10px;font-size:10px;white-space:nowrap;}
 .rule-note{font-size:10px;color:#6b7280;margin-top:6px;display:flex;align-items:center;gap:5px;}
+/* ── Delivery window & preferred time ──────────────────────
+   One day, drawn once, full width. The window is the range on the track;
+   each preferred time is a bar under it on the same scale, with dashed
+   lines up to the track and its times under its ends. Drag a bar to move
+   it, drag an end to size it, ✕ removes it, and the + hanging off the box
+   puts a new one in the window's next free stretch. Bars never overlap —
+   each stops at its neighbours. Matches DeliveryWindowTimeline in
+   prototypes/unified-view. */
+.dwt{margin-bottom:12px;}
+.dwt-lbl{font-size:10px;font-weight:600;color:#afb1b4;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;display:block;}
+.dwt-box{position:relative;border:1px solid rgba(255,255,255,0.14);border-radius:4px;background:#2c3034;padding:10px 12px 6px;}
+.dwt-track{position:relative;height:22px;background:#1d1f23;border-radius:3px;overflow:hidden;cursor:crosshair;}
+.dwt-win{position:absolute;top:0;bottom:0;background:rgba(54,87,245,0.3);border-left:2px solid #3657f5;border-right:2px solid #3657f5;}
+.dwt-h{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:3;}
+.dwt-h::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:11px;background:#fff;border-radius:1px;opacity:.85;}
+.dwt-ticks{position:relative;height:13px;margin-top:2px;}
+.dwt-tick{position:absolute;top:0;font-size:8px;color:#5a6472;transform:translateX(-50%);white-space:nowrap;}
+.dwt-bars{position:relative;margin-top:3px;}
+.dwt-lane{position:relative;height:17px;}
+.dwt-bar{position:absolute;top:0;height:17px;background:rgba(111,212,255,0.28);border:1px solid #6fd4ff;border-radius:3px;cursor:grab;display:flex;align-items:center;justify-content:center;min-width:8px;}
+.dwt-bar:active{cursor:grabbing;}
+.dwt-bar-e{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;}
+.dwt-bar-x{position:absolute;right:-6px;top:-6px;width:13px;height:13px;border-radius:50%;background:#2c3034;border:1px solid rgba(255,255,255,0.22);color:#9ba3af;font-size:9px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;padding:0;font-family:inherit;}
+.dwt-bar-x:hover{background:#cc0200;border-color:#cc0200;color:#fff;}
+.dwt-dash{position:absolute;top:-3px;width:0;border-left:1px dashed rgba(111,212,255,0.45);height:3px;}
+.dwt-times{position:relative;height:12px;margin-top:1px;}
+.dwt-t{position:absolute;font-size:8px;color:#6fd4ff;transform:translateX(-50%);white-space:nowrap;cursor:pointer;}
+.dwt-t:hover{color:#fff;text-decoration:underline;}
+.dwt-add{position:absolute;left:12px;bottom:-11px;display:flex;align-items:center;gap:4px;height:21px;padding:0 9px;border-radius:11px;border:1px dashed rgba(54,87,245,0.45);background:#1e242c;color:#34c3ff;font-family:inherit;font-size:10px;cursor:pointer;}
+.dwt-add:hover{background:rgba(54,87,245,0.14);}
+.dwt-add:disabled{opacity:.4;cursor:not-allowed;}
+.dwt-foot{display:flex;align-items:center;gap:8px;margin-top:13px;font-size:10px;color:#6b7280;padding-left:92px;}
+.dwt-span{color:#d5d6d7;}
 
 /* ── Step 4: Best buy ─────────────────────────────────────── */
 #step4{z-index:20;width:900px;background:#1e242c;border-radius:8px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.7);max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
@@ -605,6 +638,9 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
         </div>
       </div>
 
+      <!-- Delivery window & preferred time -->
+      <div class="dwt" id="s3Win"></div>
+
       <!-- Order type + Common Carrier -->
       <div class="form-row" style="align-items:center;margin-bottom:14px;">
         <div style="flex:1;">
@@ -657,7 +693,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
               </select>
             </td>
             <td><input class="bd-qty" type="number" value="3000" min="0" placeholder="0" onchange="syncProducts()"></td>
-            <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
             <td class="bd-loaded">—</td>
             <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
@@ -674,7 +710,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
               </select>
             </td>
             <td><input class="bd-qty" type="number" value="1500" min="0" placeholder="0" onchange="syncProducts()"></td>
-            <td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+            <td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
             <td class="bd-loaded">—</td>
             <td class="bd-status"><span style="color:#4b5563;">Pick a truck</span></td>
             <td><button class="bd-del" onclick="delBdRow(this)">×</button></td>
@@ -763,24 +799,24 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
           </div>
           <div class="lo-body">
 
-            <!-- Shift card -->
-            <div class="shift-card">
+            <!-- Shift card — a driver's shift, with the HOS limits behind it -->
+            <div class="shift-card" id="s3ShiftCard" style="display:none;">
               <div class="shift-top">
                 <div class="shift-icon">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff931e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
                 <div>
-                  <div class="shift-name">Day Shift</div>
-                  <div class="shift-time">06:00 – 18:00</div>
+                  <div class="shift-name" id="s3ShiftName">—</div>
+                  <div class="shift-time" id="s3ShiftTime">—</div>
                 </div>
                 <div class="shift-right">
-                  <div class="shift-remaining">12 h 0 m</div>
-                  <div class="shift-remaining-lbl">remaining</div>
+                  <div class="shift-remaining" id="s3ShiftLen">—</div>
+                  <div class="shift-remaining-lbl">shift length</div>
                 </div>
               </div>
               <div class="shift-bar-row">
-                <div class="shift-bar"><div class="shift-bar-fill" style="width:0%"></div></div>
-                <span class="shift-bar-pct">0% elapsed</span>
+                <div class="shift-bar"><div class="shift-bar-fill" id="s3ShiftBar" style="width:0%"></div></div>
+                <span class="shift-bar-pct" id="s3ShiftHos">—</span>
               </div>
             </div>
 
@@ -788,24 +824,11 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
             <div class="inp3" style="grid-template-columns:1fr 1fr;">
               <div class="inp-grp">
                 <label class="inp-lbl">Driver <span class="inp-req">*</span></label>
-                <select class="inp-sel" id="s3DriverSel" onchange="onDriverChange(this)">
-                  <option value="">Select Driver…</option>
-                  <option value="alex">Alex Trebek — Day Shift</option>
-                  <option value="ravi">Ravi Patel — Day Shift</option>
-                  <option value="omar">Omar Khalid — Night Shift</option>
-                  <option value="priya">Priya Sharma — Day Shift</option>
-                  <option value="carlos">Carlos Schrader — Afternoon</option>
-                </select>
+                <select class="inp-sel" id="s3DriverSel" onchange="onDriverChange(this)"></select>
               </div>
               <div class="inp-grp">
                 <label class="inp-lbl">Truck <span class="inp-req">*</span> <span id="s3TruckAuto" style="display:none;font-weight:500;color:#34c3ff;text-transform:none;letter-spacing:0;">· mapped to driver</span></label>
-                <select class="inp-sel" id="s3TruckSel" onchange="onTruckChange(this)">
-                  <option value="">Select Truck…</option>
-                  <option value="Hi-12">Hi-12 · Bobtail · 5,000 gal (3 comps)</option>
-                  <option value="HV-7">HV-7 · Tanker · 9,000 gal (5 comps)</option>
-                  <option value="TR-22">TR-22 · Bobtail · 3,500 gal (2 comps)</option>
-                  <option value="PB-9">PB-9 · Tanker · 6,000 gal (4 comps)</option>
-                </select>
+                <select class="inp-sel" id="s3TruckSel" onchange="onTruckChange(this)"></select>
               </div>
             </div>
 
@@ -999,6 +1022,164 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;min-he
 <div id="successToast"></div>
 
 <script>
+/* Delivery window & preferred time — the shared timeline, in plain JS.
+   state: { start, end, preferred:[{start,end}] }, minutes from midnight. */
+var DWT_DAY = 1440, DWT_STEP = 30;
+
+function dwtShort(m) {
+  m = ((m % DWT_DAY) + DWT_DAY) % DWT_DAY;
+  var h24 = Math.floor(m / 60), mm = m % 60, h = h24 % 12 === 0 ? 12 : h24 % 12;
+  return h + (mm ? ':' + String(mm).padStart(2, '0') : '') + (h24 < 12 ? 'a' : 'p');
+}
+function dwtSpan(a, b) {
+  var t = b - a, h = Math.floor(t / 60), m = t % 60;
+  return (h ? h + 'h' : '') + (m ? (h ? ' ' : '') + m + 'm' : (h ? '' : '0m'));
+}
+function dwtSnap(m) { return Math.round(m / DWT_STEP) * DWT_STEP; }
+
+// every hour labelled, 12a to 12a
+function dwtRender(id, st) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var pct = function (m) { return (m / DWT_DAY) * 100 + '%'; };
+
+  var ticks = '';
+  for (var h = 0; h <= 24; h++) {
+    ticks += '<span class="dwt-tick" style="left:' + ((h * 60) / DWT_DAY) * 100 + '%">' +
+      (h === 0 || h === 24 ? '12a' : h === 12 ? '12p' : (h % 12)) + '</span>';
+  }
+
+  var bars = '', times = '';
+  st.preferred.forEach(function (p, i) {
+    bars += '<div class="dwt-bar" data-i="' + i + '" style="left:' + pct(p.start) + ';width:' + pct(p.end - p.start) + '">' +
+      '<span class="dwt-bar-e" data-i="' + i + '" data-mode="start" style="left:0"></span>' +
+      '<span class="dwt-bar-e" data-i="' + i + '" data-mode="end" style="right:0"></span>' +
+      '<button class="dwt-bar-x" data-rm="' + i + '" title="Remove preferred time">&times;</button>' +
+      '</div>';
+    times += '<span class="dwt-t" data-edit="' + i + '" data-side="start" style="left:' + pct(p.start) + '">' + dwtShort(p.start) + '</span>' +
+             '<span class="dwt-t" data-edit="' + i + '" data-side="end"   style="left:' + pct(p.end) + '">' + dwtShort(p.end) + '</span>';
+  });
+
+  var full = st.preferred.length > 0 && !dwtFreeSlot(st);
+
+  el.innerHTML =
+    '<span class="dwt-lbl">Delivery window &amp; preferred time</span>' +
+    '<div class="dwt-box">' +
+      '<div class="dwt-track" data-track>' +
+        '<div class="dwt-win" style="left:' + pct(st.start) + ';width:' + pct(st.end - st.start) + '"></div>' +
+        '<span class="dwt-h" data-win="start" style="left:calc(' + pct(st.start) + ' - 4px)"></span>' +
+        '<span class="dwt-h" data-win="end"   style="left:calc(' + pct(st.end) + ' - 5px)"></span>' +
+      '</div>' +
+      '<div class="dwt-ticks">' + ticks + '</div>' +
+      '<div class="dwt-bars"><div class="dwt-lane">' + bars + '</div><div class="dwt-times">' + times + '</div></div>' +
+      '<button class="dwt-add" data-add' + (full ? ' disabled title="Delete or adjust a preferred time first"' : '') + '>+ Preferred time</button>' +
+      '<div class="dwt-foot">Window <span class="dwt-span">' + dwtShort(st.start) + ' – ' + dwtShort(st.end) +
+        '</span> · ' + dwtSpan(st.start, st.end) +
+        (st.preferred.length ? ' · ' + st.preferred.length + ' preferred' : '') + '</div>' +
+    '</div>';
+
+  dwtWire(el, id, st);
+}
+
+// the window's next free half hour, or null when there is none
+function dwtFreeSlot(st) {
+  var busy = st.preferred.slice().sort(function (a, b) { return a.start - b.start; });
+  var cur = st.start;
+  for (var i = 0; i < busy.length; i++) {
+    if (busy[i].start - cur >= 60) return { start: cur, end: Math.min(cur + 60, busy[i].start) };
+    cur = Math.max(cur, busy[i].end);
+  }
+  if (st.end - cur >= 60) return { start: cur, end: Math.min(cur + 60, st.end) };
+  return null;
+}
+
+function dwtWire(el, id, st) {
+  var track = el.querySelector('[data-track]');
+  var rerender = function () { dwtRender(id, st); if (st.onChange) st.onChange(st); };
+
+  el.querySelectorAll('[data-rm]').forEach(function (b) {
+    b.onclick = function (e) { e.stopPropagation(); st.preferred.splice(+b.dataset.rm, 1); rerender(); };
+  });
+  var add = el.querySelector('[data-add]');
+  if (add) add.onclick = function () {
+    var slot = dwtFreeSlot(st);
+    if (slot) { st.preferred.push(slot); st.preferred.sort(function(a,b){return a.start-b.start;}); rerender(); }
+  };
+  el.querySelectorAll('[data-edit]').forEach(function (t) {
+    t.onclick = function () {
+      var i = +t.dataset.edit, side = t.dataset.side, p = st.preferred[i];
+      var cur = side === 'start' ? p.start : p.end;
+      var v = prompt('Preferred ' + side + ' time (HH:MM)',
+        String(Math.floor(cur / 60)).padStart(2, '0') + ':' + String(cur % 60).padStart(2, '0'));
+      if (!v) return;
+      var m = v.match(/^(\d{1,2}):(\d{2})$/); if (!m) return;
+      var mins = Math.min(DWT_DAY, Math.max(0, +m[1] * 60 + +m[2]));
+      if (side === 'start') p.start = Math.min(mins, p.end - DWT_STEP);
+      else p.end = Math.max(mins, p.start + DWT_STEP);
+      dwtClamp(st, i); rerender();
+    };
+  });
+
+  function pointerMin(e) {
+    var r = track.getBoundingClientRect();
+    return dwtSnap(Math.min(DWT_DAY, Math.max(0, ((e.clientX - r.left) / r.width) * DWT_DAY)));
+  }
+  function drag(onMove) {
+    function mv(e) { onMove(pointerMin(e)); rerender(); }
+    function up() { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); }
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  }
+
+  el.querySelectorAll('[data-win]').forEach(function (h) {
+    h.onpointerdown = function (e) {
+      e.preventDefault();
+      var which = h.dataset.win;
+      drag(function (m) {
+        if (which === 'start') st.start = Math.min(m, st.end - 60);
+        else st.end = Math.max(m, st.start + 60);
+        st.preferred = st.preferred.filter(function (p) { return p.start >= st.start && p.end <= st.end; });
+      });
+    };
+  });
+
+  el.querySelectorAll('.dwt-bar').forEach(function (bar) {
+    bar.onpointerdown = function (e) {
+      if (e.target.dataset.mode || e.target.dataset.rm) return;
+      e.preventDefault();
+      var i = +bar.dataset.i, p = st.preferred[i], grab = pointerMin(e) - p.start, len = p.end - p.start;
+      drag(function (m) {
+        p.start = m - grab; p.end = p.start + len; dwtClamp(st, i);
+      });
+    };
+  });
+  el.querySelectorAll('.dwt-bar-e').forEach(function (h) {
+    h.onpointerdown = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var i = +h.dataset.i, mode = h.dataset.mode, p = st.preferred[i];
+      drag(function (m) {
+        if (mode === 'start') p.start = Math.min(m, p.end - DWT_STEP);
+        else p.end = Math.max(m, p.start + DWT_STEP);
+        dwtClamp(st, i);
+      });
+    };
+  });
+}
+
+// a bar stops at the window and at its neighbours, whichever way it is moved
+function dwtClamp(st, i) {
+  var p = st.preferred[i], len = p.end - p.start;
+  var others = st.preferred.filter(function (_, j) { return j !== i; })
+                           .sort(function (a, b) { return a.start - b.start; });
+  var lo = st.start, hi = st.end;
+  others.forEach(function (o) {
+    if (o.end <= p.start) lo = Math.max(lo, o.end);
+    if (o.start >= p.end) hi = Math.min(hi, o.start);
+  });
+  if (p.start < lo) { p.start = lo; p.end = Math.min(hi, lo + len); }
+  if (p.end > hi)   { p.end = hi;   p.start = Math.max(lo, hi - len); }
+  if (p.end - p.start < DWT_STEP) p.end = Math.min(hi, p.start + DWT_STEP);
+}
+
 // ── Product colors (from shipto_map palette) ──────────────
 var PROD_COLORS = {
   'UNL87':      '#c4a319',
@@ -1014,21 +1195,44 @@ var PROD_COLORS = {
 // only a blend may combine components in the same compartment.
 var BLEND_PRODUCTS = [];
 
+// A comparable product is a substitute: if a product is unavailable, a
+// comparable one may be delivered in its place; a non-comparable one may not.
+var COMPARABLE = {
+  'UNL87':      ['UNL88 E15'],
+  'UNL93':      ['UNL91 mid'],
+  'CLR DSL':    ['ULSD #2'],
+  'HO DSL':     ['Winter Distillate'],
+  'Diesel DEF': [],
+};
+function comparablesFor(name) { return COMPARABLE[name] || []; }
+
 // ── Truck fleet data ──────────────────────────────────────
 var TRUCKS = {
-  'Hi-12': { type:'Bobtail', totalCap:5000, comps:[{cap:2000},{cap:2000},{cap:1000}] },
-  'HV-7':  { type:'Tanker',  totalCap:9000, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
-  'TR-22': { type:'Bobtail', totalCap:3500, comps:[{cap:2000},{cap:1500}] },
-  'PB-9':  { type:'Tanker',  totalCap:6000, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+  'BT-4':  { type:'Bobtail',    totalCap:2800, meter:210, comps:[{cap:1200},{cap:900},{cap:700}] },
+  'Hi-12': { type:'Tank wagon', totalCap:5000, meter:320, comps:[{cap:2000},{cap:2000},{cap:1000}] },
+  'PB-9':  { type:'Tank wagon', totalCap:6000, meter:380, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+  'HV-7':  { type:'Transport',  totalCap:9000, meter:620, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
 };
 
-// Each driver already has a truck mapped to them, so picking the driver picks the truck
+// Driver, truck, shift and hub are linked but all soft — any pairing can change.
+var SHIFTS = {
+  e5: { name:'Early', from:300, to:780 },   // 05:00 – 13:00
+  e6: { name:'Early', from:360, to:840 },   // 06:00 – 14:00
+  l7: { name:'Late',  from:420, to:900 },   // 07:00 – 15:00
+  l8: { name:'Late',  from:480, to:960 },   // 08:00 – 16:00
+};
+function shiftLabel(k) {
+  var s = SHIFTS[k]; if (!s) return '—';
+  var hhmm = function(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+  return s.name + ' ' + hhmm(s.from) + '–' + hhmm(s.to);
+}
+
 var DRIVERS = {
-  alex:   { name:'Alex Trebek',     shift:'Day Shift',   truck:'Hi-12' },
-  ravi:   { name:'Ravi Patel',      shift:'Day Shift',   truck:'HV-7'  },
-  omar:   { name:'Omar Khalid',     shift:'Night Shift', truck:'TR-22' },
-  priya:  { name:'Priya Sharma',    shift:'Day Shift',   truck:'PB-9'  },
-  carlos: { name:'Carlos Schrader', shift:'Afternoon',   truck:'HV-7'  },
+  alex:   { name:'Alex Trebek',     shift:'e6', truck:'Hi-12' },
+  ravi:   { name:'Ravi Patel',      shift:'e5', truck:'HV-7'  },
+  omar:   { name:'Omar Khalid',     shift:'l8', truck:'BT-4'  },
+  priya:  { name:'Priya Sharma',    shift:'e6', truck:'PB-9'  },
+  carlos: { name:'Carlos Schrader', shift:'l7', truck:'HV-7'  },
 };
 
 // ── Best buy: where each product is loaded from ───────────
@@ -1137,6 +1341,16 @@ function goBackToStep1() {
   document.getElementById('scrim1').style.display = 'flex';
 }
 
+// Top off fills the tank instead of a stated quantity, so the two are
+// mutually exclusive — a top-off line carries no quantity.
+function onTopOff(cb) {
+  var tr = cb.closest('tr');
+  var qty = tr.querySelector('input[type="number"]');
+  if (cb.checked) { qty.dataset.was = qty.value; qty.value = ''; qty.disabled = true; qty.placeholder = 'Top off'; }
+  else { qty.disabled = false; qty.placeholder = '0'; if (qty.dataset.was) qty.value = qty.dataset.was; }
+  syncProducts();
+}
+
 // The order lines live in the delivery column, so anything that changes them
 // re-reads the table and re-plans the compartments beside it.
 function syncProducts() {
@@ -1144,8 +1358,14 @@ function syncProducts() {
   document.querySelectorAll('#bdBody tr').forEach(function(tr) {
     var sel = tr.querySelector('select');
     var qty = tr.querySelector('input[type="number"]');
-    if (sel && qty && sel.value && qty.value) {
-      products.push({ name: sel.options[sel.selectedIndex].text, qty: parseInt(qty.value) || 0 });
+    var top = tr.querySelector('.bd-topoff input[type="checkbox"]');
+    if (!sel || !sel.value) return;
+    var name = sel.options[sel.selectedIndex].text;
+    if (top && top.checked) {
+      // No stated quantity: what goes on is whatever the tank takes on the day.
+      products.push({ name: name, qty: 0, topOff: true });
+    } else if (qty && qty.value) {
+      products.push({ name: name, qty: parseInt(qty.value) || 0 });
     }
   });
   s3.products = products;
@@ -1168,7 +1388,10 @@ function updateS3DoStatuses() {
     if (!loadedEl || !statusEl) return;
     var sel = tr.querySelector('select');
     var qtyInp = tr.querySelector('input[type="number"]');
-    if (!sel || !sel.value || !qtyInp || !qtyInp.value) {
+    var topCb = tr.querySelector('.bd-topoff input[type="checkbox"]');
+    var isTop = topCb && topCb.checked;
+    // a top-off line has no quantity, so an empty qty is not an empty line
+    if (!sel || !sel.value || (!isTop && (!qtyInp || !qtyInp.value))) {
       loadedEl.textContent = '—';
       statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
       return;
@@ -1183,8 +1406,15 @@ function updateS3DoStatuses() {
     var loaded = assignedByProd[p.name] || 0;
     var short = p.qty - loaded;
     loadedEl.textContent = loaded.toLocaleString();
+    if (p.topOff) {
+      statusEl.innerHTML = '<span style="color:#6fd4ff;">Top off — qty at delivery</span>';
+      loadedEl.textContent = '—';
+      return;
+    }
     if (short > 0) {
-      statusEl.innerHTML = '<span style="color:#ff931e;">⚠ ' + short.toLocaleString() + " gal won't fit</span>";
+      var alt = comparablesFor(p.name);
+      statusEl.innerHTML = '<span style="color:#ff931e;">⚠ ' + short.toLocaleString() + " gal won't fit</span>" +
+        (alt.length ? '<div style="color:#6b7280;font-size:9px;">≈ ' + alt[0] + ' is comparable</div>' : '');
     } else if (p.qty === 0) {
       statusEl.innerHTML = '<span style="color:#4b5563;">—</span>';
     } else {
@@ -1218,10 +1448,38 @@ function closeAll() {
 // ── Driver picks the truck ────────────────────────────────
 // Every driver has a truck mapped to them, so selecting the driver selects
 // the truck and plans its compartments. It stays changeable.
+function buildFleetSelects() {
+  var ds = document.getElementById('s3DriverSel');
+  ds.innerHTML = '<option value="">Select Driver…</option>' + Object.keys(DRIVERS).map(function(k) {
+    return '<option value="' + k + '">' + DRIVERS[k].name + ' — ' + shiftLabel(DRIVERS[k].shift) + '</option>';
+  }).join('');
+  var ts = document.getElementById('s3TruckSel');
+  ts.innerHTML = '<option value="">Select Truck…</option>' + Object.keys(TRUCKS).map(function(k) {
+    var t = TRUCKS[k];
+    return '<option value="' + k + '">' + k + ' · ' + t.type + ' · ' +
+      t.totalCap.toLocaleString() + ' gal · ' + t.comps.length + ' comps</option>';
+  }).join('');
+}
+
 function onDriverChange(sel) {
   var d = DRIVERS[sel.value];
   var auto = document.getElementById('s3TruckAuto');
-  if (!d || !d.truck) { auto.style.display = 'none'; return; }
+  var card = document.getElementById('s3ShiftCard');
+  if (!d) { auto.style.display = 'none'; card.style.display = 'none'; return; }
+
+  // The shift is the dispatcher's working window; HOS is the regulation behind
+  // it — 11 h driving inside a 14 h on-duty window, with a 30-minute break
+  // required within the first 8 h of driving.
+  var s = SHIFTS[d.shift], len = s.to - s.from;
+  var hhmm = function(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+  card.style.display = 'flex';
+  document.getElementById('s3ShiftName').textContent = s.name + ' shift';
+  document.getElementById('s3ShiftTime').textContent = hhmm(s.from) + ' – ' + hhmm(s.to);
+  document.getElementById('s3ShiftLen').textContent = Math.floor(len/60) + ' h' + (len%60 ? ' ' + (len%60) + ' m' : '');
+  document.getElementById('s3ShiftBar').style.width = Math.round(len / (14*60) * 100) + '%';
+  document.getElementById('s3ShiftHos').textContent = 'of the 14 h HOS window';
+
+  if (!d.truck) { auto.style.display = 'none'; return; }
   var truckSel = document.getElementById('s3TruckSel');
   truckSel.value = d.truck;
   auto.style.display = 'inline';
@@ -1712,7 +1970,7 @@ function addTrailer() {
 function addBdRow() {
   var tbody = document.getElementById('bdBody');
   var tr = document.createElement('tr');
-  tr.innerHTML = '<td><select class="bd-sel" onchange="syncProducts()"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0" onchange="syncProducts()"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td class="bd-loaded">—</td><td class="bd-status"><span style="color:#4b5563;">—</span></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
+  tr.innerHTML = '<td><select class="bd-sel" onchange="syncProducts()"><option value="">Select product…</option><option>UNL87</option><option>CLR DSL</option><option>HO DSL</option><option>UNL93</option><option>Diesel DEF</option></select></td><td><input class="bd-qty" type="number" value="" min="0" placeholder="0" onchange="syncProducts()"></td><td class="bd-topoff"><label class="toggle"><input type="checkbox" onchange="onTopOff(this)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td><td class="bd-loaded">—</td><td class="bd-status"><span style="color:#4b5563;">—</span></td><td><button class="bd-del" onclick="delBdRow(this)">×</button></td>';
   tbody.appendChild(tr);
   syncProducts();
 }
@@ -1738,6 +1996,13 @@ function toggleCB(label) {
 
 // ── Right rail collapse ───────────────────────────────────
 function toggleRR(hdr) { hdr.closest('.rr-card').classList.toggle('collapsed'); }
+
+// ── Delivery window ───────────────────────────────────────
+// Every window field in every module uses the shared timeline.
+var s3Window = { start: 7 * 60, end: 17 * 60, preferred: [{ start: 9 * 60, end: 11 * 60 }] };
+
+buildFleetSelects();
+dwtRender('s3Win', s3Window);
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════

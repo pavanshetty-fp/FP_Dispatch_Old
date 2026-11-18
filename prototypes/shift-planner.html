@@ -309,25 +309,44 @@ var PROD_COLORS = {
 // only a blend may combine components in the same compartment.
 var BLEND_PRODUCTS = [];
 
-// ── Fleet ─────────────────────────────────────────────────
+// ── Fleet, shifts and drivers (fleet-trucks-and-routes.md) ─
 var TRUCKS = {
-  'Hi-12': { type:'Bobtail', totalCap:5000, comps:[{cap:2000},{cap:2000},{cap:1000}] },
-  'HV-7':  { type:'Tanker',  totalCap:9000, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
-  'TR-22': { type:'Bobtail', totalCap:3500, comps:[{cap:2000},{cap:1500}] },
-  'PB-9':  { type:'Tanker',  totalCap:6000, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+  'BT-4':  { type:'Bobtail',    meter:210, comps:[{cap:1200},{cap:900},{cap:700}] },
+  'Hi-12': { type:'Tank wagon', meter:320, comps:[{cap:2000},{cap:2000},{cap:1000}] },
+  'PB-9':  { type:'Tank wagon', meter:380, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+  'HV-7':  { type:'Transport',  meter:620, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
 };
 var TRAILERS = {
-  'TR-HT7Z': { totalCap:18000, comps:[{cap:4500},{cap:3000},{cap:4500},{cap:3500},{cap:2500}] },
-  'TR-LRYE': { totalCap:17000, comps:[{cap:2500},{cap:4500},{cap:2500},{cap:2000},{cap:2000},{cap:3500}] },
-  'TR-KC1X': { totalCap:16500, comps:[{cap:3500},{cap:4500},{cap:2500},{cap:3000},{cap:3000}] },
+  'TR-HT7Z': { comps:[{cap:4500},{cap:3000},{cap:4500},{cap:3500},{cap:2500}] },
+  'TR-LRYE': { comps:[{cap:2500},{cap:4500},{cap:2500},{cap:2000},{cap:2000},{cap:3500}] },
+  'TR-KC1X': { comps:[{cap:3500},{cap:4500},{cap:2500},{cap:3000},{cap:3000}] },
 };
 
-// ── Drivers ───────────────────────────────────────────────
+// Dispatcher-defined working windows. Driver, truck, shift and hub are linked
+// but all soft — any pairing can change.
+var SHIFTS = {
+  e5: { name:'Early', from:300, to:780 },   // 05:00 – 13:00
+  e6: { name:'Early', from:360, to:840 },   // 06:00 – 14:00
+  l7: { name:'Late',  from:420, to:900 },   // 07:00 – 15:00
+  l8: { name:'Late',  from:480, to:960 },   // 08:00 – 16:00
+};
+function hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function shiftLabel(k){ var s=SHIFTS[k]; return s ? s.name+' '+hhmm(s.from)+'–'+hhmm(s.to) : '—'; }
+function trailerCap(k){ var t=TRAILERS[k]; return t ? t.comps.reduce(function(s,c){return s+c.cap;},0) : 0; }
+function truckCap(k){ var t=TRUCKS[k]; return t ? t.comps.reduce(function(s,c){return s+c.cap;},0) : 0; }
+
 var DRIVERS = {
-  alex:  { name:'Alex Trebek',  shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'Hi-12' },
-  ravi:  { name:'Ravi Patel',   shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'HV-7'  },
-  omar:  { name:'Omar Khalid',  shift:'Night Shift', hrs:'18:00 – 06:00', truck:'TR-22' },
-  priya: { name:'Priya Sharma', shift:'Day Shift',   hrs:'06:00 – 18:00', truck:'PB-9'  },
+  alex:  { name:'Alex Trebek',  shift:'e6', truck:'Hi-12' },
+  ravi:  { name:'Ravi Patel',   shift:'e5', truck:'HV-7'  },
+  omar:  { name:'Omar Khalid',  shift:'l8', truck:'BT-4'  },
+  priya: { name:'Priya Sharma', shift:'e6', truck:'PB-9'  },
+};
+
+// A comparable product is a substitute: if a product is unavailable, a
+// comparable one may be delivered in its place; a non-comparable one may not.
+var COMPARABLE = {
+  'UNL87':'UNL88 E15', 'UNL93':'UNL91 mid', 'CLR DSL':'ULSD #2',
+  'HO DSL':'Winter Distillate', 'Diesel DEF':'',
 };
 
 // ── Orders on the board ───────────────────────────────────
@@ -405,13 +424,13 @@ function renderOrders() {
         '</div>';
     }).join('');
 
-    var truckTag = (!isUn && d && d.truck) ? '<span class="sp-group-truck">'+d.truck+' · '+TRUCKS[d.truck].totalCap.toLocaleString()+' gal</span>' : '';
+    var truckTag = (!isUn && d && d.truck) ? '<span class="sp-group-truck">'+d.truck+' · '+truckCap(d.truck).toLocaleString()+' gal</span>' : '';
 
     return '<div class="sp-group">'+
         '<div class="sp-group-hdr">'+
           '<div class="sp-avatar'+(isUn?' unassigned':'')+'">'+(isUn?'—':initials(d.name))+'</div>'+
           '<span class="sp-group-name">'+(isUn?'Order Well':d.name)+'</span>'+
-          '<span class="sp-group-meta">'+(isUn?'no driver yet':d.shift)+'</span>'+
+          '<span class="sp-group-meta">'+(isUn?'no driver yet':shiftLabel(d.shift))+'</span>'+
           truckTag+
           '<span class="sp-group-tally">'+list.length+' orders · '+gal.toLocaleString()+' gal</span>'+
           '<button class="sp-group-selall" onclick="event.stopPropagation();selectGroup(\''+k+'\','+(!allSel)+')">'+(allSel?'Deselect':'Select all')+'</button>'+
@@ -731,10 +750,10 @@ function renderTabContent() {
 
   // ── Subdivision 1: driver, truck, trailer, orders in this load ──
   var truckOpts = '<option value="">Select truck…</option>' + Object.keys(TRUCKS).map(function(t) {
-    return '<option value="'+t+'"'+(u.truck===t?' selected':'')+'>'+t+' · '+TRUCKS[t].type+' · '+TRUCKS[t].totalCap.toLocaleString()+' gal</option>';
+    return '<option value="'+t+'"'+(u.truck===t?' selected':'')+'>'+t+' · '+TRUCKS[t].type+' · '+truckCap(t).toLocaleString()+' gal</option>';
   }).join('');
   var trailerOpts = '<option value="">No trailer</option>' + Object.keys(TRAILERS).map(function(t) {
-    return '<option value="'+t+'"'+(u.trailer===t?' selected':'')+'>'+t+' · '+TRAILERS[t].comps.length+' comps · '+TRAILERS[t].totalCap.toLocaleString()+' gal</option>';
+    return '<option value="'+t+'"'+(u.trailer===t?' selected':'')+'>'+t+' · '+TRAILERS[t].comps.length+' comps · '+trailerCap(t).toLocaleString()+' gal</option>';
   }).join('');
 
   var ordsHtml = u.orders.map(function(o) {
@@ -750,7 +769,7 @@ function renderTabContent() {
       '<div class="sp-avatar'+(isUn?' unassigned':'')+'">'+(isUn?'—':initials(d.name))+'</div>'+
       '<div>'+
         '<div class="lou-driver-name">'+(isUn?'Order Well':d.name)+'</div>'+
-        '<div class="lou-driver-shift">'+(isUn?'Assign a driver to dispatch':d.shift+' · '+d.hrs)+'</div>'+
+        '<div class="lou-driver-shift">'+(isUn?'Assign a driver to dispatch':shiftLabel(d.shift))+'</div>'+
       '</div>'+
     '</div>'+
 
@@ -930,8 +949,8 @@ function reAuto()      { autoAssignUnit(units[activeTab]); renderUnit(); }
 function suggestTrailer() {
   var u = units[activeTab];
   var gap = unitNeeded(u) - unitCap(u);
-  var pick = Object.keys(TRAILERS).filter(function(t){ return TRAILERS[t].totalCap >= gap; })
-    .sort(function(a,b){ return TRAILERS[a].totalCap - TRAILERS[b].totalCap; })[0];
+  var pick = Object.keys(TRAILERS).filter(function(t){ return trailerCap(t) >= gap; })
+    .sort(function(a,b){ return trailerCap(a) - trailerCap(b); })[0];
   if (pick) setTrailer(pick);
 }
 
