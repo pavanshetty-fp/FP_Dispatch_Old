@@ -382,6 +382,39 @@
       noClip('with a trailer hitched');
       if (!had) sp2DropTrailer(k); else sp2AddTrailer(had, k);
     });
+    step('compact fits more drivers, and keeps the one you are on', () => {
+      const h = () => [...document.querySelectorAll('.sp2-ln')].map(l => l.getBoundingClientRect().height);
+      sp2SetDense('full');
+      const full = h();
+      sp2SetDense('compact');
+      const comp = h();
+      const sel = [...document.querySelectorAll('.sp2-ln')].findIndex(l => l.classList.contains('on'));
+      if (sel < 0) throw new Error('no lane is chosen');
+      if (comp[sel] !== full[sel]) throw new Error('the chosen lane shrank in compact');
+      const other = sel === 0 ? 1 : 0;
+      if (comp[other] >= full[other] - 40)
+        throw new Error('compact saved only ' + Math.round(full[other] - comp[other]) + 'px');
+      // the tank keeps its shape and its fuel; only the writing goes
+      [...document.querySelectorAll('.sp2-ln')].forEach((l, i) => {
+        if (i === sel) return;
+        if (!l.querySelector('.sp2-r2-tank')) throw new Error('compact dropped the tank');
+        if (!l.querySelector('.sp2-r2-liq')) throw new Error('compact dropped the fuel');
+        const cab = l.querySelector('.sp2-r2-cab').getBoundingClientRect();
+        const tank = l.querySelector('.sp2-r2-tank').getBoundingClientRect();
+        if (Math.abs(cab.bottom - tank.bottom) > 2)
+          throw new Error('compact floats the cab by ' + Math.round(cab.bottom - tank.bottom) + 'px');
+        const tk = l.querySelector('.sp2-r2-tank');
+        if (tk.scrollWidth > tk.clientWidth + 1) throw new Error('compact clips the compartments');
+      });
+    });
+    step('the density switch is V2 only', () => {
+      sp2SetLayout('v1');
+      if (getComputedStyle(document.getElementById('sp2DenseSeg')).display !== 'none')
+        throw new Error('density switch shows on V1, where it means nothing');
+      sp2SetLayout('v2');
+      if (getComputedStyle(document.getElementById('sp2DenseSeg')).display === 'none')
+        throw new Error('density switch did not come back');
+    });
     step('a lane takes the drop, whoever is selected', () => {
       sp2SetDrvFilter('all');
       const lanes = [...document.querySelectorAll('.sp2-ln')];

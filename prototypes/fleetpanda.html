@@ -1229,6 +1229,32 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-r2-tag{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--fp-ink-3);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 
+/* ── Compact: a density, not a second drawing ─────────────
+   The tank keeps its shape and its fuel — what goes is the writing inside it,
+   which you only need for the rig you are actually loading. That one is the
+   chosen lane, and it stays full. */
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on){padding:7px 16px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-day{padding:7px 10px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-sync{display:none;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-shift{margin-top:3px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-drv .sp2-state{margin-top:5px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2{margin-top:6px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-rail{display:none;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-tank{height:40px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-cab{height:32px;margin-top:8px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-win{top:5px;height:12px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-cmp{min-width:26px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-in{padding:2px 3px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-ccap{display:none;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-p,#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-q,#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-s,#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-tag{display:none;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-axles{height:12px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-wheel{width:13px;height:13px;border-width:2px;top:-1px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-hitch{margin-top:40px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:6px;padding-top:5px;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-stop{display:none;}
+#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-trl-btn,#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-truck .sp2-link{display:none;}
+
+
 </style>
 </head>
 <body>
@@ -2366,6 +2392,14 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
           <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
         </div>
         <div class="sp2-hdr-tools">
+          <div class="sp2-seg" id="sp2DenseSeg">
+            <button class="sp2-seg-btn on" data-z="compact" onclick="sp2SetDense('compact')" title="Compact — more drivers on screen">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <button class="sp2-seg-btn" data-z="full" onclick="sp2SetDense('full')" title="Full — every compartment spelled out">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>
+            </button>
+          </div>
           <div class="sp2-seg" id="sp2LayoutSeg">
             <button class="sp2-seg-btn"    data-l="v1" onclick="sp2SetLayout('v1')" title="Roster beside one rig">V1</button>
             <button class="sp2-seg-btn on" data-l="v2" onclick="sp2SetLayout('v2')" title="A lane per driver">V2</button>
@@ -4249,7 +4283,8 @@ var sp2Quick = 'all';          // all · unplanned · planned
 var sp2Shift_ = 'am';          // am · pm · custom
 var sp2Driver = 'd0';
 var sp2DrvFilter = 'all';
-var sp2Layout = 'v2';        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
+var sp2Layout = 'v2';
+var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
 var sp2Drag = null;          // the order id being dragged
 var sp2SelOrder = null;
 var sp2View = 'h';            // h horizontal · v vertical · n no timeline
@@ -4572,8 +4607,19 @@ function sp2SetDrvFilter(f) {
   sp2RenderUnit();
 }
 
+// Compact is only a density, not a different render: the chosen lane stays
+// full, so you can scan thirty rigs and still work the one you are on.
+function sp2SetDense(z) {
+  sp2Dense = z;
+  document.querySelectorAll('[data-z]').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.z === z);
+  });
+  document.getElementById('sp2V2').setAttribute('data-dense', z);
+}
+
 function sp2SetLayout(v) {
   sp2Layout = v;
+  document.getElementById('sp2DenseSeg').style.display = v === 'v2' ? '' : 'none';
   document.querySelectorAll('[data-l]').forEach(function (b) {
     b.classList.toggle('on', b.dataset.l === v);
   });
@@ -4842,7 +4888,8 @@ function sp2ArtUnit(caps, load, k, unit, tag, axles) {
         'title="C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity">' +
       '<div class="sp2-r2-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
       '<div class="sp2-r2-in">' +
-        '<div class="sp2-r2-c">C' + (i + 1) + ' · ' + cap.toLocaleString() + '</div>' +
+        '<div class="sp2-r2-c">C' + (i + 1) +
+          '<span class="sp2-r2-ccap"> · ' + cap.toLocaleString() + '</span></div>' +
         '<div class="sp2-r2-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
         '<div class="sp2-r2-q">' + l.q.toLocaleString() + ' gal</div>' +
         (l.p
@@ -4964,6 +5011,7 @@ function sp2RenderUnit() {
   var v2 = sp2Layout === 'v2';
   document.getElementById('sp2V1').style.display = v2 ? 'none' : 'flex';
   document.getElementById('sp2V2').style.display = v2 ? 'block' : 'none';
+  document.getElementById('sp2V2').setAttribute('data-dense', sp2Dense);
   if (v2) sp2RenderLanes();
   else { sp2RenderDrivers(); sp2RenderRig(); }
 }
