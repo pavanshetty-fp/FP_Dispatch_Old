@@ -52,6 +52,76 @@
       if (!document.querySelectorAll('#s4Modes .bb-mode').length) throw new Error('no sourcing modes');
       if (!document.getElementById('s4Total').textContent.trim()) throw new Error('no total');
     });
+    // In the combined file every colliding global is renamed per screen, so bind
+    // the sourcing ones by whichever name actually exists.
+    const S = (() => {
+      const pick = n => typeof window['create_' + n] !== 'undefined' ? window['create_' + n] : window[n];
+      return { RACK: pick('RACK'), cheapest: pick('cheapestTerminal'),
+               preferred: pick('preferredTerminal'), why: pick('preferredWhy'),
+               landed: pick('landed'), freight: pick('freightFor'),
+               unexplained: pick('unexplained'), applyMode: pick('applyMode'),
+               pickTerminal: pick('pickTerminal'), REASONS: pick('SRC_REASONS') };
+    })();
+
+    step('freight is in the price, so the cheapest rack can lose', () => {
+      const flipped = Object.keys(S.RACK).filter(p => {
+        const r = S.RACK[p];
+        const byRack = Object.keys(r).sort((a, b) => r[a] - r[b])[0];
+        return byRack !== S.cheapest(p);
+      });
+      if (!flipped.length)
+        throw new Error('no product where freight changes the winner — the model does nothing');
+      Object.keys(TERMINALS).forEach(t => {
+        if (!(S.freight(t) > 0)) throw new Error(t + ' has no freight');
+      });
+    });
+    step('preferred is not the same as cheapest', () => {
+      const diff = Object.keys(S.RACK).filter(p => S.preferred(p) !== S.cheapest(p));
+      if (!diff.length)
+        throw new Error('preferred always equals cheapest — nothing was actually fixed');
+      diff.forEach(p => {
+        const why = S.why(p);
+        if (why === 'cheapest landed')
+          throw new Error(p + ' differs from cheapest but claims it is the cheapest');
+        if (!/contract/.test(why)) throw new Error(p + ': unexplained preference "' + why + '"');
+      });
+      // the whole point: a preferred source is allowed to cost more
+      const dearer = diff.filter(p => S.landed(p, S.preferred(p)) > S.landed(p, S.cheapest(p)));
+      if (!dearer.length) throw new Error('no case where the preferred source costs more');
+    });
+    step('leaving the preferred source demands a reason', () => {
+      S.applyMode('best');
+      if (S.unexplained().length) throw new Error('the default sourcing already owes a reason');
+      if (document.querySelector('.bb-reason')) throw new Error('a reason is asked for on the preferred source');
+      const line = s4.lines.find(l => Object.keys(TERMINALS).some(t => t !== S.preferred(l.name)));
+      if (!line) throw new Error('nothing to move');
+      const away = Object.keys(TERMINALS).find(t => t !== S.preferred(line.name));
+      S.pickTerminal(line.name, away);
+      if (!S.unexplained().length) throw new Error('deviation went unrecorded');
+      const box = document.querySelector('.bb-reason.needed .bb-reason-sel');
+      if (!box) throw new Error('no reason prompt appeared');
+      // and it blocks the create until answered
+      const before = getComputedStyle(document.getElementById('scrim4')).display;
+      createOrderAndLoad();
+      if (getComputedStyle(document.getElementById('scrim4')).display !== before)
+        throw new Error('the order was created with an unexplained override');
+      box.value = S.REASONS[0];
+      fire(box, 'change');
+      if (S.unexplained().length) throw new Error('the reason did not stick');
+      if (document.querySelector('.bb-reason.needed')) throw new Error('still flagged after a reason');
+      // going back to preferred drops the reason again
+      S.pickTerminal(line.name, S.preferred(line.name));
+      if (document.querySelector('.bb-reason')) throw new Error('reason still asked on the preferred source');
+      S.applyMode('best');
+    });
+    step('the wording is about preferred, not cheapest', () => {
+      S.applyMode('best');
+      const sheet = document.getElementById('s4Blocks').closest('.modal, .wiz, section, body') || document;
+      const txt = sheet.textContent;
+      if (/cheapest source|cheapest sourcing|Cheapest per product/.test(txt))
+        throw new Error('the old cheapest wording is still on screen');
+      if (!/preferred/i.test(txt)) throw new Error('nothing says preferred');
+    });
   }
 
   if (out.page.startsWith('load-order')) {

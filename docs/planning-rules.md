@@ -242,12 +242,12 @@ and two modes: *Cheapest per product* and *All at one terminal*.
 
 | Spec'd | In our prototype |
 |---|---|
-| TLC = base + **freight** | Rack price only — no freight, so the "far terminal loses" case cannot happen |
+| TLC = base + **freight** | ✅ **Done 2026-11-19** — freight at $0.0018/gal/mile; the cheapest rack now loses on four of seven products |
 | Contract · spot · bulk plant | Terminal rack only |
 | Allocation / Planned / Available / Lifted | None |
-| MTQ, pace, must-lift | None |
+| MTQ, pace, must-lift | Pace per contract per product (on pace · behind · must lift · ahead), shown as a pill and driving the preference. No horizon numbers |
 | Loading numbers ranked R1/R2/R3 by the buyer | None |
-| Reason on deviating from **preferred** | We prompt on **not cheapest** — the known drift (R10.9) |
+| Reason on deviating from **preferred** | ✅ **Done 2026-11-19** — a recorded reason is required, and it blocks the create |
 | A terminal holds several contracts from several suppliers | One supplier per terminal |
 | Four-step preference ladder | Only steps 1 and 4 |
 

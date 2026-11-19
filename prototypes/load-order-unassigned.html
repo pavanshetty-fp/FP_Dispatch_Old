@@ -687,7 +687,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <!-- Action buttons -->
             <div class="lo-actions lo-reveal">
               <button class="btn-cancel">Cancel</button>
-              <button class="btn-save">Save load order</button>
+              <button class="btn-save" onclick="saveLoadOrder()">Save load order</button>
             </div>
 
           </div>
@@ -715,7 +715,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <button class="col-focus" id="focusSrc" onclick="event.stopPropagation();setSplit('src')">Focus</button>
           </div>
           <div style="font-size:10.5px;color:var(--fp-ink-3);margin-bottom:10px;">
-            Rack prices for the planned date. Source each product wherever it is cheapest, or put the whole load on one terminal to save the driver a stop.
+            Landed cost for the planned date — rack price plus freight. Pricing names a preferred source per product; leaving it needs a reason.
           </div>
           <div class="bb-modes" id="srcModes"></div>
           <div id="srcBlocks"></div>
@@ -831,9 +831,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 // ══════════════════════════════════════════════════════════
 // Loading accounts belong to a terminal, so picking a terminal narrows them.
 var SRC_TERMINALS = {
-  'Magellan CC': { supplier:'Kendrick Oil', accounts:['MCC-7823','MCC-8841'], dist:'12 mi' },
-  'Buckeye CC':  { supplier:'Flint Hills',  accounts:['BCC-2290','BCC-2291'], dist:'23 mi' },
-  'Valero West': { supplier:'Valero',       accounts:['VLW-5510'],            dist:'31 mi' },
+  'Magellan CC': { supplier:'Kendrick Oil', accounts:['MCC-7823','MCC-8841'], dist:'12 mi', mi:12, type:'contract' },
+  'Buckeye CC':  { supplier:'Flint Hills',  accounts:['BCC-2290','BCC-2291'], dist:'23 mi', mi:23, type:'contract' },
+  'Valero West': { supplier:'Valero',       accounts:['VLW-5510'],            dist:'31 mi', mi:31, type:'spot' },
 };
 // rack price per gallon for the planned date
 var RACK = {
@@ -843,7 +843,28 @@ var RACK = {
   'Premium UNL':   { 'Magellan CC':3.302, 'Buckeye CC':3.341, 'Valero West':3.288 },
   'Heating Oil':   { 'Magellan CC':3.207, 'Buckeye CC':3.244, 'Valero West':3.189 },
 };
-var srcState = { picks:{}, mode:'best', lines:[], created:false };
+
+// Freight is part of the price, not a footnote. A cheap rack 31 miles out can
+// land dearer than a nearer one — which is the whole point of landed cost.
+var FREIGHT_PER_MI = 0.0018;   // $/gal per mile
+
+// Where each contract stands against its minimum take, per product. Contracts
+// only — a spot lift carries no obligation.
+var PACE = {
+  '123 (≈ UNL87)': { 'Magellan CC':'at-risk', 'Buckeye CC':'on-pace' },
+  'CLR DSL':       { 'Magellan CC':'behind',  'Buckeye CC':'on-pace' },
+  'RD DSL':        { 'Magellan CC':'on-pace', 'Buckeye CC':'on-pace' },
+  'Premium UNL':   { 'Magellan CC':'on-pace', 'Buckeye CC':'at-risk' },
+  'Heating Oil':   { 'Magellan CC':'on-pace', 'Buckeye CC':'ahead'   },
+};
+var PACE_WORD = { 'at-risk':'Must lift', 'behind':'Behind pace', 'ahead':'Ahead', 'on-pace':'On pace' };
+
+// Why a dispatcher might leave the preferred source. The reason is recorded
+// against the deviation, so it has to be a real one.
+var SRC_REASONS = ['Terminal is off-route', 'Preferred source dry or down',
+                   'Driver not carded there', 'Better landed cost',
+                   'Customer requires this brand', 'Other'];
+var srcState = { picks:{}, mode:'best', lines:[], created:false, reasons:{} };
 
 function createSourcing() {
   srcState.created = true;
@@ -872,18 +893,79 @@ function syncSourcing() {
 }
 function touchSrc(){ if (typeof touch === 'function') touch(); }
 
+function freightFor(term) {
+  return (SRC_TERMINALS[term] ? SRC_TERMINALS[term].mi : 0) * FREIGHT_PER_MI;
+}
+
+// Total landed cost — what a gallon costs once it is on the truck.
+function landed(prod, term) {
+  var r = (RACK[prod] || {})[term];
+  return typeof r === 'number' ? r + freightFor(term) : null;
+}
+
+function racksIt(prod) {
+  return Object.keys(SRC_TERMINALS).filter(function (t) { return landed(prod, t) !== null; });
+}
+
 function cheapestTerminal(prod) {
-  var r = RACK[prod];
-  if (!r) return Object.keys(SRC_TERMINALS)[0];
-  return Object.keys(r).sort(function(a,b){ return r[a] - r[b]; })[0];
+  var names = racksIt(prod);
+  if (!names.length) return Object.keys(SRC_TERMINALS)[0];
+  return names.sort(function (a, b) { return landed(prod, a) - landed(prod, b); })[0];
+}
+
+// Pricing's directive, and the reason this is not just "cheapest": a contract
+// behind its minimum take is PREFERRED even when it costs more per gallon,
+// because missing the minimum carries a penalty that outweighs the cents.
+function preferredTerminal(prod) {
+  var names = racksIt(prod), pace = PACE[prod] || {};
+  var byLanded = function (a, b) { return landed(prod, a) - landed(prod, b); };
+  var urgent = names.filter(function (t) { return pace[t] === 'at-risk'; });
+  if (!urgent.length) urgent = names.filter(function (t) { return pace[t] === 'behind'; });
+  if (urgent.length) return urgent.sort(byLanded)[0];
+  return cheapestTerminal(prod);
+}
+
+// Every preference has to be explainable on screen.
+function preferredWhy(prod) {
+  var p = (PACE[prod] || {})[preferredTerminal(prod)];
+  if (p === 'at-risk') return 'contract must lift';
+  if (p === 'behind')  return 'contract behind pace';
+  return 'cheapest landed';
+}
+
+// A source the dispatcher left for something else needs a recorded reason.
+function deviations() {
+  return srcState.lines.filter(function (l) {
+    var p = srcState.picks[l.name];
+    return p && p.terminal !== preferredTerminal(l.name);
+  });
+}
+function unexplained() {
+  return deviations().filter(function (l) { return !srcState.reasons[l.name]; });
+}
+// The load order cannot be saved while an override has no reason on it. There is
+// no toast on this screen, so send the dispatcher to the field that is missing.
+function saveLoadOrder() {
+  var owed = unexplained();
+  if (owed.length) {
+    var need = document.querySelector('.bb-reason.needed .bb-reason-sel');
+    if (need) { need.scrollIntoView({ block:'center' }); need.focus(); }
+    return;
+  }
+  var btn = document.querySelector('.btn-save');
+  if (btn) { btn.textContent = 'Load order saved'; setTimeout(function(){ btn.textContent = 'Save load order'; }, 2000); }
+}
+
+function setReason(prod, why) {
+  if (why) srcState.reasons[prod] = why; else delete srcState.reasons[prod];
+  renderSourcing();
 }
 
 // What the load costs under a given sourcing choice
 function totalFor(mode) {
   return srcState.lines.reduce(function(sum, l) {
-    var rack = RACK[l.name] || {};
-    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
-    return sum + (rack[term] || 0) * l.qty;
+    var term = mode === 'best' ? preferredTerminal(l.name) : mode;
+    return sum + (landed(l.name, term) || 0) * l.qty;
   }, 0);
 }
 
@@ -900,8 +982,9 @@ function terminalCanSupplyAll(term) {
 function applyMode(mode, quiet) {
   srcState.mode = mode;
   srcState.lines.forEach(function(l) {
-    var term = mode === 'best' ? cheapestTerminal(l.name) : mode;
+    var term = mode === 'best' ? preferredTerminal(l.name) : mode;
     if (!SRC_TERMINALS[term]) return;
+    if (term === preferredTerminal(l.name)) delete srcState.reasons[l.name];
     var prev = srcState.picks[l.name];
     // keep the chosen account when the terminal has not moved
     var acct = (prev && prev.terminal === term) ? prev.account : SRC_TERMINALS[term].accounts[0];
@@ -913,7 +996,7 @@ function applyMode(mode, quiet) {
 function renderModes() {
   var bestTotal = totalFor('best');
   var bestStops = {};
-  srcState.lines.forEach(function(l){ bestStops[cheapestTerminal(l.name)] = true; });
+  srcState.lines.forEach(function(l){ bestStops[preferredTerminal(l.name)] = true; });
   var bestStopCount = Object.keys(bestStops).length;
 
   var money = function(n) {
@@ -921,7 +1004,7 @@ function renderModes() {
   };
 
   var chips = ['<button class="bb-mode'+(srcState.mode==='best'?' on':'')+'" onclick="applyMode(\'best\')">'+
-      '<div class="bb-mode-name">Cheapest per product</div>'+
+      '<div class="bb-mode-name">Preferred per product</div>'+
       '<div class="bb-mode-total">'+money(bestTotal)+'</div>'+
       '<div class="bb-mode-sub" style="color:'+(bestStopCount>1?'var(--status-caution)':'var(--status-success)')+';">'+
         bestStopCount+' terminal'+(bestStopCount>1?'s':'')+' to visit</div>'+
@@ -935,7 +1018,9 @@ function renderModes() {
       ? '<span style="color:var(--fp-ink-3);">does not rack every product</span>'
       : over > 0.005
         ? '<span style="color:var(--status-caution);">+'+money(over).slice(1)+' · 1 stop</span>'
-        : '<span style="color:var(--status-success);">cheapest · 1 stop</span>';
+        : over < -0.005
+          ? '<span style="color:var(--status-success);">−'+money(-over).slice(1)+' · 1 stop</span>'
+          : '<span style="color:var(--status-success);">same cost · 1 stop</span>';
     chips.push('<button class="bb-mode'+(srcState.mode===t?' on':'')+'"'+(ok?'':' disabled')+
         ' onclick="applyMode(\''+t+'\')">'+
       '<div class="bb-mode-name">All at '+t+'</div>'+
@@ -950,50 +1035,74 @@ function renderModes() {
 function renderSourcing() {
   var html = srcState.lines.map(function(l) {
     var col = PROD_COLORS[l.name] || 'var(--fp-ink-3)';
-    var rack = RACK[l.name] || {};
     var names = Object.keys(SRC_TERMINALS);
-    var best = cheapestTerminal(l.name);
-    var bestPrice = rack[best];
+    var pref = preferredTerminal(l.name);
+    var prefPrice = landed(l.name, pref);
     var pick = srcState.picks[l.name];
 
     var rows = names.map(function(t) {
-      var price = rack[t];
+      var rackP = (RACK[l.name] || {})[t];
+      var lp = landed(l.name, t);
       var term = SRC_TERMINALS[t];
       var isPick = pick.terminal === t;
-      var delta = price - bestPrice;
-      var deltaHtml = delta === 0
-        ? '<span style="color:var(--status-success);">best</span>'
-        : '<span style="color:var(--fp-ink-3);">+$' + delta.toFixed(3) + '</span>';
+      var isPref = t === pref;
+      var delta = lp - prefPrice;
+      // the preferred source can cost MORE, so this delta is signed
+      var deltaHtml = isPref
+        ? '<span style="color:var(--status-success);">✦ preferred</span>'
+        : '<span style="color:var(--fp-ink-3);">'+(delta < 0 ? '−$' : '+$')+Math.abs(delta).toFixed(3)+'</span>';
+      var paceState = (PACE[l.name] || {})[t];
+      var pills = '<span class="bb-type '+term.type+'">'+(term.type === 'contract' ? 'Contract' : 'Spot')+'</span>'+
+        (paceState && paceState !== 'on-pace'
+          ? '<span class="bb-pace '+paceState+'">'+PACE_WORD[paceState]+'</span>' : '');
       var acctOpts = term.accounts.map(function(a) {
         return '<option value="'+a+'"'+(isPick && pick.account===a ? ' selected':'')+'>'+a+'</option>';
       }).join('');
 
-      return '<tr class="'+(isPick?'picked':'')+'" onclick="pickTerminal(\''+l.name+'\',\''+t+'\')" style="cursor:pointer;">'+
+      return '<tr class="'+(isPick?'picked':'')+'" onclick="pickTerminal(\'' + l.name + '\',\'' + t + '\')" style="cursor:pointer;">'+
         '<td class="bb-radio-cell"><div class="bb-radio'+(isPick?' on':'')+'"></div></td>'+
         '<td class="bb-cell">'+t+'<div class="bb-cell-sub">'+term.dist+'</div></td>'+
-        '<td class="bb-cell">'+term.supplier+'</td>'+
-        '<td onclick="event.stopPropagation();"><select class="bb-acct" onchange="pickAccount(\''+l.name+'\',\''+t+'\',this.value)"'+(isPick?'':' disabled style="opacity:0.4;"')+'>'+acctOpts+'</select></td>'+
-        '<td class="bb-price'+(delta===0?' bb-price-best':'')+'">$'+price.toFixed(3)+'</td>'+
+        '<td class="bb-cell">'+term.supplier+'<div class="bb-pills">'+pills+'</div></td>'+
+        '<td onclick="event.stopPropagation();"><select class="bb-acct" onchange="pickAccount(\'' + l.name + '\',\'' + t + '\',this.value)"'+(isPick?'':' disabled style="opacity:0.4;"')+'>'+acctOpts+'</select></td>'+
+        '<td class="bb-price'+(isPref?' bb-price-best':'')+'">$'+lp.toFixed(3)+
+          '<div class="bb-cell-sub">rack '+rackP.toFixed(3)+' + frt '+freightFor(t).toFixed(3)+'</div></td>'+
         '<td class="bb-delta">'+deltaHtml+'</td>'+
-        '<td class="bb-price">$'+(price*l.qty).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '<td class="bb-price">$'+(lp*l.qty).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
       '</tr>';
     }).join('');
 
-    var onBest = pick.terminal === best;
+    var onPref = pick.terminal === pref;
+    // The reason is recorded against leaving PREFERRED, never against "not
+    // cheapest" — a contract behind its minimum is preferred though it costs more.
+    var reason = srcState.reasons[l.name] || '';
+    var reasonBlock = onPref ? '' :
+      '<div class="bb-reason'+(reason ? '' : ' needed')+'">'+
+        '<span class="bb-reason-lbl">'+(reason
+            ? 'Reason recorded for leaving ' + pref
+            : 'Reason required — ' + pref + ' is preferred (' + preferredWhy(l.name) + ')')+'</span>'+
+        '<select class="bb-reason-sel" onchange="setReason(\'' + l.name + '\',this.value)">'+
+          '<option value=""'+(reason?'':' selected')+'>Choose a reason…</option>'+
+          SRC_REASONS.map(function(r){
+            return '<option value="'+r+'"'+(reason===r?' selected':'')+'>'+r+'</option>';
+          }).join('')+
+        '</select>'+
+      '</div>';
 
     return '<div class="bb-prod-block">'+
       '<div class="bb-prod-hdr">'+
         '<span class="prod-dot" style="background:'+col+';"></span>'+
         '<span class="bb-prod-name">'+l.name+'</span>'+
         '<span class="bb-prod-gal">'+l.qty.toLocaleString()+' gal to load</span>'+
-        '<span class="bb-prod-best">'+(onBest ? '✓ cheapest source' : 'not the cheapest source')+'</span>'+
+        '<span class="bb-prod-best'+(onPref?'':' off')+'">'+
+          (onPref ? '✦ preferred · '+preferredWhy(l.name) : 'not the preferred source')+'</span>'+
       '</div>'+
       '<table class="bb-tbl"><thead><tr>'+
         '<th></th><th>Terminal</th><th>Supplier</th><th style="width:150px;">Loading account</th>'+
-        '<th style="width:88px;text-align:right;">$/gal</th>'+
-        '<th style="width:74px;text-align:right;">vs best</th>'+
+        '<th style="width:106px;text-align:right;">Landed $/gal</th>'+
+        '<th style="width:84px;text-align:right;">vs preferred</th>'+
         '<th style="width:112px;text-align:right;">Line cost</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table>'+
+      reasonBlock+
     '</div>';
   }).join('');
 
@@ -1003,20 +1112,26 @@ function renderSourcing() {
   renderModes();
 
   // Totals
-  var total = 0, bestTotal = 0;
+  var total = 0, prefTotal = 0;
   srcState.lines.forEach(function(l) {
-    var rack = RACK[l.name] || {};
-    total     += (rack[srcState.picks[l.name].terminal] || 0) * l.qty;
-    bestTotal += (rack[cheapestTerminal(l.name)]  || 0) * l.qty;
+    total     += (landed(l.name, srcState.picks[l.name].terminal) || 0) * l.qty;
+    prefTotal += (landed(l.name, preferredTerminal(l.name))  || 0) * l.qty;
   });
   document.getElementById('srcTotal').textContent =
     '$' + total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-  var over = total - bestTotal;
+  var over = total - prefTotal;
+  var missing = unexplained().length;
   var saving = document.getElementById('srcSaving');
-  saving.textContent = over > 0.005
-    ? '$' + over.toFixed(2) + ' above the cheapest sourcing'
-    : 'every product on its cheapest source';
-  saving.style.color = over > 0.005 ? 'var(--status-caution)' : 'var(--status-success)';
+  // Leaving the preferred source is allowed; leaving it unexplained is not.
+  saving.textContent = missing
+    ? missing + ' source' + (missing === 1 ? '' : 's') + ' left the preferred choice with no reason'
+    : over > 0.005
+      ? '$' + over.toFixed(2) + ' above the preferred sourcing'
+      : over < -0.005
+        ? '$' + (-over).toFixed(2) + ' below the preferred sourcing — reason recorded'
+        : 'every product on its preferred source';
+  saving.style.color = missing ? 'var(--status-failed)'
+    : Math.abs(over) > 0.005 ? 'var(--status-caution)' : 'var(--status-success)';
 
   // The cheapest price per product can sit at different terminals, which costs
   // the driver a second stop. Worth saying out loud before the order is created.
@@ -1649,6 +1764,22 @@ setSplit('do');
 #protoShow{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;width:48px;height:7px;padding:0;border:none;border-radius:0 0 6px 6px;background:var(--fp-selected);cursor:pointer;display:none;}
 #protoShow:hover{background:var(--primary);}
 #protoShow.on{display:block;}
+.bb-pills{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
+.bb-type{display:inline-flex;align-items:center;height:16px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;}
+.bb-type.contract{background:color-mix(in oklab,var(--status-info) 15%,transparent);color:var(--status-info);}
+.bb-type.spot{background:var(--muted);color:var(--status-neutral);}
+.bb-pace{display:inline-flex;align-items:center;height:16px;padding:0 6px;border-radius:8px;font-size:9px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;}
+.bb-pace.at-risk{background:color-mix(in oklab,var(--status-failed) 15%,transparent);color:var(--status-failed);}
+.bb-pace.behind{background:color-mix(in oklab,var(--status-caution) 15%,transparent);color:var(--status-caution);}
+.bb-pace.ahead{background:color-mix(in oklab,var(--status-success) 15%,transparent);color:var(--status-success);}
+.bb-prod-best.off{color:var(--status-caution);}
+/* Leaving the preferred source is allowed; leaving it unexplained is not. */
+.bb-reason{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid var(--fp-stroke-hairline);background:var(--fp-surface-1a);}
+.bb-reason.needed{background:color-mix(in oklab,var(--status-caution) 8%,transparent);}
+.bb-reason-lbl{font-size:11px;color:var(--fp-ink-3);}
+.bb-reason.needed .bb-reason-lbl{color:var(--status-caution);font-weight:500;}
+.bb-reason-sel{margin-left:auto;height:28px;min-width:200px;border:1px solid var(--fp-stroke-field);border-radius:4px;background:var(--fp-surface-1b);color:var(--fp-ink-1);font-family:inherit;font-size:11px;padding:0 8px;outline:none;cursor:pointer;}
+.bb-reason.needed .bb-reason-sel{border-color:var(--status-caution);}
 </style>
 
 <div id="protoSwitch">

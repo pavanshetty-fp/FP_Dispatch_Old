@@ -22,7 +22,9 @@ SCREENS = [
 # these exist in more than one screen and would otherwise overwrite each other
 COLLIDING = """BLEND_PRODUCTS COMPARABLE DRIVERS PROD_COLORS RACK addTrailer applyMode
 cheapestTerminal colClick onDriverChange pickAccount pickTerminal planAssignments
-renderModes setSplit terminalCanSupplyAll totalFor""".split()
+renderModes setSplit terminalCanSupplyAll totalFor
+FREIGHT_PER_MI PACE PACE_WORD SRC_REASONS deviations freightFor landed
+preferredTerminal preferredWhy racksIt setReason unexplained""".split()
 
 
 def strip_switcher(text):
