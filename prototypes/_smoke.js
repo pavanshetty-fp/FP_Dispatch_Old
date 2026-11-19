@@ -169,6 +169,32 @@
     });
   }
 
+  // Text that cannot be read on its own fill. Composite every alpha layer down
+  // to an opaque colour first — ignoring alpha reports nearly everything as a
+  // failure and buries the handful that are real.
+  (function () {
+    const px = c => { const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      return m ? { r:+m[1], g:+m[2], b:+m[3], a: m[4] === undefined ? 1 : +m[4] } : null; };
+    const over = (f, b) => ({ r: f.r*f.a + b.r*(1-f.a), g: f.g*f.a + b.g*(1-f.a), b: f.b*f.a + b.b*(1-f.a), a: 1 });
+    const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+      return 0.2126*f(c.r) + 0.7152*f(c.g) + 0.0722*f(c.b); };
+    const effBg = e => { let acc = { r:255, g:255, b:255, a:1 }, chain = [], n = e;
+      while (n && n !== document.documentElement) { const c = px(getComputedStyle(n).backgroundColor);
+        if (c && c.a > 0) chain.push(c); n = n.parentElement; }
+      for (let i = chain.length - 1; i >= 0; i--) acc = over(chain[i], acc);
+      return acc; };
+    const root = document.querySelector('.screen.on') || document;
+    root.querySelectorAll('*').forEach(e => {
+      if (!e.textContent.trim() || e.children.length) return;
+      const r = e.getBoundingClientRect();
+      if (r.width < 8 || r.height < 6) return;
+      const fg = px(getComputedStyle(e).color); if (!fg) return;
+      const bg = effBg(e), fc = lum(over(fg, bg)), bc = lum(bg);
+      const ratio = (Math.max(fc, bc) + 0.05) / (Math.min(fc, bc) + 0.05);
+      if (ratio < 3) out.layout.push('low contrast: "' + e.textContent.trim().slice(0, 26) + '" ' + ratio.toFixed(2) + ':1');
+    });
+  })();
+
   // anything visually cut off, anywhere on the page
   document.querySelectorAll('td,th,select,option,button,.comp-prod,.const-name,.bb-mode-name').forEach(e => {
     if (e.scrollWidth > e.clientWidth + 2 && e.clientWidth > 0) {

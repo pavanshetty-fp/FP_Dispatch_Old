@@ -160,7 +160,7 @@ TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1440">
 <title>FleetPanda — Prototypes</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
 <style>
 /* ══ Shell ══════════════════════════════════════════════════
    Each screen below keeps its own stylesheet, scoped to its own container —
@@ -168,16 +168,16 @@ TEMPLATE = """<!DOCTYPE html>
    other. Only this shell is global. */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
-body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;overflow:hidden;letter-spacing:0.4px;}
+body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;overflow:hidden;}
 
 .shell{height:100vh;display:flex;flex-direction:column;}
-.shell-nav{height:42px;background:#14181e;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:3px;padding:0 12px;flex-shrink:0;z-index:50;}
-.shell-brand{display:flex;align-items:center;gap:8px;margin-right:14px;font-size:12px;font-weight:700;color:#fff;letter-spacing:0.5px;white-space:nowrap;}
-.shell-brand span{width:19px;height:19px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;}
-.nav-tab{height:28px;padding:0 14px;border:none;border-radius:14px;background:transparent;color:#9ba3af;font-family:inherit;font-size:11.5px;cursor:pointer;white-space:nowrap;letter-spacing:0.3px;}
-.nav-tab:hover{background:rgba(255,255,255,0.07);color:#e9ebf0;}
-.nav-tab.on{background:#3657f5;color:#fff;font-weight:600;}
-.shell-note{margin-left:auto;font-size:10px;color:#4b5563;white-space:nowrap;}
+.shell-nav{height:48px;background:#ffffff;border-bottom:1px solid #c8c9cd;display:flex;align-items:center;gap:4px;padding:0 14px;flex-shrink:0;z-index:50;}
+.shell-brand{display:flex;align-items:center;gap:8px;margin-right:16px;font-size:14px;font-weight:600;color:#030405;white-space:nowrap;}
+.shell-brand span{width:22px;height:22px;border-radius:50%;background:#fa6400;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.nav-tab{height:32px;padding:0 14px;border:none;border-radius:8px;background:transparent;color:#4f5968;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.nav-tab:hover{background:#dee0e5;color:#030405;}
+.nav-tab.on{background:#090c0f;color:#f0f2f5;font-weight:600;}
+.shell-note{margin-left:auto;font-size:12px;color:#4f5968;white-space:nowrap;}
 
 .shell-body{flex:1;position:relative;overflow:hidden;min-height:0;}
 .screen{position:absolute;inset:0;overflow:hidden;display:none;}
