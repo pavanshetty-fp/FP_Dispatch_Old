@@ -342,22 +342,41 @@
       const tank = art.querySelector('.sp2-r2-tank').getBoundingClientRect();
       if (Math.abs(cab.bottom - tank.bottom) > 2)
         throw new Error('the cab floats off the chassis by ' + Math.round(cab.bottom - tank.bottom) + 'px');
+      // the drawn levels have to agree with the driver's actual load
+      const k = document.querySelectorAll('.sp2-ln')[0].dataset.k;
+      const d = SP2_DRIVERS[k];
+      let caps = SP2_TRUCKS[d.truck].comps.map(c => c.cap), load = d.load.slice();
+      if (d.trailer) { caps = caps.concat(SP2_TRAILERS[d.trailer].caps); load = load.concat(d.tload); }
       const cmps = [...art.querySelectorAll('.sp2-r2-cmp')];
-      const lbls = [...art.querySelectorAll('.sp2-r2-lbl')];
-      if (cmps.length !== lbls.length) throw new Error('a compartment has no label under it');
+      if (cmps.length !== caps.length) throw new Error('compartments drawn do not match the rig');
       cmps.forEach((c, i) => {
-        const pct = parseInt(lbls[i].querySelector('.sp2-r2-ls').textContent, 10);
+        const want = Math.min(100, Math.round((load[i].q || 0) / caps[i] * 100));
         const h = parseFloat(c.querySelector('.sp2-r2-liq').style.height);
-        if (Math.abs(h - pct) > 1) throw new Error('C' + (i + 1) + ' drawn at ' + h + '% but labelled ' + pct + '%');
-        // the label sits under its own compartment
-        if (Math.abs(c.getBoundingClientRect().left - lbls[i].getBoundingClientRect().left) > 3)
-          throw new Error('C' + (i + 1) + ' label is not under its compartment');
+        if (Math.abs(h - want) > 1) throw new Error('C' + (i + 1) + ' drawn at ' + h + '% but holds ' + want + '%');
+        // every fact is inside the compartment, not in a row underneath
+        if (!c.querySelector('.sp2-r2-p') || !c.querySelector('.sp2-r2-q') || !c.querySelector('.sp2-r2-s'))
+          throw new Error('C' + (i + 1) + ' is missing product, quantity or state');
+        const txt = c.querySelector('.sp2-r2-in').getBoundingClientRect();
+        if (txt.height > c.getBoundingClientRect().height + 1)
+          throw new Error('C' + (i + 1) + ' text overflows the tank');
       });
-      ['.sp2-r2-lp', '.sp2-r2-lq'].forEach(sel => {
-        art.querySelectorAll(sel).forEach(el => {
-          if (el.scrollWidth > el.clientWidth) throw new Error('label cut off: ' + el.textContent);
+      if (art.querySelector('.sp2-r2-scale')) throw new Error('the old label row is still there');
+      const noClip = where => {
+        document.querySelectorAll('.sp2-r2-p, .sp2-r2-q').forEach(el => {
+          if (el.scrollWidth > el.clientWidth)
+            throw new Error('label cut off ' + where + ': ' + el.textContent);
         });
-      });
+        document.querySelectorAll('.sp2-r2-tank').forEach(tk => {
+          if (tk.scrollWidth > tk.clientWidth + 1)
+            throw new Error('compartments overflow the tank ' + where);
+        });
+      };
+      noClip('on the truck alone');
+      // a trailer halves the truck's share of the width — the tightest case there is
+      const had = d.trailer;
+      sp2AddTrailer('TR-660', k);
+      noClip('with a trailer hitched');
+      if (!had) sp2DropTrailer(k); else sp2AddTrailer(had, k);
     });
     step('a lane takes the drop, whoever is selected', () => {
       sp2SetDrvFilter('all');

@@ -348,34 +348,38 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
    each one. The numbers go underneath, where no product colour is behind them. */
 .sp2-r2{display:flex;align-items:flex-start;margin-top:10px;}
 .sp2-r2-cabwrap{flex:0 0 52px;}
-.sp2-r2-cab{height:68px;margin-top:22px;border:2px solid var(--fp-ink-1);border-right:none;border-radius:11px 3px 2px 2px;background:var(--fp-card-2);position:relative;}
+.sp2-r2-cab{height:74px;margin-top:36px;border:2px solid var(--fp-ink-1);border-right:none;border-radius:11px 3px 2px 2px;background:var(--fp-card-2);position:relative;}
 .sp2-r2-win{position:absolute;left:7px;right:4px;top:8px;height:21px;border-radius:4px 6px 0 0;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-2);}
-.sp2-r2-art{flex:1;display:flex;align-items:flex-start;min-width:0;}
-.sp2-r2-unit{display:flex;flex-direction:column;flex-basis:0;min-width:0;}
+.sp2-r2-art{flex:1;display:flex;align-items:flex-start;min-width:0;overflow-x:auto;padding-bottom:2px;}
+.sp2-r2-unit{display:flex;flex-direction:column;flex-basis:0;min-width:min-content;}
 .sp2-r2-rail{height:4px;margin:0 20px 2px;border-radius:2px;background:var(--fp-outline-2);}
-.sp2-r2-tank{display:flex;height:84px;border:2px solid var(--fp-ink-1);border-radius:9999px;overflow:hidden;background:var(--fp-surface-1b);}
-.sp2-r2-cmp{position:relative;flex-basis:0;min-width:64px;border-right:2px solid var(--fp-ink-1);}
+.sp2-r2-tank{display:flex;height:104px;border:2px solid var(--fp-ink-1);border-radius:9999px;overflow:hidden;background:var(--fp-surface-1b);}
+.sp2-r2-cmp{position:relative;flex-basis:0;min-width:84px;border-right:2px solid var(--fp-ink-1);}
 .sp2-r2-cmp:last-child{border-right:none;}
 .sp2-r2-cmp.sp2-over{background:var(--fp-selected);}
 .sp2-r2-liq{position:absolute;left:0;right:0;bottom:0;opacity:.85;border-top:2px solid rgba(3,4,5,.18);transition:height .3s ease;}
-.sp2-r2-c{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--fp-ink-1);}
+/* vertically centred, so the text stays in the tank's full-width middle band
+   rather than running into the capsule's rounded ends */
+.sp2-r2-in{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 5px;text-align:center;}
+.sp2-r2-c{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--fp-ink-1);opacity:.65;}
+.sp2-r2-p{font-size:12px;font-weight:600;color:var(--fp-ink-1);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-r2-p.empty{font-weight:400;opacity:.6;}
+.sp2-r2-q{font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+.sp2-r2-q span{opacity:.6;}
+.sp2-r2-s{display:flex;align-items:center;justify-content:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--fp-ink-1);line-height:1.3;margin-top:1px;}
+.sp2-r2-s.empty-c{opacity:.6;font-weight:400;}
+.sp2-r2-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.7);}
+.sp2-r2-dot.full{background:var(--status-success);}
+.sp2-r2-dot.partial{background:var(--status-caution);}
+.sp2-r2-dot.empty-c{background:var(--fp-outline-2);}
 .sp2-r2-chassis{height:5px;margin:0 12px 0 0;background:var(--fp-ink-1);border-radius:0 0 3px 3px;}
 .sp2-r2-cabframe{height:5px;margin-left:5px;background:var(--fp-ink-1);}
 .sp2-r2-axles{position:relative;height:20px;}
 .sp2-r2-wheel{position:absolute;top:-2px;width:19px;height:19px;border-radius:50%;background:var(--fp-surface-1b);border:3px solid var(--fp-ink-1);}
-.sp2-r2-hitch{flex:0 0 16px;height:5px;margin-top:90px;background:var(--fp-ink-1);border-radius:3px;}
+.sp2-r2-art::-webkit-scrollbar{height:7px;}
+.sp2-r2-art::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:4px;}
+.sp2-r2-hitch{flex:0 0 16px;flex-shrink:0;height:5px;margin-top:110px;background:var(--fp-ink-1);border-radius:3px;}
 .sp2-r2-tag{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--fp-ink-3);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-scale{display:flex;margin:5px 2px 0;}
-.sp2-r2-lbl{flex-basis:0;min-width:64px;text-align:center;padding:0 3px;border-left:1px dashed var(--fp-outline-1);}
-.sp2-r2-lbl:first-child{border-left:none;}
-.sp2-r2-lp{font-size:11px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-lp.empty{color:var(--fp-ink-3);font-weight:400;}
-.sp2-r2-lq{font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-lq span{color:var(--fp-ink-3);}
-.sp2-r2-ls{font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:1px;line-height:1.3;}
-.sp2-r2-ls.full{color:var(--status-success);}
-.sp2-r2-ls.partial{color:var(--status-caution);}
-.sp2-r2-ls.empty-c{color:var(--fp-ink-3);}
 
 </style>
 </head>
@@ -1220,26 +1224,27 @@ function sp2ArtUnit(caps, load, k, unit, tag, axles) {
   var tank = caps.map(function (cap, i) {
     var l = load[i] || { p:'', q:0 };
     var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
-    var col = SP2_PROD_COLORS[l.p] || 'transparent';
-    return '<div class="sp2-r2-cmp" style="flex-grow:' + cap + ';" ' +
-        'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-        'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')">' +
-      '<div class="sp2-r2-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
-      '<span class="sp2-r2-c">C' + (i + 1) + '</span>' +
-    '</div>';
-  }).join('');
-
-  var scale = caps.map(function (cap, i) {
-    var l = load[i] || { p:'', q:0 };
-    var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
     var cls = pct >= 99 ? 'full' : pct > 0 ? 'partial' : 'empty-c';
     var word = pct >= 99 ? 'Full' : pct > 0 ? 'Partially full' : 'Empty';
-    return '<div class="sp2-r2-lbl" style="flex-grow:' + cap + ';">' +
-        '<div class="sp2-r2-lp' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
-        '<div class="sp2-r2-lq">' + l.q.toLocaleString() +
+    var col = SP2_PROD_COLORS[l.p] || 'transparent';
+    // Everything reads in near-black, which clears every product colour we
+    // use; the state keeps its colour in the dot, where contrast is not text.
+    return '<div class="sp2-r2-cmp" style="flex-grow:' + cap + ';" ' +
+        'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+        'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')" ' +
+        'title="C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity">' +
+      '<div class="sp2-r2-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
+      '<div class="sp2-r2-in">' +
+        '<div class="sp2-r2-c">C' + (i + 1) + '</div>' +
+        '<div class="sp2-r2-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
+        '<div class="sp2-r2-q">' + l.q.toLocaleString() +
           '<span>/' + cap.toLocaleString() + '</span></div>' +
-        '<div class="sp2-r2-ls ' + cls + '">' + pct + '% · ' + word + '</div>' +
-      '</div>';
+        (l.p
+          ? '<div class="sp2-r2-s"><span class="sp2-r2-dot ' + cls + '"></span>' +
+              pct + '% · ' + word + '</div>'
+          : '<div class="sp2-r2-s empty-c">' + cap.toLocaleString() + ' gal free</div>') +
+      '</div>' +
+    '</div>';
   }).join('');
 
   var wheels = '';
@@ -1252,7 +1257,6 @@ function sp2ArtUnit(caps, load, k, unit, tag, axles) {
       '<div class="sp2-r2-chassis"></div>' +
       '<div class="sp2-r2-axles">' + wheels + '</div>' +
       '<div class="sp2-r2-tag">' + tag + '</div>' +
-      '<div class="sp2-r2-scale">' + scale + '</div>' +
     '</div>';
 }
 
