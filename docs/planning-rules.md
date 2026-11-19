@@ -52,18 +52,25 @@ different truck**. Never split one order across two transports.
 Usually one or the other. When both ride together, the truck must be one with
 **totes** (bulk lube) **and zones** (packaged goods).
 
-### Naming conflict to settle ⚠️
-Three different LOS vocabularies are live today:
+### The canonical words — settled 2026-11-19 ✅
+**Tank wagon · Transport · Lubes & packaged · Propane.** These four win everywhere.
+The two older vocabularies are retired; both lost information the packer needs.
 
-| Where | Words |
-|---|---|
-| This brief (the operational truth) | Tank wagon · Transport · Lubes & packaged · Propane |
-| UV Customers | Transportation · Tank Wagon · Propane |
-| 3PL + Customer Portal switch | All · Fuel · Lubricants · Propane |
+| Old word | Where it was | Becomes |
+|---|---|---|
+| Transportation | UV Customers | **Transport** |
+| Tank Wagon | UV Customers | **Tank wagon** (lower-case w) |
+| Propane | UV Customers, 3PL, Portal | **Propane** |
+| Fuel | 3PL, Customer Portal | **splits into Tank wagon *or* Transport** |
+| Lubricants | 3PL, Customer Portal | **Lubes & packaged** |
+| *(absent)* | UV Customers | **Lubes & packaged** — UV never had it |
 
-UV has no Lubricants; 3PL collapses Tank wagon and Transport into "Fuel". The
-four-way split above is the real one — the other two are lossy. **Pick one set of
-words before any of this is built.**
+**The one migration that is not mechanical:** 3PL and the Portal tag records
+"Fuel", which is exactly the distinction that decides whether an order may be
+split (§2). Every existing Fuel record has to be read as one or the other —
+by truck class on the order, where that is known.
+
+An account can still hold several lines of service, as UV already allows.
 
 ---
 
@@ -177,7 +184,9 @@ The third option is the **only** one available on a Transport (§2).
 
 ## 6. Open questions
 
-1. **Which LOS vocabulary wins** (§2) — blocks everything else.
+1. ~~Which LOS vocabulary wins~~ — **settled 2026-11-19**, see §2. Still to do:
+   carry the four words into `FP-DS-2026`'s context layer and prototypes, and
+   decide each existing 3PL "Fuel" record's real line.
 2. **Blend:** ratio source, and which of the three fulfilment modes first.
 3. **When may the planner substitute a comparable product** — nobody has written it.
 4. **Propane:** splitting rules and load source not yet given.
