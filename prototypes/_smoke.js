@@ -172,6 +172,13 @@
       sp2ResetFlt();
       if (getComputedStyle(dot).display !== 'none') throw new Error('reset left the dot on');
     });
+    step('V1 — the roster beside one rig', () => {
+      sp2SetLayout('v1');
+      if (getComputedStyle(document.getElementById('sp2V1')).display === 'none')
+        throw new Error('V1 did not come back');
+      if (getComputedStyle(document.getElementById('sp2V2')).display !== 'none')
+        throw new Error('both layouts on at once');
+    });
     step('an order follows to its driver', () => {
       const card = [...document.querySelectorAll('.sp2-card.planned')][0];
       if (!card) throw new Error('no planned order to click');
@@ -202,9 +209,9 @@
       sp2SetDrvFilter('all');
       const box = document.getElementById('sp2DrvSearch');
       box.value = SP2_DRIVERS.d0.name.split(' ')[0];
-      sp2RenderDrivers();
+      sp2RenderUnit();
       if (document.querySelectorAll('.sp2-drow').length !== 1) throw new Error('search did not narrow to one');
-      box.value = ''; sp2RenderDrivers();
+      box.value = ''; sp2RenderUnit();
     });
     step('the rig is drawn, not listed', () => {
       sp2PickDriver('d0');
@@ -302,12 +309,101 @@
       });
       sp2PickDriver('d0');
     });
+    step('V1 reads cleanly before we leave it', () => { contrastSweep(); });
+
+    // ── V2 ──────────────────────────────────────────────────
+    step('V2 — a lane per driver', () => {
+      sp2SetLayout('v2');
+      if (getComputedStyle(document.getElementById('sp2V2')).display === 'none')
+        throw new Error('V2 did not show');
+      if (getComputedStyle(document.getElementById('sp2V1')).display !== 'none')
+        throw new Error('V1 still showing under V2');
+      const lanes = document.querySelectorAll('.sp2-ln');
+      if (lanes.length !== sp2DriverKeys().length)
+        throw new Error('lanes do not match the drivers on screen');
+      if (!document.querySelector('.sp2-ln-hdr')) throw new Error('no lane header');
+    });
+    step('only the first lane is drawn', () => {
+      if (document.querySelectorAll('.sp2-r2').length !== 1)
+        throw new Error('expected exactly one drawn rig, got ' + document.querySelectorAll('.sp2-r2').length);
+      const first = document.querySelectorAll('.sp2-ln')[0];
+      if (!first.querySelector('.sp2-r2')) throw new Error('the drawing is not on the first lane');
+      if (first.querySelector('.sp2-boxes')) throw new Error('the first lane has boxes too');
+      const second = document.querySelectorAll('.sp2-ln')[1];
+      if (!second.querySelector('.sp2-boxes')) throw new Error('the other lanes lost their boxes');
+    });
+    step('the drawing is a truck, and it matches the numbers', () => {
+      const art = document.querySelector('.sp2-r2');
+      if (!art.querySelector('.sp2-r2-cab')) throw new Error('no cab');
+      if (!art.querySelector('.sp2-r2-tank')) throw new Error('no tank');
+      if (art.querySelectorAll('.sp2-r2-wheel').length < 3) throw new Error('fewer than three wheels');
+      // the cab has to sit on the same ground as the tank
+      const cab = art.querySelector('.sp2-r2-cab').getBoundingClientRect();
+      const tank = art.querySelector('.sp2-r2-tank').getBoundingClientRect();
+      if (Math.abs(cab.bottom - tank.bottom) > 2)
+        throw new Error('the cab floats off the chassis by ' + Math.round(cab.bottom - tank.bottom) + 'px');
+      const cmps = [...art.querySelectorAll('.sp2-r2-cmp')];
+      const lbls = [...art.querySelectorAll('.sp2-r2-lbl')];
+      if (cmps.length !== lbls.length) throw new Error('a compartment has no label under it');
+      cmps.forEach((c, i) => {
+        const pct = parseInt(lbls[i].querySelector('.sp2-r2-ls').textContent, 10);
+        const h = parseFloat(c.querySelector('.sp2-r2-liq').style.height);
+        if (Math.abs(h - pct) > 1) throw new Error('C' + (i + 1) + ' drawn at ' + h + '% but labelled ' + pct + '%');
+        // the label sits under its own compartment
+        if (Math.abs(c.getBoundingClientRect().left - lbls[i].getBoundingClientRect().left) > 3)
+          throw new Error('C' + (i + 1) + ' label is not under its compartment');
+      });
+      ['.sp2-r2-lp', '.sp2-r2-lq'].forEach(sel => {
+        art.querySelectorAll(sel).forEach(el => {
+          if (el.scrollWidth > el.clientWidth) throw new Error('label cut off: ' + el.textContent);
+        });
+      });
+    });
+    step('a lane takes the drop, whoever is selected', () => {
+      sp2SetDrvFilter('all');
+      const lanes = [...document.querySelectorAll('.sp2-ln')];
+      const target = lanes.find(l => l.dataset.k !== sp2Driver);
+      const k = target.dataset.k;
+      sp2Unload(k);
+      const un = SP2_ORDERS.filter(o => !o.driver)[0];
+      if (!un) throw new Error('no unplanned order to drag');
+      const card = [...document.querySelectorAll('.sp2-card')]
+        .find(c => c.querySelector('.sp2-ord').textContent === un.id);
+      if (!card) throw new Error(un.id + ' is not on the timeline');
+      const dt = new DataTransfer();
+      const fire = (el, type) => { const e = new DragEvent(type, { bubbles:true, cancelable:true, dataTransfer:dt });
+        el.dispatchEvent(e); return e; };
+      fire(card, 'dragstart');
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === k);
+      if (!fire(lane, 'dragover').defaultPrevented) throw new Error('the lane refuses the drop');
+      fire(lane, 'drop');
+      if (un.driver !== k) throw new Error('order went to ' + un.driver + ', not the lane it was dropped on');
+      if (!SP2_DRIVERS[k].load.some(l => l.q > 0)) throw new Error('nothing went into that truck');
+      sp2Unload(k); un.driver = ''; sp2RenderUnit();
+    });
+    step('a lane hitches its own trailer', () => {
+      const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k).find(x => !SP2_DRIVERS[x].trailer);
+      sp2AddTrailer('TR-200', k);
+      if (SP2_DRIVERS[k].trailer !== 'TR-200') throw new Error('trailer not hitched to that lane');
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === k);
+      if (lane.querySelector('.sp2-ln-truck-id').textContent.indexOf('TR-200') < 0)
+        throw new Error('the lane does not name its trailer');
+      sp2DropTrailer(k);
+      if (SP2_DRIVERS[k].trailer) throw new Error('trailer would not come off');
+    });
+    step('every lane states its load', () => {
+      document.querySelectorAll('.sp2-ln').forEach(l => {
+        if (!l.querySelector('.sp2-ln-truck-id').textContent.trim()) throw new Error('a lane has no truck');
+        if (!l.querySelector('.sp2-ln-cap')) throw new Error('a lane does not say how full it is');
+        if (!l.querySelector('.sp2-ln-stops')) throw new Error('a lane has no stops row');
+      });
+    });
   }
 
   // Text that cannot be read on its own fill. Composite every alpha layer down
   // to an opaque colour first — ignoring alpha reports nearly everything as a
   // failure and buries the handful that are real.
-  (function () {
+  function contrastSweep() {
     const px = c => { const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
       return m ? { r:+m[1], g:+m[2], b:+m[3], a: m[4] === undefined ? 1 : +m[4] } : null; };
     const over = (f, b) => ({ r: f.r*f.a + b.r*(1-f.a), g: f.g*f.a + b.g*(1-f.a), b: f.b*f.a + b.b*(1-f.a), a: 1 });
@@ -328,7 +424,8 @@
       const ratio = (Math.max(fc, bc) + 0.05) / (Math.min(fc, bc) + 0.05);
       if (ratio < 3) out.layout.push('low contrast: "' + e.textContent.trim().slice(0, 26) + '" ' + ratio.toFixed(2) + ':1');
     });
-  })();
+  }
+  contrastSweep();
 
   // anything visually cut off, anywhere on the page
   document.querySelectorAll('td,th,select,option,button,.comp-prod,.const-name,.bb-mode-name').forEach(e => {
