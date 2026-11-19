@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>Shift Planner — FleetPanda Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height:100vh;overflow:hidden;letter-spacing:0.4px;}
+
+.sp2{height:100vh;display:flex;flex-direction:column;background:#363a42;}
+
+/* ── Header ───────────────────────────────────────────────── */
+.sp2-hdr{height:54px;background:#2b3037;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.sp2-title{display:flex;align-items:center;gap:10px;}
+.sp2-title h1{font-size:16.8px;font-weight:600;color:#fff;letter-spacing:0.4px;}
+.sp2-title-sub{font-size:11.5px;color:#797a7d;}
+.sp2-date{display:flex;align-items:center;gap:7px;}
+.sp2-nav-btn{width:28px;height:28px;border:1px solid rgba(255,255,255,0.15);border-radius:5px;background:#1d1f23;color:#d5d6d7;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sp2-nav-btn:hover{background:#2f333a;border-color:rgba(255,255,255,0.3);}
+.sp2-date-inp{height:28px;background:#1d1f23;border:1px solid rgba(255,255,255,0.15);border-radius:5px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;text-align:center;min-width:150px;cursor:pointer;}
+.sp2-date-inp:focus{border-color:#3657f5;}
+.sp2-today{height:28px;padding:0 12px;border:1px solid rgba(255,255,255,0.15);border-radius:5px;background:transparent;color:#d5d6d7;font-family:inherit;font-size:11.5px;cursor:pointer;}
+.sp2-today:hover{background:rgba(255,255,255,0.06);}
+
+/* ── Two columns ──────────────────────────────────────────── */
+.sp2-body{flex:1;display:flex;overflow:hidden;min-height:0;}
+.sp2-col{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.sp2-col-orders{flex:1;border-right:1px solid rgba(255,255,255,0.1);}
+.sp2-col-unit{width:clamp(400px,31%,520px);flex-shrink:0;background:rgba(0,0,0,0.12);}
+
+.sp2-col-hdr{min-height:46px;display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;flex-wrap:wrap;}
+.sp2-col-title{font-size:12.5px;font-weight:600;color:#fff;letter-spacing:0.3px;white-space:nowrap;}
+.sp2-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 6px;border-radius:9px;background:rgba(255,255,255,0.08);font-size:10px;font-weight:600;color:#9ba3af;}
+
+/* quick filters */
+.sp2-seg{display:flex;background:#1f2226;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px;}
+.sp2-seg-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border:none;background:transparent;color:#797a7d;font-family:inherit;font-size:11px;cursor:pointer;border-radius:4px;white-space:nowrap;}
+.sp2-seg-btn:hover{color:#d5d6d7;}
+.sp2-seg-btn.on{background:#3657f5;color:#fff;font-weight:600;}
+.sp2-seg-n{font-size:9px;opacity:.8;}
+.sp2-flt-lbl{font-size:10px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.5px;}
+.sp2-custom{display:none;align-items:center;gap:5px;}
+.sp2-custom.on{display:flex;}
+.sp2-time{height:26px;width:66px;background:#1d1f23;border:1px solid rgba(255,255,255,0.15);border-radius:5px;color:#e9ebf0;font-family:inherit;font-size:11px;padding:0 7px;outline:none;text-align:center;}
+.sp2-time:focus{border-color:#3657f5;}
+
+/* ── Timeline ─────────────────────────────────────────────── */
+.sp2-tl-wrap{flex:1;overflow:auto;min-height:0;position:relative;}
+.sp2-tl-wrap::-webkit-scrollbar{height:10px;width:8px;}
+.sp2-tl-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.16);border-radius:5px;}
+.sp2-tl-wrap::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.26);}
+.sp2-tl{position:relative;padding:0 16px 18px;min-width:min-content;}
+
+.sp2-ruler{position:sticky;top:0;z-index:3;height:30px;background:#363a42;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;margin:0 -16px;padding:0 16px;}
+.sp2-hour{flex-shrink:0;position:relative;font-size:9.5px;color:#5a6472;padding-top:9px;border-left:1px solid rgba(255,255,255,0.06);padding-left:6px;}
+.sp2-hour.now{color:#ff931e;font-weight:700;border-left-color:rgba(255,147,30,0.5);}
+
+.sp2-lanes{position:relative;padding-top:12px;}
+.sp2-lane{position:relative;height:118px;margin-bottom:9px;}
+.sp2-grid{position:absolute;inset:0;display:flex;pointer-events:none;}
+.sp2-grid-col{flex-shrink:0;border-left:1px solid rgba(255,255,255,0.04);}
+
+/* order card on the timeline */
+.sp2-card{position:absolute;top:0;height:114px;background:#25282d;border:1px solid rgba(255,255,255,0.1);border-left:3px solid #5a6472;border-radius:5px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,background .12s;}
+.sp2-card:hover{background:#2b2f37;border-color:rgba(255,255,255,0.2);}
+.sp2-card.sel{border-color:#3657f5;background:rgba(54,87,245,0.1);box-shadow:0 0 0 1px rgba(54,87,245,0.4);}
+.sp2-card.planned{border-left-color:#00c765;}
+.sp2-card.unplanned{border-left-color:#ff931e;}
+.sp2-card-top{display:flex;align-items:center;gap:6px;}
+.sp2-ord{font-size:11.5px;font-weight:600;color:#e9ebf0;white-space:nowrap;}
+.sp2-time-lbl{margin-left:auto;font-size:9.5px;color:#5a6472;white-space:nowrap;}
+.sp2-ship{font-size:11px;color:#e9ebf0;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-addr{font-size:9.5px;color:#6b7280;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.sp2-prods{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;}
+.sp2-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:9.5px;color:#e9ebf0;white-space:nowrap;}
+.sp2-chip-q{color:#9ba3af;font-size:9px;}
+.sp2-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sp2-card-foot{display:flex;align-items:center;gap:5px;}
+.sp2-pill{display:inline-flex;align-items:center;height:16px;padding:0 7px;border-radius:8px;font-size:9px;font-weight:400;letter-spacing:0.3px;white-space:nowrap;}
+.sp2-pill-planned{background:#1b3b2a;color:#00c765;}
+.sp2-pill-unplanned{background:#ff931e;color:#241603;}
+.sp2-type{font-size:9px;color:#797a7d;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.sp2-empty{padding:40px 16px;text-align:center;font-size:12px;color:#5a6472;}
+
+/* ── Column 2 ─────────────────────────────────────────────── */
+.sp2-sec{border-bottom:1px solid rgba(255,255,255,0.08);padding:13px 16px;}
+.sp2-sec-lbl{font-size:10px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:8px;}
+.sp2-sec-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+
+/* driver card */
+.sp2-drv{background:#25282d;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.sp2-drv-top{display:flex;align-items:center;gap:10px;}
+.sp2-av{width:34px;height:34px;border-radius:50%;background:rgba(54,87,245,0.16);border:1px solid rgba(54,87,245,0.3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#6fd4ff;flex-shrink:0;}
+.sp2-drv-name{font-size:13.5px;font-weight:600;color:#fff;}
+.sp2-drv-shift{font-size:11px;color:#9ba3af;margin-top:2px;}
+.sp2-drv-state{margin-left:auto;text-align:right;}
+.sp2-state{display:inline-flex;align-items:center;gap:5px;height:19px;padding:0 9px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;}
+.sp2-state.on-duty{background:#1b3b2a;color:#00c765;}
+.sp2-state.off-duty{background:rgba(107,114,128,0.18);color:#9ba3af;}
+.sp2-state.driving{background:rgba(54,87,245,0.18);color:#6fd4ff;}
+.sp2-state::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.sp2-sync{font-size:10px;color:#6b7280;margin-top:5px;}
+.sp2-drv-foot{display:flex;align-items:center;gap:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.07);}
+.sp2-drv-meta{font-size:10.5px;color:#797a7d;}
+.sp2-view{margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border:1px solid rgba(255,255,255,0.16);border-radius:5px;background:transparent;color:#34c3ff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.sp2-view:hover{background:rgba(54,87,245,0.14);border-color:rgba(54,87,245,0.45);}
+
+/* truck + compartments */
+.sp2-truck{background:#25282d;border:1px solid rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;}
+.sp2-truck-top{padding:11px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sp2-truck-ico{width:28px;height:28px;border-radius:5px;background:rgba(54,87,245,0.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sp2-truck-id{font-size:12.5px;font-weight:600;color:#fff;}
+.sp2-truck-sub{font-size:10.5px;color:#797a7d;margin-top:1px;}
+.sp2-truck-cap{margin-left:auto;text-align:right;}
+.sp2-truck-pct{font-size:14px;font-weight:700;color:#e9ebf0;}
+.sp2-truck-pct-lbl{font-size:9.5px;color:#6b7280;}
+
+.sp2-comps{padding:12px;display:flex;flex-direction:column;gap:9px;}
+.sp2-comp{display:flex;align-items:center;gap:10px;}
+.sp2-comp-id{width:26px;font-size:10.5px;font-weight:700;color:#797a7d;flex-shrink:0;}
+.sp2-comp-main{flex:1;min-width:0;}
+.sp2-comp-row1{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
+.sp2-comp-prod{font-size:11.5px;color:#e9ebf0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-comp-prod.empty{color:#5a6472;font-style:italic;font-weight:400;}
+.sp2-comp-qty{margin-left:auto;font-size:11px;color:#9ba3af;white-space:nowrap;}
+.sp2-bar{height:16px;border-radius:3px;background:#1a1d22;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.06);}
+.sp2-bar-fill{height:100%;transition:width .25s;}
+.sp2-bar-striped{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.03),rgba(255,255,255,0.03) 2px,transparent 2px,transparent 6px);}
+.sp2-comp-state{width:96px;flex-shrink:0;text-align:right;}
+.sp2-comp-pct{font-size:12px;font-weight:700;}
+.sp2-comp-word{font-size:9px;letter-spacing:0.4px;text-transform:uppercase;margin-top:1px;}
+.full .sp2-comp-pct,.full .sp2-comp-word{color:#00c765;}
+.partial .sp2-comp-pct,.partial .sp2-comp-word{color:#ff931e;}
+.empty-c .sp2-comp-pct,.empty-c .sp2-comp-word{color:#5a6472;}
+
+.sp2-none{padding:34px 16px;text-align:center;font-size:12px;color:#5a6472;line-height:1.6;}
+
+#sp2Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:6px;font-size:12.5px;font-weight:500;z-index:200;display:none;white-space:nowrap;background:#0d2a1b;border:1px solid rgba(0,199,101,0.35);color:#00c765;box-shadow:0 8px 24px rgba(0,0,0,0.55);}
+</style>
+</head>
+<body>
+
+<div class="sp2">
+
+  <!-- Header -->
+  <div class="sp2-hdr">
+    <div class="sp2-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6fd4ff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <h1>Shift Planner</h1>
+      <span class="sp2-title-sub" id="sp2Sub">—</span>
+    </div>
+    <div class="sp2-date">
+      <button class="sp2-nav-btn" onclick="sp2Shift(-1)" title="Previous day">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <input class="sp2-date-inp" id="sp2Date" value="Wed 19 Nov 2026" onchange="sp2Render()">
+      <button class="sp2-nav-btn" onclick="sp2Shift(1)" title="Next day">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="sp2-today" onclick="sp2Today()">Today</button>
+    </div>
+  </div>
+
+  <div class="sp2-body">
+
+    <!-- ══ Column 1 — the orders, on a timeline ══ -->
+    <div class="sp2-col sp2-col-orders">
+      <div class="sp2-col-hdr">
+        <span class="sp2-col-title">Orders</span>
+        <span class="sp2-count" id="sp2OrdCount">0</span>
+
+        <div class="sp2-seg" id="sp2Quick">
+          <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+          <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
+          <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
+        </div>
+
+        <span class="sp2-flt-lbl" style="margin-left:4px;">Shift</span>
+        <div class="sp2-seg">
+          <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
+          <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
+          <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
+        </div>
+        <div class="sp2-custom" id="sp2Custom">
+          <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
+          <span style="color:#5a6472;font-size:11px;">–</span>
+          <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
+        </div>
+      </div>
+
+      <div class="sp2-tl-wrap" id="sp2TlWrap">
+        <div class="sp2-tl" id="sp2Tl"></div>
+      </div>
+    </div>
+
+    <!-- ══ Column 2 — the driver, and the truck mapped to them ══ -->
+    <div class="sp2-col sp2-col-unit">
+      <div class="sp2-col-hdr">
+        <span class="sp2-col-title">Driver &amp; truck</span>
+        <select class="sp2-date-inp" id="sp2DrvSel" style="margin-left:auto;min-width:0;flex:1;text-align:left;" onchange="sp2PickDriver(this.value)"></select>
+      </div>
+      <div style="flex:1;overflow-y:auto;min-height:0;" id="sp2Unit"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="sp2Toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  Reference data
+// ══════════════════════════════════════════════════════════
+var SP2_PROD_COLORS = {
+  'UNL87':'#c4a319', 'UNL93':'#8a6cff', 'CLR DSL':'#2f9be0',
+  'HO DSL':'#e0483f', 'Diesel DEF':'#46cf9c', 'Kerosene':'#c8ccd2',
+};
+
+// shifts as the docs have them: early 05:00–13:00 / 06:00–14:00, late 07:00–15:00 / 08:00–16:00
+var SP2_SHIFTS = {
+  e5:{ name:'Early', from:300, to:780 }, e6:{ name:'Early', from:360, to:840 },
+  l7:{ name:'Late',  from:420, to:900 }, l8:{ name:'Late',  from:480, to:960 },
+};
+
+// Compartment counts and capacities are fixed physical properties; what is in
+// them right now is the day's state.
+var SP2_TRUCKS = {
+  'BT-4':  { type:'Bobtail',    meter:210, comps:[{cap:1200},{cap:900},{cap:700}] },
+  'Hi-12': { type:'Tank wagon', meter:320, comps:[{cap:2000},{cap:2000},{cap:1000}] },
+  'PB-9':  { type:'Tank wagon', meter:380, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
+  'HV-7':  { type:'Transport',  meter:620, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
+};
+
+var SP2_DRIVERS = {
+  alex:  { name:'Alex Trebek',  shift:'e6', truck:'Hi-12', state:'driving',  synced:2,  hub:'Denver Hub',
+           load:[{p:'UNL87',q:2000},{p:'UNL87',q:1400},{p:'CLR DSL',q:0}] },
+  ravi:  { name:'Ravi Patel',   shift:'e5', truck:'HV-7',  state:'on-duty',  synced:7,  hub:'Denver Hub',
+           load:[{p:'HO DSL',q:2000},{p:'HO DSL',q:500},{p:'CLR DSL',q:2000},{p:'UNL93',q:900},{p:'',q:0}] },
+  omar:  { name:'Omar Khalid',  shift:'l8', truck:'BT-4',  state:'off-duty', synced:46, hub:'Phoenix Hub',
+           load:[{p:'UNL87',q:1200},{p:'',q:0},{p:'',q:0}] },
+  priya: { name:'Priya Sharma', shift:'e6', truck:'PB-9',  state:'on-duty',  synced:1,  hub:'Denver Hub',
+           load:[{p:'CLR DSL',q:2000},{p:'CLR DSL',q:1200},{p:'UNL87',q:1500},{p:'Diesel DEF',q:800}] },
+};
+
+// Order type is a field on the order: Delivery · Extraction · Transfer.
+var SP2_ORDERS = [
+  { id:'D-5157060', ship:'Morris Group — Upstairs Hub',  addr:'1180 Wewatta St, Denver CO 80202',        t:390,  type:'Delivery',   driver:'alex',  prods:[{p:'UNL87',q:3000},{p:'CLR DSL',q:1500}] },
+  { id:'D-5157061', ship:'Acme Fuel Co — Branch 1A',     addr:'20400 Stevens Creek Blvd, Cupertino CA',  t:495,  type:'Delivery',   driver:'alex',  prods:[{p:'UNL87',q:2000}] },
+  { id:'D-5157062', ship:'Dean Ltd — SJ Main',           addr:'2130 N First St, San Jose CA 95131',      t:420,  type:'Delivery',   driver:'ravi',  prods:[{p:'HO DSL',q:2500}] },
+  { id:'D-5157063', ship:'Aguilar and Sons — Tampa HQ',  addr:'4221 W Boy Scout Blvd, Tampa FL 33607',   t:630,  type:'Transfer',   driver:'ravi',  prods:[{p:'CLR DSL',q:2000},{p:'UNL93',q:1000}] },
+  { id:'D-5157064', ship:"Jeff's Jalopies — Tucson Main", addr:'3760 E Speedway Blvd, Tucson AZ 85716',  t:1140, type:'Delivery',   driver:'omar',  prods:[{p:'UNL87',q:1800}] },
+  { id:'D-5157065', ship:'Sunbelt Pump — PC268',         addr:'1409 John Sims Pkwy, Niceville FL 32578', t:405,  type:'Delivery',   driver:'priya', prods:[{p:'CLR DSL',q:3200}] },
+  { id:'D-5157066', ship:'Clearwater Utilities — Portland', addr:'1500 SW 1st Ave, Portland OR 97201',   t:560,  type:'Delivery',   driver:'priya', prods:[{p:'Diesel DEF',q:800},{p:'UNL87',q:1800}] },
+  { id:'D-5157067', ship:'Morris Group — Downtown',      addr:'1601 Blake St, Denver CO 80202',          t:660,  type:'Extraction', driver:'',      prods:[{p:'UNL93',q:900}] },
+  { id:'D-5157068', ship:'Dean Ltd — Oakland Depot',     addr:'800 Embarcadero W, Oakland CA 94607',     t:810,  type:'Delivery',   driver:'',      prods:[{p:'HO DSL',q:1400}] },
+  { id:'D-5157069', ship:'Morris Group — East Depot',    addr:'5400 Havana St, Denver CO 80239',         t:915,  type:'Transfer',   driver:'',      prods:[{p:'CLR DSL',q:1100}] },
+];
+
+// ══════════════════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════════════════
+var sp2Quick = 'all';          // all · unplanned · planned
+var sp2Shift_ = 'am';          // am · pm · custom
+var sp2Driver = 'alex';
+var sp2SelOrder = null;
+
+var SP2_HOUR_W = 132;          // pixels per hour on the timeline
+var SP2_CARD_W = 206;
+
+function sp2Hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
+function sp2Short(m){
+  var h24 = Math.floor(m/60), mm = m%60, h = h24%12===0 ? 12 : h24%12;
+  return h + (mm ? ':'+String(mm).padStart(2,'0') : '') + (h24<12 ? 'a' : 'p');
+}
+function sp2ShiftLabel(k){ var s = SP2_SHIFTS[k]; return s ? s.name + ' ' + sp2Hhmm(s.from) + '–' + sp2Hhmm(s.to) : '—'; }
+function sp2Planned(o){ return !!o.driver; }
+function sp2Gal(o){ return o.prods.reduce(function(s,p){ return s+p.q; },0); }
+
+// the window the timeline draws, from the shift filter
+function sp2Window() {
+  if (sp2Shift_ === 'am') return { from:5*60,  to:13*60 };
+  if (sp2Shift_ === 'pm') return { from:13*60, to:22*60 };
+  var f = sp2ParseTime(document.getElementById('sp2From').value, 5*60);
+  var t = sp2ParseTime(document.getElementById('sp2To').value, 22*60);
+  if (t <= f) t = f + 60;
+  return { from:f, to:t };
+}
+function sp2ParseTime(v, dflt) {
+  var m = String(v||'').match(/^(\d{1,2}):(\d{2})$/);
+  return m ? Math.min(1440, Math.max(0, +m[1]*60 + +m[2])) : dflt;
+}
+
+function sp2Visible() {
+  var w = sp2Window();
+  return SP2_ORDERS.filter(function(o) {
+    if (o.t < w.from || o.t > w.to) return false;
+    if (sp2Quick === 'planned')   return sp2Planned(o);
+    if (sp2Quick === 'unplanned') return !sp2Planned(o);
+    return true;
+  }).sort(function(a,b){ return a.t - b.t; });
+}
+
+// ══════════════════════════════════════════════════════════
+//  Column 1 — the timeline
+// ══════════════════════════════════════════════════════════
+function sp2RenderTimeline() {
+  var w = sp2Window();
+  var hours = Math.ceil((w.to - w.from) / 60);
+  var orders = sp2Visible();
+  var tl = document.getElementById('sp2Tl');
+
+  var ruler = '';
+  for (var i = 0; i <= hours; i++) {
+    var m = w.from + i*60;
+    ruler += '<div class="sp2-hour" style="width:' + SP2_HOUR_W + 'px;">' + sp2Short(m) + '</div>';
+  }
+
+  if (!orders.length) {
+    tl.innerHTML = '<div class="sp2-ruler">' + ruler + '</div>' +
+      '<div class="sp2-empty">No orders in this window — widen the shift range or clear the filter.</div>';
+    sp2Counts();
+    return;
+  }
+
+  // lane packing: an order takes a lane where it does not overlap what is already there
+  var lanes = [];
+  orders.forEach(function(o) {
+    var x = ((o.t - w.from) / 60) * SP2_HOUR_W;
+    var placed = false;
+    for (var li = 0; li < lanes.length && !placed; li++) {
+      var last = lanes[li][lanes[li].length - 1];
+      if (x >= last.x + SP2_CARD_W + 8) { lanes[li].push({ o:o, x:x }); placed = true; }
+    }
+    if (!placed) lanes.push([{ o:o, x:x }]);
+  });
+
+  var trackW = Math.max(hours * SP2_HOUR_W, 600);
+  var grid = '';
+  for (var g = 0; g <= hours; g++) grid += '<div class="sp2-grid-col" style="width:' + SP2_HOUR_W + 'px;"></div>';
+
+  var lanesHtml = lanes.map(function(lane) {
+    var cards = lane.map(function(slot) {
+      var o = slot.o, planned = sp2Planned(o);
+      var chips = o.prods.map(function(p) {
+        var col = SP2_PROD_COLORS[p.p] || '#9ba3af';
+        return '<span class="sp2-chip"><span class="sp2-dot" style="background:' + col + ';"></span>' +
+               p.p + ' <span class="sp2-chip-q">' + p.q.toLocaleString() + '</span></span>';
+      }).join('');
+      return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
+          (sp2SelOrder === o.id ? ' sel' : '') + '" style="left:' + slot.x + 'px;width:' + SP2_CARD_W + 'px;" ' +
+          'onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + ' · ' + o.addr + '">' +
+        '<div class="sp2-card-top"><span class="sp2-ord">' + o.id + '</span>' +
+          '<span class="sp2-time-lbl">' + sp2Hhmm(o.t) + '</span></div>' +
+        '<div class="sp2-ship">' + o.ship + '</div>' +
+        '<div class="sp2-addr">' + o.addr + '</div>' +
+        '<div class="sp2-prods">' + chips + '</div>' +
+        '<div class="sp2-card-foot">' +
+          '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
+            (planned ? 'Planned' : 'Unplanned') + '</span>' +
+          '<span class="sp2-type">' + o.type + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="sp2-lane" style="width:' + trackW + 'px;">' +
+      '<div class="sp2-grid">' + grid + '</div>' + cards + '</div>';
+  }).join('');
+
+  tl.innerHTML = '<div class="sp2-ruler">' + ruler + '</div>' +
+    '<div class="sp2-lanes" style="width:' + trackW + 'px;">' + lanesHtml + '</div>';
+  sp2Counts();
+}
+
+function sp2Counts() {
+  var w = sp2Window();
+  var inWindow = SP2_ORDERS.filter(function(o){ return o.t >= w.from && o.t <= w.to; });
+  var pl = inWindow.filter(sp2Planned).length;
+  document.getElementById('sp2nAll').textContent = inWindow.length;
+  document.getElementById('sp2nUn').textContent  = inWindow.length - pl;
+  document.getElementById('sp2nPl').textContent  = pl;
+  document.getElementById('sp2OrdCount').textContent = sp2Visible().length;
+}
+
+function sp2SetQuick(q) {
+  sp2Quick = q;
+  document.querySelectorAll('#sp2Quick .sp2-seg-btn').forEach(function(b) {
+    b.classList.toggle('on', b.dataset.q === q);
+  });
+  sp2RenderTimeline();
+}
+function sp2SetShift(s) {
+  sp2Shift_ = s;
+  document.querySelectorAll('[data-s]').forEach(function(b) {
+    b.classList.toggle('on', b.dataset.s === s);
+  });
+  document.getElementById('sp2Custom').classList.toggle('on', s === 'custom');
+  sp2RenderTimeline();
+}
+
+// picking an order shows the driver it is planned on
+function sp2PickOrder(id) {
+  sp2SelOrder = id;
+  var o = SP2_ORDERS.filter(function(x){ return x.id === id; })[0];
+  if (o && o.driver) {
+    sp2Driver = o.driver;
+    document.getElementById('sp2DrvSel').value = o.driver;
+  }
+  sp2Render();
+  if (o && !o.driver) sp2Toast(o.id + ' has no driver yet — it sits unplanned');
+}
+
+// ══════════════════════════════════════════════════════════
+//  Column 2 — driver, and the truck mapped to them
+// ══════════════════════════════════════════════════════════
+function sp2RenderUnit() {
+  var d = SP2_DRIVERS[sp2Driver];
+  var host = document.getElementById('sp2Unit');
+  if (!d) { host.innerHTML = '<div class="sp2-none">Pick a driver to see their truck.</div>'; return; }
+
+  var s = SP2_SHIFTS[d.shift];
+  var stateWord = d.state === 'driving' ? 'Driving' : d.state === 'on-duty' ? 'On duty' : 'Off duty';
+  var mine = SP2_ORDERS.filter(function(o){ return o.driver === sp2Driver; });
+  var gal = mine.reduce(function(a,o){ return a + sp2Gal(o); }, 0);
+
+  var drv = '<div class="sp2-sec">' +
+      '<div class="sp2-sec-lbl">Driver</div>' +
+      '<div class="sp2-drv">' +
+        '<div class="sp2-drv-top">' +
+          '<div class="sp2-av">' + d.name.split(' ').map(function(x){return x[0];}).join('').slice(0,2) + '</div>' +
+          '<div><div class="sp2-drv-name">' + d.name + '</div>' +
+            '<div class="sp2-drv-shift">' + sp2ShiftLabel(d.shift) + ' · ' + d.hub + '</div></div>' +
+          '<div class="sp2-drv-state">' +
+            '<span class="sp2-state ' + d.state + '">' + stateWord + '</span>' +
+            '<div class="sp2-sync">Last synced ' + (d.synced < 60 ? d.synced + ' min ago' : 'over an hour ago') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sp2-drv-foot">' +
+          '<span class="sp2-drv-meta">' + mine.length + ' order' + (mine.length===1?'':'s') +
+            ' · ' + gal.toLocaleString() + ' gal</span>' +
+          '<button class="sp2-view" onclick="sp2ViewDriver()">View details' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  var t = SP2_TRUCKS[d.truck];
+  if (!t) return host.innerHTML = drv + '<div class="sp2-none">No truck mapped to this driver.</div>';
+
+  var totalCap = t.comps.reduce(function(a,c){ return a+c.cap; }, 0);
+  var onboard  = d.load.reduce(function(a,l){ return a+l.q; }, 0);
+  var pct = totalCap ? Math.round(onboard/totalCap*100) : 0;
+
+  var comps = t.comps.map(function(cmp, i) {
+    var l = d.load[i] || { p:'', q:0 };
+    var p = cmp.cap ? Math.round(l.q / cmp.cap * 100) : 0;
+    // Full, partially full, or empty — the three states a compartment is in
+    var cls  = p >= 99 ? 'full' : p > 0 ? 'partial' : 'empty-c';
+    var word = p >= 99 ? 'Full' : p > 0 ? 'Partially full' : 'Empty';
+    var col  = SP2_PROD_COLORS[l.p] || '#5a6472';
+    return '<div class="sp2-comp ' + cls + '">' +
+        '<span class="sp2-comp-id">C' + (i+1) + '</span>' +
+        '<div class="sp2-comp-main">' +
+          '<div class="sp2-comp-row1">' +
+            (l.p ? '<span class="sp2-dot" style="background:' + col + ';"></span>' : '') +
+            '<span class="sp2-comp-prod' + (l.p ? '' : ' empty') + '">' + (l.p || 'empty') + '</span>' +
+            '<span class="sp2-comp-qty">' + l.q.toLocaleString() + ' / ' + cmp.cap.toLocaleString() + ' gal</span>' +
+          '</div>' +
+          '<div class="sp2-bar"><div class="sp2-bar-striped"></div>' +
+            '<div class="sp2-bar-fill" style="width:' + p + '%;background:' + (l.p ? col : 'transparent') + ';opacity:.85;"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sp2-comp-state"><div class="sp2-comp-pct">' + p + '%</div>' +
+          '<div class="sp2-comp-word">' + word + '</div></div>' +
+      '</div>';
+  }).join('');
+
+  host.innerHTML = drv +
+    '<div class="sp2-sec" style="border-bottom:none;">' +
+      '<div class="sp2-sec-lbl">Truck &amp; compartments</div>' +
+      '<div class="sp2-truck">' +
+        '<div class="sp2-truck-top">' +
+          '<div class="sp2-truck-ico">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6fd4ff" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' +
+          '</div>' +
+          '<div><div class="sp2-truck-id">' + d.truck + '</div>' +
+            '<div class="sp2-truck-sub">' + t.type + ' · ' + totalCap.toLocaleString() + ' gal · ' +
+              t.comps.length + ' comps · ' + t.meter + ' gpm</div></div>' +
+          '<div class="sp2-truck-cap"><div class="sp2-truck-pct">' + pct + '%</div>' +
+            '<div class="sp2-truck-pct-lbl">' + onboard.toLocaleString() + ' gal aboard</div></div>' +
+        '</div>' +
+        '<div class="sp2-comps">' + comps + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function sp2PickDriver(k) {
+  sp2Driver = k;
+  // keep the picker honest when the driver is chosen by clicking an order
+  var sel = document.getElementById('sp2DrvSel');
+  if (sel && sel.value !== k) sel.value = k;
+  sp2RenderUnit();
+}
+function sp2ViewDriver(){ sp2Toast(SP2_DRIVERS[sp2Driver].name + ' — driver details would open here'); }
+
+// ══════════════════════════════════════════════════════════
+//  Shell
+// ══════════════════════════════════════════════════════════
+function sp2Render(){ sp2RenderTimeline(); sp2RenderUnit(); sp2Sub(); }
+
+function sp2Sub() {
+  var w = sp2Window();
+  document.getElementById('sp2Sub').textContent =
+    document.getElementById('sp2Date').value + ' · ' + sp2Hhmm(w.from) + '–' + sp2Hhmm(w.to);
+}
+
+var SP2_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var SP2_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function sp2Fmt(d) {
+  return SP2_DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + SP2_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+}
+var sp2Cursor = new Date(2026, 10, 19);
+function sp2ShiftDay(n) {
+  sp2Cursor.setDate(sp2Cursor.getDate() + n);
+  document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor);
+  sp2Render();
+}
+function sp2Today() { sp2Cursor = new Date(2026, 10, 19); document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor); sp2Render(); }
+
+function sp2Toast(msg) {
+  var t = document.getElementById('sp2Toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){ t.style.display = 'none'; }, 2600);
+}
+
+(function () {
+  var sel = document.getElementById('sp2DrvSel');
+  sel.innerHTML = Object.keys(SP2_DRIVERS).map(function(k) {
+    return '<option value="' + k + '">' + SP2_DRIVERS[k].name + ' · ' + SP2_DRIVERS[k].truck + '</option>';
+  }).join('');
+  sel.value = sp2Driver;
+  document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor);
+  sp2Render();
+})();
+
+// the header arrows move the day
+function sp2Shift(n){ sp2ShiftDay(n); }
+</script>
+
+</body>
+</html>

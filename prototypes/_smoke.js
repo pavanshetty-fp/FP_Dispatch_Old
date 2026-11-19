@@ -1,7 +1,7 @@
 // Drives each prototype through its real flow in the page and reports anything
 // that errored, clipped or overflowed. Paste-run via the browser tool.
 (async function () {
-  const out = { page: location.pathname.split('/').pop(), width: innerWidth, steps: [], errors: [], layout: [] };
+  const out = { page: window.__SMOKE_PAGE__ || location.pathname.split('/').pop(), width: innerWidth, steps: [], errors: [], layout: [] };
   window.onerror = (m, s, l) => out.errors.push(m + ' @' + l);
 
   const step = (name, fn) => {
@@ -98,49 +98,50 @@
   }
 
   if (out.page.startsWith('shift-planner')) {
-    step('cards present', () => { if (document.querySelectorAll('.sp-card').length < 5) throw new Error('too few cards'); });
-    step('select two orders', () => {
-      const c = document.querySelectorAll('.sp-card'); c[0].click(); c[2].click();
+    step('orders on the timeline', () => {
+      if (document.querySelectorAll('.sp2-card').length < 3) throw new Error('too few order cards');
     });
-    step('build load orders', () => document.getElementById('btnBuild').click());
-    step('unit opened with driver tabs', () => {
-      if (!document.getElementById('lou').classList.contains('open')) throw new Error('unit closed');
-      if (document.querySelectorAll('.lou-tab').length < 2) throw new Error('expected a tab per driver');
+    step('quick filter narrows', () => {
+      const all = document.querySelectorAll('.sp2-card').length;
+      sp2SetQuick('unplanned');
+      const un = document.querySelectorAll('.sp2-card').length;
+      sp2SetQuick('planned');
+      const pl = document.querySelectorAll('.sp2-card').length;
+      sp2SetQuick('all');
+      if (un + pl !== all) throw new Error('planned + unplanned does not equal all');
     });
-    step('compartment table built', () => {
-      if (!document.querySelectorAll('.as-tbl tbody tr').length) throw new Error('no compartments');
+    step('shift range changes the window', () => {
+      const am = document.querySelectorAll('.sp2-card').length;
+      sp2SetShift('pm');
+      const pm = document.querySelectorAll('.sp2-card').length;
+      sp2SetShift('custom');
+      if (!document.getElementById('sp2Custom').classList.contains('on')) throw new Error('custom range hidden');
+      sp2SetShift('am');
+      if (am === pm && am !== 0) throw new Error('AM and PM show the same orders');
     });
-    step('switch driver tab', () => document.querySelectorAll('.lou-tab')[1].click());
-    step('sourcing is the next step', () => {
-      document.getElementById('segSrc').click();
-      const cta = document.querySelector('#louSrc .src-cta');
-      if (!cta) throw new Error('no Create sourcing CTA');
-      if (cta.disabled) throw new Error('CTA locked though the load has a truck');
+    step('timeline scrolls horizontally', () => {
+      const w = document.getElementById('sp2TlWrap');
+      if (w.scrollWidth <= w.clientWidth) throw new Error('nothing to scroll');
     });
-    step('create sourcing for this load', () => {
-      document.querySelector('#louSrc .src-cta').click();
-      if (!document.querySelectorAll('#louSrc .bb-prod-block').length) throw new Error('no product blocks');
-      if (!document.querySelector('#louSrc .bb-total-val').textContent.trim()) throw new Error('no total');
+    step('an order follows to its driver', () => {
+      const card = [...document.querySelectorAll('.sp2-card.planned')][0];
+      if (!card) throw new Error('no planned order to click');
+      card.click();
+      if (!document.querySelector('.sp2-card.sel')) throw new Error('selection not shown');
+      if (!document.querySelector('.sp2-drv-name').textContent.trim()) throw new Error('no driver card');
     });
-    step('each load sources on its own', () => {
-      const sourced = document.querySelector('#louSrc .bb-total-val').textContent;
-      document.querySelectorAll('.lou-tab')[0].click();          // the one not touched yet
-      if (!document.querySelector('#louSrc .src-cta')) throw new Error('the other load was sourced too');
-      document.querySelector('#louSrc .src-cta').click();
-      if (document.querySelector('#louSrc .bb-total-val').textContent === sourced) throw new Error('same total for a different load');
+    step('compartments report their state', () => {
+      const comps = [...document.querySelectorAll('.sp2-comp')];
+      if (!comps.length) throw new Error('no compartments');
+      const words = comps.map(c => c.querySelector('.sp2-comp-word').textContent);
+      const ok = words.every(w => ['Full','Partially full','Empty'].indexOf(w) >= 0);
+      if (!ok) throw new Error('unexpected compartment state: ' + words.join(','));
     });
-    step('back to the load plan', () => {
-      document.getElementById('segPlan').click();
-      if (document.getElementById('louSrc').style.display !== 'none') throw new Error('sourcing still showing');
-    });
-    step('drag an order in', () => {
-      const dt = new DataTransfer();
-      const card = document.querySelectorAll('.sp-card')[4];
-      card.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
-      const lou = document.getElementById('lou');
-      lou.dispatchEvent(new DragEvent('dragover', { bubbles: true, dataTransfer: dt, cancelable: true }));
-      lou.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer: dt }));
-      card.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: dt }));
+    step('every driver maps to a truck', () => {
+      Object.keys(SP2_DRIVERS).forEach(k => {
+        sp2PickDriver(k);
+        if (!document.querySelector('.sp2-truck-id')) throw new Error(k + ' has no truck');
+      });
     });
   }
 

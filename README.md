@@ -4,18 +4,46 @@ Interactive prototypes for FleetPanda flows. Standalone HTML files — open in a
 
 ## Prototypes
 
-| File | Tab | Flow |
-|------|-----|------|
+**`prototypes/fleetpanda.html` is the one to open.** All three touch points are
+in it, behind a nav bar: Create order · Edit order · Shift planner. Each screen
+keeps its own stylesheet and script, scoped so they do not collide — they share
+144 class names and 18 globals, which is why the file is built rather than
+hand-merged. `#create`, `#edit` and `#plan` open it on a given screen.
+
+It is generated from the three sources, which still open on their own:
+
+| Source | Tab | Flow |
+|--------|-----|------|
 | `prototypes/create-order.html` | Create order | 3 steps: customer, order planning, best buy |
-| `prototypes/load-order-unassigned.html` | Edit order | An existing unassigned delivery order, planned onto a truck |
-| `prototypes/shift-planner.html` | Shift planner | Select orders, grouped into one load order per driver |
+| `prototypes/load-order-unassigned.html` | Edit order | Delivery order, load order and sourcing on one screen |
+| `prototypes/shift-planner-v2.html` | Shift planner | Orders on a timeline, beside the driver and their truck |
 
-Open any one of them and a switcher sits at the top to move between all three —
-there is no index page to go back to. Press **H** (or the ×) to hide it before
-taking screenshots; the sliver at the top edge brings it back.
+Rebuild the combined file after editing any source:
 
-They want a window **1280px or wider**. Below that the three columns start
-fighting each other.
+```bash
+python3 .claude/merge.py
+```
+
+`prototypes/shift-planner.html` is the earlier planner — selecting orders and
+grouping them into load orders by driver. Kept because that flow has no home in
+the new design yet.
+
+## The shift planner
+
+Two columns under a header that carries the date.
+
+- **Orders** on a horizontally scrollable timeline, laid out by planned time and
+  packed into lanes so they never overlap. Each card carries the order number,
+  ship-to and address, products and quantities, order type and whether it is
+  planned. Quick filter: all · unplanned · planned. Shift range: AM · PM ·
+  custom, which is also the window the timeline draws.
+- **Driver and truck** beside them: the driver's card with shift, duty state and
+  when they last synced, then the truck mapped to them with every compartment —
+  what is in it, how much of its capacity that is, and whether it reads full,
+  partially full or empty.
+
+Clicking an order follows it to the driver it is planned on; an unplanned one
+says so instead.
 
 ## Checking they still work
 
