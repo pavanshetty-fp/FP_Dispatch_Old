@@ -30,13 +30,35 @@ the new design yet.
 
 ## The shift planner
 
+Styled on FP DS, light theme — tokens resolved from `FP-DS-2026/src/index.css`,
+Geist, the board card's shape, the delivery-timeline's hour scale. It stays a
+prototype here; nothing was added to the unified module.
+
+The system has **no timeline unit** — no gantt, no time axis, no vertical
+timeline. These three views are a gap in it, not a deviation from it, so they
+borrow the nearest sanctioned pieces rather than invent a fourth language.
+
+Things that are easy to get wrong going light, and are not simply the dark
+theme inverted:
+
+- the ground is **warm** (`#e8e8e4`) and everything on it is cool — deliberate
+- a card sits **lighter** than its lane here; dark inverts that
+- brand orange is the product mark and the focus ring, **never the CTA** — the
+  CTA is `--primary`, near-black
+- three stroke weights do three jobs: card rim, divider, field boundary
+- hover is grey (`--fp-emphasis`); selected is the brand tint (`--fp-selected`)
+
+
 Two columns under a header that carries the date, split 40 / 60.
 
-- **Orders** on a horizontally scrollable timeline, laid out by planned time and
-  packed into lanes so they never overlap. Each card carries the order number,
-  ship-to and address, products and quantities, order type and whether it is
-  planned. Quick filter: all · unplanned · planned. Shift range: AM · PM ·
-  custom, which is also the window the timeline draws.
+- **Orders** in one of three views, and the column resizes to suit:
+  **horizontal** (40%) places them along a time axis, lane-packed so they never
+  overlap; **vertical** (25%) runs time down a rail with the gap between orders
+  written on it; **no timeline** (23%) is just the orders in the sequence the day
+  runs them. Each card carries the order number, ship-to and address, products
+  and quantities, order type and whether it is planned. Quick filter: all ·
+  unplanned · planned. Shift range: AM · PM · custom, which is also the window
+  the horizontal view draws.
 - **Driver and truck** take the other 60%, side by side rather than stacked: the
   driver's card with shift, duty state and when they last synced, and beside it
   the truck mapped to them with every compartment — what is in it, how much of

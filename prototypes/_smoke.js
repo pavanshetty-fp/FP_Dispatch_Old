@@ -119,6 +119,30 @@
       sp2SetShift('am');
       if (am === pm && am !== 0) throw new Error('AM and PM show the same orders');
     });
+    step('three views, and the column resizes with them', () => {
+      const col = document.querySelector('.sp2-col-orders');
+      // measure with the transition off — an animating property reads as the
+      // value it is coming FROM, which makes every check a coin flip
+      const keep = col.style.transition;
+      col.style.transition = 'none';
+      const seen = {};
+      ['h', 'v', 'n'].forEach(v => {
+        sp2SetView(v);
+        void col.offsetWidth;
+        seen[v] = getComputedStyle(col).flexBasis;
+      });
+      col.style.transition = keep;
+      if (seen.h === seen.v || seen.v === seen.n) {
+        throw new Error('column did not resize: ' + JSON.stringify(seen));
+      }
+      sp2SetView('v');
+      if (!document.querySelector('.sp2-vt-rail')) throw new Error('vertical rail missing');
+      sp2SetView('n');
+      if (document.querySelector('.sp2-ruler')) throw new Error('no-timeline view still draws an axis');
+      if (!document.querySelectorAll('.sp2-lrow').length) throw new Error('no list rows');
+      sp2SetView('h');
+      if (!document.querySelector('.sp2-ruler')) throw new Error('horizontal lost its axis');
+    });
     step('timeline scrolls horizontally', () => {
       const w = document.getElementById('sp2TlWrap');
       if (w.scrollWidth <= w.clientWidth) throw new Error('nothing to scroll');

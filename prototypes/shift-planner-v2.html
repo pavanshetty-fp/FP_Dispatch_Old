@@ -4,144 +4,219 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1440">
 <title>Shift Planner — FleetPanda Prototype</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height:100vh;overflow:hidden;letter-spacing:0.4px;}
+/* ══ FP DS — light ══════════════════════════════════════════
+   Values taken from FP-DS-2026/src/index.css, resolved. Things that are not
+   simply the dark theme inverted, and are easy to get wrong:
+     · the ground is WARM (#e8e8e4) and everything on it is cool — deliberate
+     · a card sits LIGHTER than its lane here; dark inverts that
+     · --brand orange is the product mark and the focus ring, never the CTA;
+       the CTA is --primary, near-black
+     · three stroke weights do three jobs — card rim, divider, field boundary
+     · hover is grey (--fp-emphasis); selected is the brand tint (--fp-selected)
+   The system has no timeline unit, so the three views below borrow the board
+   card and the delivery-timeline's hour scale rather than invent a third thing. */
+:root{
+  --fp-surface-base:#e8e8e4;
+  --fp-shell-ground:#f2f2f2;
+  --fp-surface-1b:#ffffff;
+  --fp-surface-1a:#f4f5f8;
+  --fp-card-1:#dee1e7;
+  --fp-card-2:#e8eaed;
+  --fp-table-header:#f1f2f2;
+  --fp-row-hover:#e8eaed;
+  --chip:#efefeb;
+  --muted:#e9eaeb;
 
-.sp2{height:100vh;display:flex;flex-direction:column;background:#363a42;}
+  --fp-ink-1:#030405;
+  --fp-ink-3:#4f5968;
+  --fp-ink-inverse:#f0f2f5;
+
+  --fp-outline-1:#cfd3d9;
+  --fp-outline-2:#adaeb4;
+  --fp-stroke-hairline:#c8c9cd;
+  --fp-stroke-field:#91949b;
+
+  --brand:#fa6400;
+  --primary:#090c0f;
+  --primary-foreground:#f0f2f5;
+  --fp-selected:#fee8d9;
+  --fp-selected-strong:#a33f00;
+  --fp-selected-border:#fdb98c;
+  --fp-emphasis:#dee0e5;
+  --fp-emphasis-hover:#e4e6ea;
+  --ring:#fa6400;
+
+  --status-caution:#b45309;
+  --status-info:#1d4ed8;
+  --status-success:#15803d;
+  --status-failed:#dc2626;
+  --status-neutral:#4f5968;
+
+  --r-md:8px; --r-lg:10px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);color:var(--fp-ink-1);height:100vh;overflow:hidden;}
+
+.sp2{height:100vh;display:flex;flex-direction:column;background:var(--fp-shell-ground);}
 
 /* ── Header ───────────────────────────────────────────────── */
-.sp2-hdr{height:54px;background:#2b3037;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.sp2-hdr{height:56px;background:var(--fp-surface-1b);border-bottom:1px solid var(--fp-stroke-hairline);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;}
 .sp2-title{display:flex;align-items:center;gap:10px;}
-.sp2-title h1{font-size:16.8px;font-weight:600;color:#fff;letter-spacing:0.4px;}
-.sp2-title-sub{font-size:11.5px;color:#797a7d;}
-.sp2-date{display:flex;align-items:center;gap:7px;}
-.sp2-nav-btn{width:28px;height:28px;border:1px solid rgba(255,255,255,0.15);border-radius:5px;background:#1d1f23;color:#d5d6d7;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.sp2-nav-btn:hover{background:#2f333a;border-color:rgba(255,255,255,0.3);}
-.sp2-date-inp{height:28px;background:#1d1f23;border:1px solid rgba(255,255,255,0.15);border-radius:5px;color:#e9ebf0;font-family:inherit;font-size:12px;padding:0 10px;outline:none;text-align:center;min-width:150px;cursor:pointer;}
-.sp2-date-inp:focus{border-color:#3657f5;}
-.sp2-today{height:28px;padding:0 12px;border:1px solid rgba(255,255,255,0.15);border-radius:5px;background:transparent;color:#d5d6d7;font-family:inherit;font-size:11.5px;cursor:pointer;}
-.sp2-today:hover{background:rgba(255,255,255,0.06);}
+.sp2-title h1{font-size:16px;line-height:24px;font-weight:600;color:var(--fp-ink-1);}
+.sp2-title-sub{font-size:12px;line-height:16px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-date{display:flex;align-items:center;gap:6px;}
+.sp2-nav-btn{width:36px;height:36px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sp2-nav-btn:hover{background:var(--fp-emphasis);}
+.sp2-date-inp{height:36px;background:var(--fp-surface-1b);border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);color:var(--fp-ink-1);font-family:inherit;font-size:14px;padding:0 12px;outline:none;text-align:center;min-width:164px;cursor:pointer;font-variant-numeric:tabular-nums;}
+.sp2-date-inp:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+.sp2-today{height:36px;padding:0 14px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;}
+.sp2-today:hover{background:var(--fp-emphasis);}
 
 /* ── Two columns ──────────────────────────────────────────── */
 .sp2-body{flex:1;display:flex;overflow:hidden;min-height:0;}
 .sp2-col{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.sp2-col-orders{flex:0 0 40%;border-right:1px solid rgba(255,255,255,0.1);}
-.sp2-col-unit{flex:1 1 60%;background:rgba(0,0,0,0.12);}
+/* plain percentages, not clamp(): flex-basis cannot interpolate between a
+   clamp() and a percentage, so the transition stalls where it started. */
+.sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-card-1);}
+.sp2-body[data-view="v"] .sp2-col-orders{flex-basis:25%;}
+.sp2-body[data-view="n"] .sp2-col-orders{flex-basis:23%;}
+.sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1a);}
 
-.sp2-col-hdr{min-height:46px;display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;flex-wrap:wrap;}
-.sp2-col-title{font-size:12.5px;font-weight:600;color:#fff;letter-spacing:0.3px;white-space:nowrap;}
-.sp2-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 6px;border-radius:9px;background:rgba(255,255,255,0.08);font-size:10px;font-weight:600;color:#9ba3af;}
+.sp2-col-hdr{min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--fp-stroke-hairline);flex-shrink:0;flex-wrap:wrap;background:var(--fp-surface-1b);}
+.sp2-col-title{font-size:14px;line-height:20px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;}
+.sp2-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;border-radius:9999px;background:var(--muted);font-size:12px;font-weight:500;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 
-/* quick filters */
-.sp2-seg{display:flex;background:#1f2226;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px;}
-.sp2-seg-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border:none;background:transparent;color:#797a7d;font-family:inherit;font-size:11px;cursor:pointer;border-radius:4px;white-space:nowrap;}
-.sp2-seg-btn:hover{color:#d5d6d7;}
-.sp2-seg-btn.on{background:#3657f5;color:#fff;font-weight:600;}
-.sp2-seg-n{font-size:9px;opacity:.8;}
-.sp2-flt-lbl{font-size:10px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.5px;}
-.sp2-custom{display:none;align-items:center;gap:5px;}
+.sp2-seg{display:flex;background:var(--muted);border:1px solid var(--fp-outline-1);border-radius:var(--r-md);padding:2px;}
+.sp2-seg-btn{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:none;background:transparent;color:var(--fp-ink-3);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;border-radius:6px;white-space:nowrap;}
+.sp2-seg-btn:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+.sp2-seg-btn.on{background:var(--primary);color:var(--primary-foreground);font-weight:600;}
+.sp2-seg-n{font-size:11px;opacity:.75;font-variant-numeric:tabular-nums;}
+.sp2-flt-lbl{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.12em;}
+.sp2-custom{display:none;align-items:center;gap:6px;}
 .sp2-custom.on{display:flex;}
-.sp2-time{height:26px;width:66px;background:#1d1f23;border:1px solid rgba(255,255,255,0.15);border-radius:5px;color:#e9ebf0;font-family:inherit;font-size:11px;padding:0 7px;outline:none;text-align:center;}
-.sp2-time:focus{border-color:#3657f5;}
+.sp2-time{height:32px;width:72px;background:var(--fp-surface-1b);border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);color:var(--fp-ink-1);font-family:inherit;font-size:13px;padding:0 8px;outline:none;text-align:center;font-variant-numeric:tabular-nums;}
+.sp2-time:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
 
 /* ── Timeline ─────────────────────────────────────────────── */
 .sp2-tl-wrap{flex:1;overflow:auto;min-height:0;position:relative;}
 .sp2-tl-wrap::-webkit-scrollbar{height:10px;width:8px;}
-.sp2-tl-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.16);border-radius:5px;}
-.sp2-tl-wrap::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.26);}
+.sp2-tl-wrap::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:5px;}
 .sp2-tl{position:relative;padding:0 16px 18px;min-width:min-content;}
 
-.sp2-ruler{position:sticky;top:0;z-index:3;height:30px;background:#363a42;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;margin:0 -16px;padding:0 16px;}
-.sp2-hour{flex-shrink:0;position:relative;font-size:9.5px;color:#5a6472;padding-top:9px;border-left:1px solid rgba(255,255,255,0.06);padding-left:6px;}
-.sp2-hour.now{color:#ff931e;font-weight:700;border-left-color:rgba(255,147,30,0.5);}
+.sp2-ruler{position:sticky;top:0;z-index:3;height:32px;background:var(--fp-card-1);border-bottom:1px solid var(--fp-stroke-hairline);display:flex;margin:0 -16px;padding:0 16px;}
+.sp2-hour{flex-shrink:0;position:relative;font-size:12px;color:var(--fp-ink-3);padding-top:9px;border-left:1px solid var(--fp-outline-1);padding-left:6px;font-variant-numeric:tabular-nums;}
 
 .sp2-lanes{position:relative;padding-top:12px;}
-.sp2-lane{position:relative;height:118px;margin-bottom:9px;}
+.sp2-lane{position:relative;height:124px;margin-bottom:8px;}
 .sp2-grid{position:absolute;inset:0;display:flex;pointer-events:none;}
-.sp2-grid-col{flex-shrink:0;border-left:1px solid rgba(255,255,255,0.04);}
+.sp2-grid-col{flex-shrink:0;border-left:1px solid color-mix(in oklab,var(--fp-outline-1) 55%,transparent);}
 
-/* order card on the timeline */
-.sp2-card{position:absolute;top:0;height:114px;background:#25282d;border:1px solid rgba(255,255,255,0.1);border-left:3px solid #5a6472;border-radius:5px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,background .12s;}
-.sp2-card:hover{background:#2b2f37;border-color:rgba(255,255,255,0.2);}
-.sp2-card.sel{border-color:#3657f5;background:rgba(54,87,245,0.1);box-shadow:0 0 0 1px rgba(54,87,245,0.4);}
-.sp2-card.planned{border-left-color:#00c765;}
-.sp2-card.unplanned{border-left-color:#ff931e;}
-.sp2-card-top{display:flex;align-items:center;gap:6px;}
-.sp2-ord{font-size:11.5px;font-weight:600;color:#e9ebf0;white-space:nowrap;}
-.sp2-time-lbl{margin-left:auto;font-size:9.5px;color:#5a6472;white-space:nowrap;}
-.sp2-ship{font-size:11px;color:#e9ebf0;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-addr{font-size:9.5px;color:#6b7280;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.sp2-prods{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;}
-.sp2-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:9.5px;color:#e9ebf0;white-space:nowrap;}
-.sp2-chip-q{color:#9ba3af;font-size:9px;}
-.sp2-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.sp2-card-foot{display:flex;align-items:center;gap:5px;}
-.sp2-pill{display:inline-flex;align-items:center;height:16px;padding:0 7px;border-radius:8px;font-size:9px;font-weight:400;letter-spacing:0.3px;white-space:nowrap;}
-.sp2-pill-planned{background:#1b3b2a;color:#00c765;}
-.sp2-pill-unplanned{background:#ff931e;color:#241603;}
-.sp2-type{font-size:9px;color:#797a7d;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+/* the order card — board card's shape and stack levels */
+.sp2-card{position:absolute;top:0;height:120px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
+.sp2-card:hover{border-color:var(--fp-outline-2);box-shadow:0 1px 3px rgba(3,4,5,.10),0 1px 2px rgba(3,4,5,.06);}
+.sp2-card.sel{border-color:var(--fp-selected-border);background:var(--fp-selected);}
+.sp2-card.planned{border-left-color:var(--status-success);}
+.sp2-card.unplanned{border-left-color:var(--status-caution);}
+.sp2-card-top{display:flex;align-items:center;gap:8px;}
+.sp2-ord{font-size:14px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sp2-time-lbl{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sp2-ship{font-size:13px;font-weight:500;color:var(--fp-ink-3);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-addr{font-size:12px;color:var(--fp-ink-3);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;opacity:.85;}
+.sp2-prods{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
+.sp2-chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:9999px;background:var(--chip);font-size:12px;color:var(--fp-ink-1);white-space:nowrap;}
+.sp2-chip-q{color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sp2-card-foot{display:flex;align-items:center;gap:7px;}
 
-.sp2-empty{padding:40px 16px;text-align:center;font-size:12px;color:#5a6472;}
+/* pills: kind colour at 10%, text the kind colour, no border */
+.sp2-pill{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:400;white-space:nowrap;}
+.sp2-pill-planned{background:color-mix(in oklab,var(--status-success) 10%,transparent);color:var(--status-success);}
+.sp2-pill-unplanned{background:color-mix(in oklab,var(--status-caution) 10%,transparent);color:var(--status-caution);}
+.sp2-type{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.12em;white-space:nowrap;}
+
+.sp2-empty{padding:44px 16px;text-align:center;font-size:14px;color:var(--fp-ink-3);}
+
+/* ── Vertical timeline ────────────────────────────────────
+   Same orders, same cards; time runs down a rail instead of across the top,
+   so the column needs width for one card, not for hours. */
+.sp2-vt{padding:12px 16px 20px;position:relative;}
+.sp2-vt-rail{position:absolute;left:62px;top:0;bottom:0;width:1px;background:var(--fp-outline-1);}
+.sp2-vrow{position:relative;display:flex;gap:14px;margin-bottom:10px;}
+.sp2-vtime{width:48px;flex-shrink:0;text-align:right;padding-top:10px;font-size:12px;color:var(--fp-ink-3);font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sp2-vnode{position:absolute;left:58px;top:15px;width:9px;height:9px;border-radius:50%;background:var(--fp-surface-1b);border:2px solid var(--status-neutral);z-index:1;}
+.sp2-vrow.planned .sp2-vnode{border-color:var(--status-success);}
+.sp2-vrow.unplanned .sp2-vnode{border-color:var(--status-caution);}
+.sp2-vgap{position:relative;height:22px;margin:0 0 10px 76px;display:flex;align-items:center;font-size:12px;color:var(--fp-ink-3);opacity:.8;}
+.sp2-vcard{flex:1;min-width:0;margin-left:22px;}
+
+/* ── No timeline — the orders, in the order the day runs them ── */
+.sp2-list{padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px;}
+.sp2-lrow{display:flex;align-items:stretch;gap:10px;}
+.sp2-ltime{width:46px;flex-shrink:0;padding-top:10px;font-size:12px;color:var(--fp-ink-3);font-weight:500;font-variant-numeric:tabular-nums;}
+
+.sp2-flow .sp2-card{position:static;width:auto;height:auto;min-height:0;}
+.sp2-flow .sp2-addr{-webkit-line-clamp:1;}
 
 /* ── Column 2 ─────────────────────────────────────────────── */
 .sp2-unit-row{display:flex;align-items:flex-start;min-height:100%;}
-.sp2-sec{padding:13px 16px;min-width:0;}
-.sp2-sec-drv{flex:0 0 clamp(300px,37%,392px);border-right:1px solid rgba(255,255,255,0.08);align-self:stretch;}
+.sp2-sec{padding:16px;min-width:0;}
+.sp2-sec-drv{flex:0 0 clamp(300px,37%,392px);border-right:1px solid var(--fp-stroke-hairline);align-self:stretch;}
 .sp2-sec-trk{flex:1;min-width:0;}
-.sp2-sec-lbl{font-size:10px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:8px;}
-.sp2-sec-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.sp2-sec-lbl{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sp2-sec-lbl::after{content:'';flex:1;height:1px;background:var(--fp-stroke-hairline);}
 
-/* driver card */
-.sp2-drv{background:#25282d;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px;}
-.sp2-drv-top{display:flex;align-items:center;gap:10px;}
-.sp2-av{width:34px;height:34px;border-radius:50%;background:rgba(54,87,245,0.16);border:1px solid rgba(54,87,245,0.3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#6fd4ff;flex-shrink:0;}
-.sp2-drv-name{font-size:13.5px;font-weight:600;color:#fff;}
-.sp2-drv-shift{font-size:11px;color:#9ba3af;margin-top:2px;}
+.sp2-drv{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:12px;}
+.sp2-drv-top{display:flex;align-items:center;gap:12px;}
+.sp2-av{width:36px;height:36px;border-radius:50%;background:var(--fp-card-1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--fp-ink-1);flex-shrink:0;}
+.sp2-drv-name{font-size:16px;line-height:24px;font-weight:600;color:var(--fp-ink-1);}
+.sp2-drv-shift{font-size:13px;color:var(--fp-ink-3);margin-top:1px;}
 .sp2-drv-state{margin-left:auto;text-align:right;}
-.sp2-state{display:inline-flex;align-items:center;gap:5px;height:19px;padding:0 9px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;}
-.sp2-state.on-duty{background:#1b3b2a;color:#00c765;}
-.sp2-state.off-duty{background:rgba(107,114,128,0.18);color:#9ba3af;}
-.sp2-state.driving{background:rgba(54,87,245,0.18);color:#6fd4ff;}
+.sp2-state{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:500;white-space:nowrap;}
+.sp2-state.on-duty{background:color-mix(in oklab,var(--status-success) 10%,transparent);color:var(--status-success);}
+.sp2-state.off-duty{background:var(--muted);color:var(--status-neutral);}
+.sp2-state.driving{background:color-mix(in oklab,var(--status-info) 10%,transparent);color:var(--status-info);}
 .sp2-state::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
-.sp2-sync{font-size:10px;color:#6b7280;margin-top:5px;}
-.sp2-drv-foot{display:flex;align-items:center;gap:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.07);}
-.sp2-drv-meta{font-size:10.5px;color:#797a7d;}
-.sp2-view{margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border:1px solid rgba(255,255,255,0.16);border-radius:5px;background:transparent;color:#34c3ff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
-.sp2-view:hover{background:rgba(54,87,245,0.14);border-color:rgba(54,87,245,0.45);}
+.sp2-sync{font-size:12px;color:var(--fp-ink-3);margin-top:6px;}
+.sp2-drv-foot{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--fp-stroke-hairline);}
+.sp2-drv-meta{font-size:13px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+/* the CTA is --primary, near-black. Brand orange is the mark and the ring. */
+.sp2-view{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:none;border-radius:var(--r-md);background:var(--primary);color:var(--primary-foreground);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.sp2-view:hover{background:color-mix(in oklab,var(--primary) 88%,#fff);}
 
-/* truck + compartments */
-.sp2-truck{background:#25282d;border:1px solid rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;}
-.sp2-truck-top{padding:11px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,0.07);}
-.sp2-truck-ico{width:28px;height:28px;border-radius:5px;background:rgba(54,87,245,0.14);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sp2-truck-id{font-size:12.5px;font-weight:600;color:#fff;}
-.sp2-truck-sub{font-size:10.5px;color:#797a7d;margin-top:1px;}
+.sp2-truck{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);overflow:hidden;}
+.sp2-truck-top{padding:14px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--fp-stroke-hairline);}
+.sp2-truck-ico{width:32px;height:32px;border-radius:var(--r-md);background:var(--fp-card-1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sp2-truck-id{font-size:16px;line-height:24px;font-weight:600;color:var(--fp-ink-1);}
+.sp2-truck-sub{font-size:13px;color:var(--fp-ink-3);margin-top:1px;}
 .sp2-truck-cap{margin-left:auto;text-align:right;}
-.sp2-truck-pct{font-size:14px;font-weight:700;color:#e9ebf0;}
-.sp2-truck-pct-lbl{font-size:9.5px;color:#6b7280;}
+.sp2-truck-pct{font-size:18px;line-height:28px;font-weight:600;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
+.sp2-truck-pct-lbl{font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 
-.sp2-comps{padding:12px;display:flex;flex-direction:column;gap:9px;}
-.sp2-comp{display:flex;align-items:center;gap:10px;}
-.sp2-comp-id{width:26px;font-size:10.5px;font-weight:700;color:#797a7d;flex-shrink:0;}
+.sp2-comps{padding:14px;display:flex;flex-direction:column;gap:12px;}
+.sp2-comp{display:flex;align-items:center;gap:12px;}
+.sp2-comp-id{width:28px;font-size:12px;font-weight:600;color:var(--fp-ink-3);flex-shrink:0;}
 .sp2-comp-main{flex:1;min-width:0;}
-.sp2-comp-row1{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
-.sp2-comp-prod{font-size:11.5px;color:#e9ebf0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-comp-prod.empty{color:#5a6472;font-style:italic;font-weight:400;}
-.sp2-comp-qty{margin-left:auto;font-size:11px;color:#9ba3af;white-space:nowrap;}
-.sp2-bar{height:16px;border-radius:3px;background:#1a1d22;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.06);}
+.sp2-comp-row1{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;}
+.sp2-comp-prod{font-size:13px;color:var(--fp-ink-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-comp-prod.empty{color:var(--fp-ink-3);font-weight:400;}
+.sp2-comp-qty{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sp2-bar{height:18px;border-radius:6px;background:var(--fp-card-1);overflow:hidden;position:relative;}
 .sp2-bar-fill{height:100%;transition:width .25s;}
-.sp2-bar-striped{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.03),rgba(255,255,255,0.03) 2px,transparent 2px,transparent 6px);}
-.sp2-comp-state{width:96px;flex-shrink:0;text-align:right;}
-.sp2-comp-pct{font-size:12px;font-weight:700;}
-.sp2-comp-word{font-size:9px;letter-spacing:0.4px;text-transform:uppercase;margin-top:1px;}
-.full .sp2-comp-pct,.full .sp2-comp-word{color:#00c765;}
-.partial .sp2-comp-pct,.partial .sp2-comp-word{color:#ff931e;}
-.empty-c .sp2-comp-pct,.empty-c .sp2-comp-word{color:#5a6472;}
+.sp2-bar-striped{position:absolute;inset:0;}
+.sp2-comp-state{width:104px;flex-shrink:0;text-align:right;}
+.sp2-comp-pct{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+.sp2-comp-word{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-top:1px;}
+.full .sp2-comp-pct,.full .sp2-comp-word{color:var(--status-success);}
+.partial .sp2-comp-pct,.partial .sp2-comp-word{color:var(--status-caution);}
+.empty-c .sp2-comp-pct,.empty-c .sp2-comp-word{color:var(--status-neutral);}
 
-.sp2-none{padding:34px 16px;text-align:center;font-size:12px;color:#5a6472;line-height:1.6;}
+.sp2-none{padding:36px 16px;text-align:center;font-size:14px;color:var(--fp-ink-3);line-height:1.6;}
 
-#sp2Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:6px;font-size:12.5px;font-weight:500;z-index:200;display:none;white-space:nowrap;background:#0d2a1b;border:1px solid rgba(0,199,101,0.35);color:#00c765;box-shadow:0 8px 24px rgba(0,0,0,0.55);}
+#sp2Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--r-md);font-size:14px;font-weight:500;z-index:200;display:none;white-space:nowrap;background:var(--primary);color:var(--primary-foreground);box-shadow:0 8px 24px rgba(3,4,5,.18);}
+
 </style>
 </head>
 <body>
@@ -167,7 +242,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
     </div>
   </div>
 
-  <div class="sp2-body">
+  <div class="sp2-body" id="sp2Body" data-view="h">
 
     <!-- ══ Column 1 — the orders, on a timeline ══ -->
     <div class="sp2-col sp2-col-orders">
@@ -181,6 +256,19 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
           <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
         </div>
 
+        <span class="sp2-flt-lbl" style="margin-left:4px;">View</span>
+        <div class="sp2-seg">
+          <button class="sp2-seg-btn on" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
+          </button>
+          <button class="sp2-seg-btn" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+          </button>
+          <button class="sp2-seg-btn" data-v="n" onclick="sp2SetView('n')" title="No timeline — ordered list">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+          </button>
+        </div>
+
         <span class="sp2-flt-lbl" style="margin-left:4px;">Shift</span>
         <div class="sp2-seg">
           <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
@@ -189,7 +277,7 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
         </div>
         <div class="sp2-custom" id="sp2Custom">
           <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
-          <span style="color:#5a6472;font-size:11px;">–</span>
+          <span style="color:var(--fp-ink-3);font-size:13px;">–</span>
           <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
         </div>
       </div>
@@ -269,6 +357,7 @@ var sp2Quick = 'all';          // all · unplanned · planned
 var sp2Shift_ = 'am';          // am · pm · custom
 var sp2Driver = 'alex';
 var sp2SelOrder = null;
+var sp2View = 'h';            // h horizontal · v vertical · n no timeline
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 206;
@@ -309,16 +398,85 @@ function sp2Visible() {
 // ══════════════════════════════════════════════════════════
 //  Column 1 — the timeline
 // ══════════════════════════════════════════════════════════
+// The card is the same in every view; only where it sits changes.
+function sp2CardHtml(o, style) {
+  var planned = sp2Planned(o);
+  var chips = o.prods.map(function(pr) {
+    var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
+    return '<span class="sp2-chip"><span class="sp2-dot" style="background:' + col + ';"></span>' +
+           pr.p + ' <span class="sp2-chip-q">' + pr.q.toLocaleString() + '</span></span>';
+  }).join('');
+  return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
+      (sp2SelOrder === o.id ? ' sel' : '') + '" ' + (style ? 'style="' + style + '" ' : '') +
+      'onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + ' · ' + o.addr + '">' +
+    '<div class="sp2-card-top"><span class="sp2-ord">' + o.id + '</span>' +
+      '<span class="sp2-time-lbl">' + sp2Hhmm(o.t) + '</span></div>' +
+    '<div class="sp2-ship">' + o.ship + '</div>' +
+    '<div class="sp2-addr">' + o.addr + '</div>' +
+    '<div class="sp2-prods">' + chips + '</div>' +
+    '<div class="sp2-card-foot">' +
+      '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
+        (planned ? 'Planned' : 'Unplanned') + '</span>' +
+      '<span class="sp2-type">' + o.type + '</span>' +
+    '</div>' +
+  '</div>';
+}
+
+// Time runs down a rail instead of across the top. The gap between two orders
+// is written on the rail, so the shape of the day still reads without an axis
+// wide enough to scale it.
+function sp2RenderVertical(orders) {
+  if (!orders.length) return '<div class="sp2-empty">No orders in this window — widen the shift range or clear the filter.</div>';
+  var rows = orders.map(function(o, i) {
+    var gap = '';
+    if (i) {
+      var mins = o.t - orders[i-1].t;
+      if (mins >= 45) {
+        var h = Math.floor(mins/60), m = mins%60;
+        gap = '<div class="sp2-vgap">' + (h ? h + 'h ' : '') + (m ? m + 'm' : '') + ' later</div>';
+      }
+    }
+    return gap + '<div class="sp2-vrow ' + (sp2Planned(o) ? 'planned' : 'unplanned') + '">' +
+      '<span class="sp2-vtime">' + sp2Hhmm(o.t) + '</span>' +
+      '<span class="sp2-vnode"></span>' +
+      '<div class="sp2-vcard">' + sp2CardHtml(o) + '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="sp2-vt"><div class="sp2-vt-rail"></div>' + rows + '</div>';
+}
+
+// No axis at all: the orders in the sequence the day runs them.
+function sp2RenderList(orders) {
+  if (!orders.length) return '<div class="sp2-empty">No orders in this window — widen the shift range or clear the filter.</div>';
+  return '<div class="sp2-list">' + orders.map(function(o) {
+    return '<div class="sp2-lrow"><span class="sp2-ltime">' + sp2Hhmm(o.t) + '</span>' +
+      '<div style="flex:1;min-width:0;">' + sp2CardHtml(o) + '</div></div>';
+  }).join('') + '</div>';
+}
+
 function sp2RenderTimeline() {
-  var w = sp2Window();
-  var hours = Math.ceil((w.to - w.from) / 60);
   var orders = sp2Visible();
   var tl = document.getElementById('sp2Tl');
+
+  if (sp2View !== 'h') {
+    tl.classList.add('sp2-flow');
+    tl.style.padding = '0';
+    tl.innerHTML = sp2View === 'v' ? sp2RenderVertical(orders) : sp2RenderList(orders);
+    sp2Counts();
+    return;
+  }
+  tl.classList.remove('sp2-flow');
+  tl.style.padding = '';
+
+  var w = sp2Window();
+  var hours = Math.ceil((w.to - w.from) / 60);
 
   var ruler = '';
   for (var i = 0; i <= hours; i++) {
     var m = w.from + i*60;
-    ruler += '<div class="sp2-hour" style="width:' + SP2_HOUR_W + 'px;">' + sp2Short(m) + '</div>';
+    var h24 = Math.floor((m % 1440) / 60);
+    var tick = h24 === 0 ? '12a' : h24 === 12 ? '12p' : String(h24 % 12 === 0 ? 12 : h24 % 12);
+    ruler += '<div class="sp2-hour" style="width:' + SP2_HOUR_W + 'px;">' + tick + '</div>';
   }
 
   if (!orders.length) {
@@ -346,26 +504,7 @@ function sp2RenderTimeline() {
 
   var lanesHtml = lanes.map(function(lane) {
     var cards = lane.map(function(slot) {
-      var o = slot.o, planned = sp2Planned(o);
-      var chips = o.prods.map(function(p) {
-        var col = SP2_PROD_COLORS[p.p] || '#9ba3af';
-        return '<span class="sp2-chip"><span class="sp2-dot" style="background:' + col + ';"></span>' +
-               p.p + ' <span class="sp2-chip-q">' + p.q.toLocaleString() + '</span></span>';
-      }).join('');
-      return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
-          (sp2SelOrder === o.id ? ' sel' : '') + '" style="left:' + slot.x + 'px;width:' + SP2_CARD_W + 'px;" ' +
-          'onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + ' · ' + o.addr + '">' +
-        '<div class="sp2-card-top"><span class="sp2-ord">' + o.id + '</span>' +
-          '<span class="sp2-time-lbl">' + sp2Hhmm(o.t) + '</span></div>' +
-        '<div class="sp2-ship">' + o.ship + '</div>' +
-        '<div class="sp2-addr">' + o.addr + '</div>' +
-        '<div class="sp2-prods">' + chips + '</div>' +
-        '<div class="sp2-card-foot">' +
-          '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
-            (planned ? 'Planned' : 'Unplanned') + '</span>' +
-          '<span class="sp2-type">' + o.type + '</span>' +
-        '</div>' +
-      '</div>';
+      return sp2CardHtml(slot.o, 'left:' + slot.x + 'px;width:' + SP2_CARD_W + 'px;');
     }).join('');
     return '<div class="sp2-lane" style="width:' + trackW + 'px;">' +
       '<div class="sp2-grid">' + grid + '</div>' + cards + '</div>';
@@ -393,6 +532,17 @@ function sp2SetQuick(q) {
   });
   sp2RenderTimeline();
 }
+function sp2SetView(v) {
+  sp2View = v;
+  document.querySelectorAll('[data-v]').forEach(function(b) {
+    b.classList.toggle('on', b.dataset.v === v);
+  });
+  document.getElementById('sp2Body').setAttribute('data-view', v);
+  // the shift range still filters, but only the horizontal view draws a scale
+  document.getElementById('sp2TlWrap').style.overflowX = v === 'h' ? 'auto' : 'hidden';
+  sp2RenderTimeline();
+}
+
 function sp2SetShift(s) {
   sp2Shift_ = s;
   document.querySelectorAll('[data-s]').forEach(function(b) {
@@ -464,7 +614,7 @@ function sp2RenderUnit() {
     // Full, partially full, or empty — the three states a compartment is in
     var cls  = p >= 99 ? 'full' : p > 0 ? 'partial' : 'empty-c';
     var word = p >= 99 ? 'Full' : p > 0 ? 'Partially full' : 'Empty';
-    var col  = SP2_PROD_COLORS[l.p] || '#5a6472';
+    var col  = SP2_PROD_COLORS[l.p] || 'var(--fp-outline-2)';
     return '<div class="sp2-comp ' + cls + '">' +
         '<span class="sp2-comp-id">C' + (i+1) + '</span>' +
         '<div class="sp2-comp-main">' +
