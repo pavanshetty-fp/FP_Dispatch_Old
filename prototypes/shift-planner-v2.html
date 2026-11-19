@@ -335,18 +335,16 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-rig::-webkit-scrollbar{height:7px;}
 .sp2-rig::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:4px;}
 .sp2-sv{display:block;}
-.sp2-sv text{font-family:inherit;text-anchor:middle;dominant-baseline:middle;}
-.sp2-sv-c{font-size:9px;font-weight:700;letter-spacing:.04em;fill:var(--fp-ink-1);opacity:.62;}
-.sp2-sv-p{font-size:12px;font-weight:600;fill:var(--fp-ink-1);}
-.sp2-sv-p.empty{font-weight:400;opacity:.55;}
-.sp2-sv-q{font-size:11px;fill:var(--fp-ink-1);}
-.sp2-sv-s{font-size:9px;font-weight:600;letter-spacing:.04em;fill:var(--fp-ink-1);text-transform:uppercase;}
-.sp2-sv-tag{font-size:9px;font-weight:600;letter-spacing:.09em;fill:var(--fp-ink-3);text-transform:uppercase;}
-/* the strip along the bottom of a compartment carries its state in colour,
-   so the words above it never have to sit on a status tint */
-.sp2-sv-strip.full{fill:var(--status-success);}
-.sp2-sv-strip.partial{fill:var(--status-caution);}
-.sp2-sv-strip.empty-c{fill:var(--fp-outline-1);}
+/* Type inside the drawing is in DESIGN units and renders at TK.scale, so these
+   are the rendered sizes divided by 0.68. All of it is the design's dark ink:
+   a status colour would have to sit on whatever fuel is behind it. */
+.sp2-sv text{font-family:inherit;text-anchor:middle;dominant-baseline:middle;fill:#242425;}
+.sp2-sv-c{font-size:13px;font-weight:700;letter-spacing:.04em;opacity:.55;}
+.sp2-sv-p{font-size:18px;font-weight:600;}
+.sp2-sv-p.empty{font-weight:400;opacity:.5;}
+.sp2-sv-q{font-size:16px;}
+.sp2-sv-s{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75;}
+.sp2-sv-tag{font-size:13px;font-weight:600;letter-spacing:.09em;fill:var(--fp-ink-3);text-transform:uppercase;}
 
 /* ── every other lane: plain rectangles ── */
 .sp2-bars{display:flex;gap:5px;margin-top:9px;height:52px;}
@@ -1242,39 +1240,55 @@ function sp2Drop(e, unit, idx, k) {
 // rig at once, so an order goes straight to whichever driver has room.
 
 // ══════════════════════════════════════════════════════════
-//  The rig, drawn
+//  The rig, drawn — from the Figma truck (node 2:65)
 // ══════════════════════════════════════════════════════════
-// The selected lane gets the tanker: a capsule tank cut into compartments by
-// capacity, fuel standing in each one under a wavy surface, dome covers on top
-// and the tractor at the front. Every other lane gets plain bars — thirty
-// tankers on one screen is noise, and you only read the rig you are loading.
-//
-// Drawn at its natural size and scrolled rather than scaled, so the numbers
-// inside a compartment stay the same size whatever the truck is carrying.
-var TK = { y:16, h:60, chassisY:76, chassisH:7, wheelY:93, wheelR:12.5, hubR:5.5, H:110 };
+// The tractor is the design's own artwork, inlined and placed at the offsets it
+// uses. The tank is not: that asset bakes in four fixed compartments and ours
+// run from three to five, so the shell, dividers and fuel are rebuilt in code
+// from the design's radius, colours and — scaled to each compartment — its own
+// wave curve.
+var TRUCK_ART = {
+  'cab':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE3NC43NDYiIGhlaWdodD0iMTIzLjQ5MSIgdmlld0JveD0iMCAwIDE3NC43NDYgMTIzLjQ5MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggaWQ9IlVuaW9uIiBkPSJNNzkuMDI1NyAwQzgxLjgyNDEgMC4wMDAxNTczMiA4NC4yNDIgMS44MDYwNCA4NC45MDg1IDQuNTI0MDFDODYuMTYxNiA5LjYzNDY1IDg4LjM3NiAxOS4zMTEyIDkxLjgzODkgMzUuNzYwM0MxMTguMjk2IDM4LjAxMiAxNDcuNDc0IDQ0LjQ4NzUgMTYzLjQ0NSA0OC42NDY2QzE2Ny4zMzIgNDkuNjU4NyAxNzAuMTEgNTMuMDIxNyAxNzAuNDg4IDU3LjAxOTlMMTc0LjcwOSAxMDEuNjM5QzE3NS4xNiAxMDYuNDA5IDE3MS40MDkgMTEwLjUzMiAxNjYuNjE4IDExMC41MzJIMTYxLjYxQzE2MC43MjcgMTEzLjI4NyAxNTkuNzM2IDExNi4yNzkgMTU5LjczNiAxMTkuNTM5VjEyMy40OTFIMTU1LjM4OUMxNTUuNjQ2IDEyMi4wNDcgMTU1Ljc4MSAxMjAuNTYxIDE1NS43ODEgMTE5LjA0M0MxNTUuNzgxIDEwNS4xMjMgMTQ0LjQ5NiA5My44Mzc0IDEzMC41NzYgOTMuODM3NEMxMTYuNjU1IDkzLjgzNzQgMTA1LjM3IDEwNS4xMjMgMTA1LjM3IDExOS4wNDNDMTA1LjM3IDEyMC41NjEgMTA1LjUwNSAxMjIuMDQ3IDEwNS43NjIgMTIzLjQ5MUgxMDIuNDA0Vjk1LjA4OTlIMFY4OC41MjQzQzAgODYuMzE1MiAxLjc5MDg2IDg0LjUyNDMgNCA4NC41MjQzSDI2Ljg4MzlDMjkuMDkzIDg0LjUyNDMgMzAuODgzOSA4Mi43MzM1IDMwLjg4MzkgODAuNTI0M1Y2LjUwMTg3QzMwLjg4MzkgMi45MTA5OSAzMy43OTQ5IDAgMzcuMzg1OCAwSDc5LjAyNTdaIiBmaWxsPSIjODc4Njg2Ii8+Cjwvc3ZnPgo=',
+  'stack':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjMwLjg4MzkiIGhlaWdodD0iMTA0LjAzIiB2aWV3Qm94PSIwIDAgMzAuODgzOSAxMDQuMDMiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJHcm91cCA3Ij4KPHJlY3QgaWQ9IlJlY3RhbmdsZSAxNSIgeD0iMTYuMjU0NyIgeT0iOTQuMjc3MSIgd2lkdGg9IjExLjM3ODMiIGhlaWdodD0iOS43NTI4MSIgZmlsbD0iIzMzMzczOSIvPgo8cGF0aCBpZD0iVW5pb24iIGQ9Ik0yNy42MzI5IDQyLjI2MjJDMjkuNDI4NCA0Mi4yNjIyIDMwLjg4MzkgNDMuNzE3NiAzMC44ODM5IDQ1LjUxMzFWOTIuNjUxNkMzMC44ODM5IDk0LjQ0NzEgMjkuNDI4NCA5NS45MDI2IDI3LjYzMjkgOTUuOTAyNkgxNi4yNTQ3QzE0LjQ1OTIgOTUuOTAyNiAxMy4wMDM3IDk0LjQ0NzEgMTMuMDAzNyA5Mi42NTE2VjQ1LjUxMzFDMTMuMDAzNyA0My43MTc2IDE0LjQ1OTIgNDIuMjYyMiAxNi4yNTQ3IDQyLjI2MjJWMTQuNjI5MkMxNi4yNTQ3IDEyLjgzMzggMTQuNzk5MiAxMS4zNzgzIDEzLjAwMzcgMTEuMzc4M0g0Ljg3NjRMMCAwSDE2LjI1NDdWMC4wMzMzMzQ4QzE2LjUyMyAwLjAxMjkyMDEgMTYuNzkzOSAwIDE3LjA2NzQgMEMyMi45MDI2IDAgMjcuNjMyOSA0LjczMDM1IDI3LjYzMjkgMTAuNTY1NUMyNy42MzI5IDEwLjgzOTEgMjcuNjE4NCAxMS4xMDk5IDI3LjU5OCAxMS4zNzgzSDI3LjYzMjlWNDIuMjYyMloiIGZpbGw9IiM2MzYzNjMiLz4KPC9nPgo8L3N2Zz4K',
+  'windshield':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjQzLjY0MDMiIGhlaWdodD0iMzcuODc3MiIgdmlld0JveD0iMCAwIDQzLjY0MDMgMzcuODc3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggaWQ9IlZlY3RvciA1IiBkPSJNMC41IDIzLjk5ODlWMi43ODYzOEMwLjUgMS42ODg3NyAxLjM4NDYgMC43OTYyNDYgMi40ODIxNyAwLjc4NjQ2TDM0LjYwMyAwLjUwMDA4MUMzNS41NjQzIDAuNDkxNTEgMzYuMzk1NyAxLjE2ODA2IDM2LjU4MjYgMi4xMTEwM0w0My4xMDEyIDM0Ljk4ODJDNDMuMzQ2NCAzNi4yMjQ4IDQyLjQwMDIgMzcuMzc3MiA0MS4xMzk0IDM3LjM3NzJIMjcuNzQzNUMyNi45ODYgMzcuMzc3MiAyNi4yOTM1IDM2Ljk0OTEgMjUuOTU0NyAzNi4yNzE2TDIxLjM3MTEgMjcuMTA0NUMyMS4wMzIzIDI2LjQyNjkgMjAuMzM5OCAyNS45OTg5IDE5LjU4MjMgMjUuOTk4OUgyLjVDMS4zOTU0MyAyNS45OTg5IDAuNSAyNS4xMDM1IDAuNSAyMy45OTg5WiIgZmlsbD0iIzY5RDhGQSIgc3Ryb2tlPSJibGFjayIvPgo8L3N2Zz4K',
+  'mirror-arm':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjguNjkzOTciIGhlaWdodD0iMTMuMDAzNyIgdmlld0JveD0iMCAwIDguNjkzOTcgMTMuMDAzNyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggaWQ9IlJlY3RhbmdsZSAxMyIgZD0iTTAuMTA2ODYzIDEuNDQ3MjFDLTAuMjI1NTg4IDAuNzgyMzEyIDAuMjU3OTA4IDAgMS4wMDEyOSAwSDMuNTY2NjZDMy45ODM1IDAgNC4zNTY2MiAwLjI1ODU3MyA0LjUwMjk5IDAuNjQ4ODc3TDguNjI5MzkgMTEuNjUyNkM4Ljg3NDU1IDEyLjMwNjQgOC4zOTEyNyAxMy4wMDM3IDcuNjkzMDYgMTMuMDAzN0g2LjUwMzE2QzYuMTI0MzkgMTMuMDAzNyA1Ljc3ODEzIDEyLjc4OTcgNS42MDg3MyAxMi40NTFMMC4xMDY4NjMgMS40NDcyMVoiIGZpbGw9IiMyNDI0MjUiLz4KPC9zdmc+Cg==',
+  'headlight':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE5LjIiIGhlaWdodD0iMTEuMzc4MyIgdmlld0JveD0iMCAwIDE5LjIgMTEuMzc4MyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggaWQ9IlJlY3RhbmdsZSAxNyIgZD0iTTAgMkMwIDAuODk1NDMyIDAuODk1NDMxIDAgMiAwSDE2LjE0NTZDMTcuMTQwOSAwIDE3Ljk4NDcgMC43MzE4NiAxOC4xMjU1IDEuNzE3MTZMMTkuMTc5NSA5LjA5NTQzQzE5LjM1MTYgMTAuMzAwMyAxOC40MTY3IDExLjM3ODMgMTcuMTk5NiAxMS4zNzgzSDJDMC44OTU0MzEgMTEuMzc4MyAwIDEwLjQ4MjggMCA5LjM3ODI3VjJaIiBmaWxsPSIjRkU4RjA0Ii8+Cjwvc3ZnPgo=',
+  'bumper':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjI4Ljc2MTUiIGhlaWdodD0iMTkiIHZpZXdCb3g9IjAgMCAyOC43NjE1IDE5IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBpZD0iU3VidHJhY3QiIGQ9Ik0yOC43MjI3IDkuMzg3N0MyOS4xOTg3IDE0LjQyMiAyNS4yMzk0IDE4Ljc3NDEgMjAuMTgyNiAxOC43NzQ0SDE0Ljg5NjVDMTQuODcyNCAxOC44NDk0IDE0Ljg0ODQgMTguOTI0NyAxNC44MjQyIDE5SDcuMjY0NjVDNS43ODQ4NCAxNC43NTQzIDMuMjYyNDUgMTAuOTk3MyAwIDguMDQwMDRWMEgyNy44MzVMMjguNzIyNyA5LjM4NzdaIiBmaWxsPSIjQjVCNkI2Ii8+Cjwvc3ZnPgo=',
+  'kingpin':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjU1LjI3MzMiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCA1NS4yNzMzIDExIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBpZD0iVmVjdG9yIDYiIGQ9Ik01NC41IDAuNUgwLjVWNi41TDYgMTAuNUg1MEw1NC41IDAuNVoiIHN0cm9rZT0iYmxhY2siLz4KPC9zdmc+Cg==',
+  'wheel-tractor':'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjQ2LjQ1NzYiIGhlaWdodD0iNDYuNDU3NiIgdmlld0JveD0iMCAwIDQ2LjQ1NzYgNDYuNDU3NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgaWQ9Ikdyb3VwIDYiPgo8Y2lyY2xlIGlkPSJFbGxpcHNlIDQiIGN4PSIyMy4yMjg4IiBjeT0iMjMuMjI4OCIgcj0iMjMuMjI4OCIgZmlsbD0iIzI0MjQyNSIvPgo8Y2lyY2xlIGlkPSJFbGxpcHNlIDYiIGN4PSIyMy4yMjg4IiBjeT0iMjMuMjI4OCIgcj0iMTUuMzIxMSIgZmlsbD0iI0UwRTBERiIvPgo8Y2lyY2xlIGlkPSJFbGxpcHNlIDciIGN4PSIyMy4yMjg4IiBjeT0iMjMuMjI4OCIgcj0iNy40MTM0NSIgZmlsbD0iIzhCOEE4QSIvPgo8L2c+Cjwvc3ZnPgo=',
+};
 
-// A liquid surface is never flat. Three gentle crests across the compartment,
-// clipped by the tank, so a full one reads as full rather than as a flat lid.
-function sp2Wave(x0, x1, top, bottom) {
-  var w = x1 - x0, seg = w / 3, amp = 3.4, d = 'M' + x0 + ',' + top;
-  for (var i = 0; i < 3; i++) {
-    d += ' q' + (seg / 4).toFixed(1) + ',' + (-amp) + ' ' + (seg / 2).toFixed(1) + ',0' +
-         ' q' + (seg / 4).toFixed(1) + ',' + amp + ' ' + (seg / 2).toFixed(1) + ',0';
-  }
-  return d + ' L' + x1 + ',' + bottom + ' L' + x0 + ',' + bottom + ' Z';
+// design units; the whole thing is drawn at this scale
+var TK = { h:100, chassisY:106, chassisH:46, wheelY:124, wheelR:23.5, tankX:12,
+           H:172, scale:0.62,
+           shell:'#E0E0DF', divider:'#878686', frame:'#303436', dark:'#242425',
+           marker:'#FE8F04', hub:'#8B8A8A' };
+
+// The design's wave, normalised: the same bezier at any width, any level.
+function sp2Wave(w, y, h) {
+  var p = function (fx, fy) { return (fx * w).toFixed(2) + ',' + (y + fy).toFixed(2); };
+  return 'M' + p(0.3972, 8.4352) +
+         'C' + p(0.2402, 12.4047) + ' ' + p(0.06698, 4.4657) + ' ' + p(0, 0) +
+         'V' + h + 'H' + w.toFixed(2) + 'V' + y.toFixed(2) +
+         'C' + p(0.8552, -8.4352) + ' ' + p(0.5934, 3.4733) + ' ' + p(0.3972, 8.4352) + 'Z';
 }
 
-function sp2CompW(cap) { return Math.max(86, Math.round(cap / 1000 * 46)); }
+// three concentric circles, exactly as the design's wheel
+function sp2Wheel(cx) {
+  return '<circle cx="' + cx + '" cy="' + (TK.wheelY + TK.wheelR) + '" r="23.5" fill="' + TK.dark + '"/>' +
+         '<circle cx="' + cx + '" cy="' + (TK.wheelY + TK.wheelR) + '" r="15.5" fill="' + TK.shell + '"/>' +
+         '<circle cx="' + cx + '" cy="' + (TK.wheelY + TK.wheelR) + '" r="7.5" fill="' + TK.hub + '"/>';
+}
 
-// One tank: the shell, the fuel, the dividers, the domes and the labels.
+function sp2CompW(cap) { return Math.max(100, Math.round(cap / 1000 * 56)); }
+
+// One tank: shell, fuel, dividers, labels — however many compartments it has.
 function sp2TankSvg(x, caps, load, k, unit, uid) {
   var widths = caps.map(sp2CompW);
   var tw = widths.reduce(function (a, b) { return a + b; }, 0);
-  var y = TK.y, h = TK.h, r = h / 2, bot = y + h;
-  var clip = 'clip' + uid;
+  var h = TK.h, clip = 'ck' + uid;
+  var fuel = '', dividers = '', labels = '', hits = '', cx = x;
 
-  var liquid = '', dividers = '', domes = '', labels = '', strips = '', hits = '';
-  var cx = x;
   caps.forEach(function (cap, i) {
     var w = widths[i], l = load[i] || { p:'', q:0 };
     var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
@@ -1284,126 +1298,99 @@ function sp2TankSvg(x, caps, load, k, unit, uid) {
     var mid = cx + w / 2;
 
     if (pct > 0) {
-      var top = y + h * (1 - pct / 100);
-      liquid += '<path class="sp2-sv-liq" data-c="' + i + '" data-top="' + top.toFixed(1) + '" d="' +
-                  sp2Wave(cx, cx + w, top, bot) + '" fill="' + col + '" opacity="0.85"/>' +
-                '<path d="' + sp2Wave(cx, cx + w, top, top + 2.2) + '" fill="rgba(3,4,5,0.18)"/>';
+      fuel += '<g transform="translate(' + cx + ',0)">' +
+        '<path class="sp2-sv-liq" data-c="' + i + '" data-top="' + (h * (1 - pct / 100)).toFixed(1) + '" ' +
+          'd="' + sp2Wave(w, h * (1 - pct / 100), h) + '" fill="' + col + '"/></g>';
+    } else {
+      // the design marks an empty compartment with a dashed line at the floor
+      fuel += '<line x1="' + (cx + 6) + '" y1="' + (h - 5) + '" x2="' + (cx + w - 6) + '" y2="' + (h - 5) +
+              '" stroke="' + TK.divider + '" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.8"/>';
     }
-    if (i) dividers += '<line x1="' + cx + '" y1="' + y + '" x2="' + cx + '" y2="' + bot +
-                       '" stroke="var(--fp-ink-1)" stroke-width="2.5"/>';
-    // the manhole each compartment is filled through
-    domes += '<rect x="' + (mid - 12) + '" y="' + (y - 9) + '" width="24" height="11" rx="4" ' +
-             'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.2"/>';
-    strips += '<rect x="' + (cx + 2) + '" y="' + (bot - 5) + '" width="' + (w - 4) + '" height="3" rx="1.5" ' +
-              'class="sp2-sv-strip ' + cls + '"/>';
+    if (i) dividers += '<rect x="' + (cx - 1) + '" y="0" width="2" height="' + h + '" fill="' + TK.divider + '"/>';
     labels +=
-      '<text x="' + mid + '" y="' + (y + 15) + '" class="sp2-sv-c">C' + (i + 1) + ' · ' + cap.toLocaleString() + '</text>' +
-      '<text x="' + mid + '" y="' + (y + 30) + '" class="sp2-sv-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</text>' +
-      '<text x="' + mid + '" y="' + (y + 43) + '" class="sp2-sv-q">' + l.q.toLocaleString() + ' gal</text>' +
-      (l.p ? '<text x="' + mid + '" y="' + (y + 54) + '" class="sp2-sv-s">' + pct + '% · ' + word + '</text>' : '');
-    // a transparent panel per compartment, so a drop can aim at one
-    hits += '<rect x="' + cx + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="transparent" ' +
+      '<text x="' + mid + '" y="22" class="sp2-sv-c">C' + (i + 1) + ' · ' + cap.toLocaleString() + '</text>' +
+      '<text x="' + mid + '" y="45" class="sp2-sv-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</text>' +
+      '<text x="' + mid + '" y="65" class="sp2-sv-q">' + l.q.toLocaleString() + ' gal</text>' +
+      '<text x="' + mid + '" y="82" class="sp2-sv-s ' + cls + '">' + pct + '% · ' + word + '</text>';
+    hits += '<rect x="' + cx + '" y="0" width="' + w + '" height="' + h + '" fill="transparent" ' +
             'style="cursor:copy;" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
             'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')">' +
             '<title>C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity</title></rect>';
     cx += w;
   });
 
-  return {
-    w: tw,
-    svg:
-      '<defs><clipPath id="' + clip + '">' +
-        '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '"/>' +
-      '</clipPath>' +
-      '<linearGradient id="shell' + uid + '" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#ffffff"/>' +
-        '<stop offset="0.42" stop-color="var(--fp-surface-1b)"/>' +
-        '<stop offset="1" stop-color="var(--fp-card-1)"/>' +
-      '</linearGradient></defs>' +
-      domes +
-      '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '" fill="url(#shell' + uid + ')"/>' +
-      '<g clip-path="url(#' + clip + ')">' + liquid +
-        // the sheen that makes it read as a polished tank rather than a box
-        '<rect x="' + x + '" y="' + (y + 3) + '" width="' + tw + '" height="9" rx="4.5" fill="#fff" opacity="0.30"/>' +
-        dividers + strips +
-      '</g>' +
-      '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '" fill="none" ' +
-        'stroke="var(--fp-ink-1)" stroke-width="2.5"/>' +
-      labels + hits
-  };
+  return { w: tw, svg:
+    '<defs><clipPath id="' + clip + '">' +
+      '<rect x="' + x + '" y="0" width="' + tw + '" height="' + h + '" rx="34"/>' +
+    '</clipPath></defs>' +
+    '<rect x="' + x + '" y="0" width="' + tw + '" height="' + h + '" rx="34" fill="' + TK.shell + '"/>' +
+    '<g clip-path="url(#' + clip + ')">' + fuel + dividers + '</g>' +
+    labels + hits };
 }
 
-function sp2Wheels(cx, n) {
-  var out = '';
-  for (var i = 0; i < n; i++) {
-    var x = cx + i * 28;
-    out += '<circle cx="' + x + '" cy="' + TK.wheelY + '" r="' + TK.wheelR + '" fill="var(--fp-ink-1)"/>' +
-           '<circle cx="' + x + '" cy="' + TK.wheelY + '" r="' + TK.hubR + '" fill="var(--fp-surface-1b)"/>';
-  }
-  return out;
-}
-
-// The tractor, nose to the right, as in the reference: sleeper, windscreen,
-// hood, stack, steer axle and drive tandem.
+// The tractor, from the design: stack, cab, windscreen, mirror, steps, lamp,
+// bumper — each at the offset it has in the file, measured from the fifth wheel.
 function sp2Tractor(x) {
-  var y = TK.y, bot = TK.chassisY;
+  var im = function (a, dx, dy, w, h) {
+    return '<image href="' + TRUCK_ART[a] + '" x="' + (x + dx) + '" y="' + dy +
+           '" width="' + w + '" height="' + h + '"/>';
+  };
   return '<g>' +
-    // stack, behind the sleeper
-    '<rect x="' + (x + 3) + '" y="' + (y - 8) + '" width="7" height="40" rx="3.5" ' +
-      'fill="var(--fp-outline-2)" stroke="var(--fp-ink-1)" stroke-width="2"/>' +
-    // hood first, so the cab overlaps it rather than the other way round
-    '<path d="M' + (x + 72) + ',' + (y + 44) + ' L' + (x + 100) + ',' + (y + 44) +
-      ' q8,0 8,7 L' + (x + 108) + ',' + bot + ' L' + (x + 72) + ',' + bot + ' Z" ' +
-      'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // sleeper + cab, raked into the windscreen
-    '<path d="M' + (x + 14) + ',' + bot + ' L' + (x + 14) + ',' + (y + 8) +
-      ' q0,-6 6,-6 L' + (x + 58) + ',' + (y + 2) + ' q5,0 7,5 L' + (x + 76) + ',' + (y + 44) +
-      ' L' + (x + 76) + ',' + bot + ' Z" ' +
-      'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // windscreen, on the same rake as the nose
-    '<path d="M' + (x + 60) + ',' + (y + 10) + ' q3,0 4,3 L' + (x + 72) + ',' + (y + 38) +
-      ' L' + (x + 60) + ',' + (y + 38) + ' Z" ' +
-      'fill="var(--fp-surface-1b)" stroke="var(--fp-outline-2)" stroke-width="1.5"/>' +
-    // side glass
-    '<rect x="' + (x + 23) + '" y="' + (y + 11) + '" width="29" height="19" rx="3" ' +
-      'fill="var(--fp-surface-1b)" stroke="var(--fp-outline-2)" stroke-width="1.5"/>' +
-    // grille
-    '<rect x="' + (x + 95) + '" y="' + (y + 50) + '" width="13" height="13" rx="2.5" fill="var(--fp-outline-2)"/>' +
-    sp2Wheels(x + 28, 2) + sp2Wheels(x + 92, 1) +
+    im('stack', 0, 12, 30.884, 104.03) +
+    im('cab', 6.5, 28.25, 174.746, 123.491) +
+    '<rect x="' + (x + 6.5) + '" y="119.28" width="102.404" height="24.382" rx="2" fill="' + TK.frame + '"/>' +
+    '<rect x="' + (x + 6.5) + '" y="129.69" width="95.903" height="31.968" rx="4" fill="' + TK.shell + '"/>' +
+    '<rect x="' + (x + 20.2) + '" y="127.41" width="4.567" height="36.534" rx="1" fill="' + TK.divider + '"/>' +
+    '<rect x="' + (x + 52.17) + '" y="127.41" width="4.567" height="36.534" rx="1" fill="' + TK.divider + '"/>' +
+    '<rect x="' + (x + 84.14) + '" y="127.41" width="4.567" height="36.534" rx="1" fill="' + TK.divider + '"/>' +
+    im('windshield', 52.01, 39.31, 43.075, 36.892) +
+    '<rect x="' + (x + 91.03) + '" y="44.51" width="9.753" height="24.382" rx="2" fill="' + TK.dark + '"/>' +
+    im('mirror-arm', 94.28, 64.83, 9.753, 13.004) +
+    '<rect x="' + (x + 52.01) + '" y="88.4" width="17.88" height="6.502" rx="3" fill="' + TK.dark + '"/>' +
+    im('headlight', 157.67, 107.9, 19.506, 11.378) +
+    im('bumper', 156, 121, 28.762, 19) +
+    im('wheel-tractor', 113.85, 124.07, 46.458, 46.458) +
   '</g>';
 }
 
-// A tank wagon carries its tank on the same chassis as the cab; a transport
-// pulls it on a trailer. Same drawing either way, different gap.
 function sp2RigArt(k) {
   var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
   var trl = d.trailer ? SP2_TRAILERS[d.trailer] : null;
-  var uid = (k + '-' + d.truck + (d.trailer || '')).replace(/[^a-z0-9]/gi, '');
-  var pad = 8, x = pad, parts = '', tags = '';
+  var uid = (k + d.truck + (d.trailer || '')).replace(/[^a-z0-9]/gi, '');
+  var x = TK.tankX, tanks = '', tags = '';
 
-  // drawn rear-to-front, because the tractor is at the right
+  // drawn rear to front, because the tractor is at the nose
   if (trl) {
     var p = sp2TankSvg(x, trl.caps, d.tload, k, 'trailer', uid + 'b');
-    parts += p.svg + sp2Wheels(x + 30, 2);
-    tags += '<text x="' + (x + p.w / 2) + '" y="' + (TK.H - 2) + '" class="sp2-sv-tag">' + d.trailer + ' · ' + trl.type + '</text>';
-    x += p.w;
-    parts += '<rect x="' + x + '" y="' + (TK.chassisY - 4) + '" width="22" height="6" rx="3" fill="var(--fp-ink-1)"/>';
-    x += 22;
+    tanks += p.svg;
+    tags += '<text x="' + (x + p.w / 2) + '" y="' + (TK.H - 4) + '" class="sp2-sv-tag">' +
+            d.trailer + ' · ' + trl.type + '</text>';
+    x += p.w + 26;
   }
   var m = sp2TankSvg(x, t.comps.map(function (c) { return c.cap; }), d.load, k, 'truck', uid + 'a');
-  parts += m.svg + sp2Wheels(x + 30, 2);
-  tags += '<text x="' + (x + m.w / 2) + '" y="' + (TK.H - 2) + '" class="sp2-sv-tag">' + d.truck + ' · ' + t.type + '</text>';
-  var chassisFrom = pad, chassisTo = x + m.w + 6;
-  x += m.w + 6;
-  parts += sp2Tractor(x);
-  var W = x + 116 + pad;
+  tanks += m.svg;
+  tags += '<text x="' + (x + m.w / 2) + '" y="' + (TK.H - 4) + '" class="sp2-sv-tag">' +
+          d.truck + ' · ' + t.type + '</text>';
+
+  var right = x + m.w;                       // where the tank ends
+  var tractorX = right + 12;
+  var W = tractorX + 186;
+  var chassis =
+    '<rect x="0" y="' + TK.chassisY + '" width="' + (right + 12) + '" height="12" rx="3" fill="' + TK.frame + '"/>' +
+    // the brackets the bogies hang from
+    '<rect x="14" y="' + (TK.chassisY + 10) + '" width="112" height="22" rx="3" fill="' + TK.frame + '"/>' +
+    '<rect x="' + (right - 124) + '" y="' + (TK.chassisY + 10) + '" width="112" height="22" rx="3" fill="' + TK.frame + '"/>' +
+    '<rect x="134" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>' +
+    '<rect x="' + (right - 135) + '" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>';
+  var wheels = sp2Wheel(45.5) + sp2Wheel(100.5) + sp2Wheel(right - 89) + sp2Wheel(right - 34);
 
   return '<div class="sp2-rig" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
       'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')">' +
-    '<svg class="sp2-sv" width="' + W + '" height="' + TK.H + '" viewBox="0 0 ' + W + ' ' + TK.H + '">' +
-      '<rect x="' + chassisFrom + '" y="' + TK.chassisY + '" width="' + (chassisTo - chassisFrom) +
-        '" height="' + TK.chassisH + '" rx="2" fill="var(--fp-ink-1)"/>' +
-      parts + tags +
+    '<svg class="sp2-sv" width="' + Math.round(W * TK.scale) + '" height="' + Math.round(TK.H * TK.scale) +
+      '" viewBox="0 0 ' + W + ' ' + TK.H + '">' +
+      chassis +
+      '<image href="' + TRUCK_ART['kingpin'] + '" x="' + (right - 18) + '" y="119.5" width="54" height="10"/>' +
+      wheels + tanks + tags + sp2Tractor(tractorX) +
     '</svg>' +
     '<div class="sp2-drop-hint">Drop the order here to load it</div>' +
   '</div>';

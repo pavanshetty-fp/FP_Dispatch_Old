@@ -435,18 +435,23 @@
       const svg = document.querySelector('.sp2-sv');
       // tank, fuel, domes, wheels, chassis and a tractor — the parts that make
       // it read as a truck rather than a bar chart
-      if (svg.querySelectorAll('circle').length < 6) throw new Error('fewer than three wheels (two circles each)');
+      // four bogie wheels, three concentric circles each, as the design draws them
+      if (svg.querySelectorAll('circle').length < 12) throw new Error('fewer than four wheels');
       if (!svg.querySelector('clipPath')) throw new Error('the tank does not clip its fuel');
-      if (!svg.querySelector('linearGradient')) throw new Error('the shell has no metal on it');
+      // the tractor is the design's own artwork, not something redrawn by hand
+      const art = [...svg.querySelectorAll('image')];
+      if (art.length < 8) throw new Error('only ' + art.length + ' pieces of the design artwork are used');
+      if (art.some(i => !/^data:image\/svg\+xml;base64,/.test(i.getAttribute('href'))))
+        throw new Error('an asset is not inlined — it would break the single file');
       if (!svg.querySelector('.sp2-sv-tag')) throw new Error('the tank is not named');
       const k = document.querySelector('.sp2-ln.on').dataset.k;
       const n = SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.length +
                 (SP2_DRIVERS[k].trailer ? SP2_TRAILERS[SP2_DRIVERS[k].trailer].caps.length : 0);
-      if (svg.querySelectorAll('.sp2-sv-strip').length !== n)
+      if (svg.querySelectorAll('.sp2-sv-p').length !== n)
         throw new Error('compartments drawn do not match the rig');
-      // a wave, not a flat lid: the surface path has to curve
+      // a wave, not a flat lid — the design's surface is a cubic
       const liq = [...svg.querySelectorAll('.sp2-sv-liq')];
-      if (liq.length && !/q/.test(liq[0].getAttribute('d')))
+      if (liq.length && !/[CcQq]/.test(liq[0].getAttribute('d')))
         throw new Error('the fuel surface is flat');
     });
     step('the fuel stands at the level it says', () => {
@@ -476,11 +481,11 @@
     step('the drawing survives a trailer', () => {
       const k = document.querySelector('.sp2-ln.on').dataset.k;
       const had = SP2_DRIVERS[k].trailer;
-      const before = document.querySelector('.sp2-sv').querySelectorAll('.sp2-sv-strip').length;
+      const before = document.querySelector('.sp2-sv').querySelectorAll('.sp2-sv-p').length;
       sp2AddTrailer('TR-660', k);
       const svg = document.querySelector('.sp2-sv');
       if (!svg) throw new Error('the tanker vanished when a trailer was hitched');
-      if (svg.querySelectorAll('.sp2-sv-strip').length !== before + SP2_TRAILERS['TR-660'].caps.length)
+      if (svg.querySelectorAll('.sp2-sv-p').length !== before + SP2_TRAILERS['TR-660'].caps.length)
         throw new Error('the trailer compartments were not drawn');
       if (svg.querySelectorAll('clipPath').length < 2) throw new Error('the two tanks share one clip');
       if (!had) sp2DropTrailer(k); else sp2AddTrailer(had, k);
