@@ -444,6 +444,12 @@
       if (art.some(i => !/^data:image\/svg\+xml;base64,/.test(i.getAttribute('href'))))
         throw new Error('an asset is not inlined — it would break the single file');
       if (!svg.querySelector('.sp2-sv-tag')) throw new Error('the tank is not named');
+      // centred in the lane: equal air either side, or flush when it runs long
+      const box = svg.closest('.sp2-rig');
+      const left = svg.getBoundingClientRect().left - box.getBoundingClientRect().left;
+      const slack = box.clientWidth - svg.getBoundingClientRect().width;
+      if (slack > 2 && Math.abs(left - slack / 2) > 2)
+        throw new Error('the rig sits ' + Math.round(left) + 'px in, not centred in ' + Math.round(slack) + 'px of slack');
       const k = document.querySelector('.sp2-ln.on').dataset.k;
       const n = SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.length +
                 (SP2_DRIVERS[k].trailer ? SP2_TRAILERS[SP2_DRIVERS[k].trailer].caps.length : 0);

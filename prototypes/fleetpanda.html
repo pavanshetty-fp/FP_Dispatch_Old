@@ -1189,10 +1189,12 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 /* ── the tanker, drawn ────────────────────────────────────
    Natural size, scrolled rather than scaled, so a compartment's numbers stay
    the same size whatever truck is under them. */
-#scr-plan .sp2-rig{position:relative;margin-top:10px;overflow-x:auto;padding-bottom:2px;}
+/* centred when it is narrower than the lane; `safe` so a long rig still
+   starts at its nose instead of being clipped on the left */
+#scr-plan .sp2-rig{position:relative;margin-top:10px;overflow-x:auto;padding-bottom:2px;display:flex;justify-content:center;justify-content:safe center;}
 #scr-plan .sp2-rig::-webkit-scrollbar{height:7px;}
 #scr-plan .sp2-rig::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:4px;}
-#scr-plan .sp2-sv{display:block;}
+#scr-plan .sp2-sv{display:block;flex:none;}
 /* Type inside the drawing is in DESIGN units and renders at TK.scale, so these
    are the rendered sizes divided by 0.68. All of it is the design's dark ink:
    a status colour would have to sit on whatever fuel is behind it. */
@@ -5141,14 +5143,19 @@ function sp2Wheel(cx) {
 // Widths come from the space available, so the rig spans the lane instead of
 // sitting small in the corner of it. Capacity still sets the proportion; the
 // floor keeps a compartment at roughly the shape the design drew.
-var TK_MIN_W = 100, TK_GAP = 18, TK_TRACTOR = 185, TK_OVERHANG = 24;
+// The ceiling is twice the compartment the design draws. Past that a tank
+// stops reading as a tank and becomes a stretched bar, so a wide lane keeps
+// the slack and the rig sits centred in it instead.
+var TK_MIN_W = 100, TK_MAX_W = 214, TK_GAP = 18, TK_TRACTOR = 185, TK_OVERHANG = 24;
 
 function sp2RigWidths(caps, availUnits, nUnits) {
   var total = caps.reduce(function (a, c) { return a + c; }, 0);
   var budget = availUnits - nUnits * TK_OVERHANG - TK_TRACTOR - (nUnits > 1 ? TK_GAP : 0);
-  var w = caps.map(function (c) { return Math.max(TK_MIN_W, Math.round(budget * c / total)); });
-  // if the floors overshot the budget the rig simply runs long and scrolls
-  return w;
+  // if the floors overshoot the budget the rig runs long and scrolls; if the
+  // ceiling bites, it comes up short of the lane and centres
+  return caps.map(function (c) {
+    return Math.min(TK_MAX_W, Math.max(TK_MIN_W, Math.round(budget * c / total)));
+  });
 }
 
 // One tank: shell, fuel, dividers, labels — however many compartments it has.
