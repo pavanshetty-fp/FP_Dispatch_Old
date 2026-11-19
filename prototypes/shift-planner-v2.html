@@ -27,8 +27,8 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
 /* ── Two columns ──────────────────────────────────────────── */
 .sp2-body{flex:1;display:flex;overflow:hidden;min-height:0;}
 .sp2-col{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.sp2-col-orders{flex:1;border-right:1px solid rgba(255,255,255,0.1);}
-.sp2-col-unit{width:clamp(400px,31%,520px);flex-shrink:0;background:rgba(0,0,0,0.12);}
+.sp2-col-orders{flex:0 0 40%;border-right:1px solid rgba(255,255,255,0.1);}
+.sp2-col-unit{flex:1 1 60%;background:rgba(0,0,0,0.12);}
 
 .sp2-col-hdr{min-height:46px;display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;flex-wrap:wrap;}
 .sp2-col-title{font-size:12.5px;font-weight:600;color:#fff;letter-spacing:0.3px;white-space:nowrap;}
@@ -86,7 +86,10 @@ body{font-family:'Montserrat',sans-serif;background:#0f131a;color:#e9ebf0;height
 .sp2-empty{padding:40px 16px;text-align:center;font-size:12px;color:#5a6472;}
 
 /* ── Column 2 ─────────────────────────────────────────────── */
-.sp2-sec{border-bottom:1px solid rgba(255,255,255,0.08);padding:13px 16px;}
+.sp2-unit-row{display:flex;align-items:flex-start;min-height:100%;}
+.sp2-sec{padding:13px 16px;min-width:0;}
+.sp2-sec-drv{flex:0 0 clamp(300px,37%,392px);border-right:1px solid rgba(255,255,255,0.08);align-self:stretch;}
+.sp2-sec-trk{flex:1;min-width:0;}
 .sp2-sec-lbl{font-size:10px;font-weight:700;color:#5a6472;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:9px;display:flex;align-items:center;gap:8px;}
 .sp2-sec-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
 
@@ -419,12 +422,13 @@ function sp2RenderUnit() {
   var host = document.getElementById('sp2Unit');
   if (!d) { host.innerHTML = '<div class="sp2-none">Pick a driver to see their truck.</div>'; return; }
 
+
   var s = SP2_SHIFTS[d.shift];
   var stateWord = d.state === 'driving' ? 'Driving' : d.state === 'on-duty' ? 'On duty' : 'Off duty';
   var mine = SP2_ORDERS.filter(function(o){ return o.driver === sp2Driver; });
   var gal = mine.reduce(function(a,o){ return a + sp2Gal(o); }, 0);
 
-  var drv = '<div class="sp2-sec">' +
+  var drv = '<div class="sp2-sec sp2-sec-drv">' +
       '<div class="sp2-sec-lbl">Driver</div>' +
       '<div class="sp2-drv">' +
         '<div class="sp2-drv-top">' +
@@ -447,7 +451,8 @@ function sp2RenderUnit() {
     '</div>';
 
   var t = SP2_TRUCKS[d.truck];
-  if (!t) return host.innerHTML = drv + '<div class="sp2-none">No truck mapped to this driver.</div>';
+  if (!t) return host.innerHTML = '<div class="sp2-unit-row">' + drv +
+    '<div class="sp2-sec sp2-sec-trk"><div class="sp2-none">No truck mapped to this driver.</div></div></div>';
 
   var totalCap = t.comps.reduce(function(a,c){ return a+c.cap; }, 0);
   var onboard  = d.load.reduce(function(a,l){ return a+l.q; }, 0);
@@ -477,8 +482,8 @@ function sp2RenderUnit() {
       '</div>';
   }).join('');
 
-  host.innerHTML = drv +
-    '<div class="sp2-sec" style="border-bottom:none;">' +
+  host.innerHTML = '<div class="sp2-unit-row">' + drv +
+    '<div class="sp2-sec sp2-sec-trk">' +
       '<div class="sp2-sec-lbl">Truck &amp; compartments</div>' +
       '<div class="sp2-truck">' +
         '<div class="sp2-truck-top">' +
@@ -493,7 +498,8 @@ function sp2RenderUnit() {
         '</div>' +
         '<div class="sp2-comps">' + comps + '</div>' +
       '</div>' +
-    '</div>';
+    '</div>' +
+  '</div>';
 }
 
 function sp2PickDriver(k) {

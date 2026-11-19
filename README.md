@@ -30,17 +30,17 @@ the new design yet.
 
 ## The shift planner
 
-Two columns under a header that carries the date.
+Two columns under a header that carries the date, split 40 / 60.
 
 - **Orders** on a horizontally scrollable timeline, laid out by planned time and
   packed into lanes so they never overlap. Each card carries the order number,
   ship-to and address, products and quantities, order type and whether it is
   planned. Quick filter: all · unplanned · planned. Shift range: AM · PM ·
   custom, which is also the window the timeline draws.
-- **Driver and truck** beside them: the driver's card with shift, duty state and
-  when they last synced, then the truck mapped to them with every compartment —
-  what is in it, how much of its capacity that is, and whether it reads full,
-  partially full or empty.
+- **Driver and truck** take the other 60%, side by side rather than stacked: the
+  driver's card with shift, duty state and when they last synced, and beside it
+  the truck mapped to them with every compartment — what is in it, how much of
+  its capacity that is, and whether it reads full, partially full or empty.
 
 Clicking an order follows it to the driver it is planned on; an unplanned one
 says so instead.
