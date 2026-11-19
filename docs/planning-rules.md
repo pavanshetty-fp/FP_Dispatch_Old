@@ -5,10 +5,12 @@
 > build against when we come back to it.
 >
 > **Sources already in hand:** `FP-DS-2026/docs/context/fuel-supply-and-sourcing.md`
-> (products, blends, branded, comparable), `assets-tanks-and-leases.md` (tank
-> monitors), `customers-and-sites.md` (the existing LOS words),
-> `DS Claude 2026/docs/plan-load-rules.md` (packing, truck ranking, mismatch
-> handling), `truck-types.md` (classes, weight, switch-loading).
+> (products, blends, branded, comparable, **Best Buy and sourcing**),
+> `assets-tanks-and-leases.md` (tank monitors), `customers-and-sites.md` (the
+> existing LOS words), `DS Claude 2026/docs/plan-load-rules.md` (packing, truck
+> ranking, mismatch handling, **R10 Best Buy, R11 supply data model**),
+> `truck-types.md` (classes, weight, switch-loading),
+> `fuel-supply-sourcing-model.md` (the ERD under it all).
 
 ---
 
@@ -137,7 +139,121 @@ Relevant because tank wagon delivers into assets that may or may not have one.
 
 ---
 
-## 4. Validations
+## 4. Best Buy — where the fuel is bought
+
+### What it is
+A **daily sourcing directive from pricing**, produced **upstream of dispatch** and
+**not automated**. Per product it names a **preferred source** among
+**contract · spot · bulk plant**, as up to **three ranked choices**. The dispatcher
+consumes it; they do not make the buying call.
+
+### The yardstick is total landed cost, not price
+**TLC = base + freight**, and freight (source → route) is **always** included.
+Base is the contract price (OPIS index + spread), the spot price, or the bulk
+plant's cost basis — so all three compare on one number. The consequence that
+catches people: **a far terminal with cheap spot can lose to a nearer source.**
+
+### Preferred is not the same as cheapest ⚠️
+**MTQ applies to contracts only.** A contract **behind pace** can be the preferred
+source even when it is **not** the cheapest landed cost — and that "why" has to be
+explainable on screen. The rule in the live-route data: preferred = the contract
+when its MTQ is behind or at risk, otherwise the cheapest landed.
+
+MTQ states: **on pace · behind · at risk (must lift) · ahead.**
+
+### What the dispatcher actually does
+The **source arrives pre-decided**. Their act is picking **where** to load — the
+terminal or bulk plant — and the loading number. They may pick a terminal with
+**no contract at all** when spot there is cheaper net of freight.
+
+### Override, and the reason prompt
+The dispatcher may fall back to R2 / R3, or pick an unranked contract, supplier or
+spot — **always with a reason**. The reason fires on **deviating from preferred**,
+**not** on "not cheapest".
+
+Two override flows, both still to be designed: **buyer approval required**, or
+**dispatcher-is-buyer** (overrides directly, no approval).
+
+### Source preference ladder
+Split only when availability forces it:
+
+1. One terminal, one supplier fills the **whole load**
+2. Different suppliers, **same terminal**
+3. Different terminals
+4. Per-product split across sources
+
+### Balances, per loading number, per day
+| | |
+|---|---|
+| **Planned** | Load orders created, not yet completed |
+| **Lifted** | Load orders completed |
+| **Available** | **Allocation − Planned − Lifted** |
+
+- **Allocation is the ceiling, MTQ the floor** (allocation 100k → MTQ ~80–85k).
+- Allocation is **company-level and shared** — every dispatcher draws down one pool.
+  The dispatcher works to **today's** figure; the buyer watches all horizons.
+- **Confirm-to-commit:** selecting a source reserves nothing. Confirming the load
+  order moves gallons into Planned; completion moves Planned → Lifted.
+- **Over-allocation:** Plan exceeds Allocation → warn → "request more allocation for
+  today" → buyer notified. Approve raises it. **Reject disables that loading number
+  and the ranks shift up** (R2 → R1).
+- The dispatcher sees the **must lift** tag, never the MTQ horizon numbers.
+
+### Loading number vs loading account — two different things ⚠️
+Same area, two vocabularies, and they are not interchangeable:
+
+| | **Loading number** | **Loading account** |
+|---|---|---|
+| Where | Planning prototype | 3PL + Master Data |
+| What | Dispatcher-assigned key for driver ↔ supplier validation | Alphanumeric account tying a terminal, a supplier and the products loadable on it |
+| Scope | **One supplier**, never shared across suppliers; contract-only (spot has none) | Belongs to a terminal **and** a supplier |
+| Ranked? | Yes — buyer ranks R1 / R2 / R3 ("Exxon 1234") | No |
+| Rule | Covers one or many of that supplier's contracts | **One account serves the whole order**, so it must carry every product on it |
+
+In 3PL, Terminal and Supplier are **not free lists** — they are the distinct values
+of the loading-account table, narrowed by what is already chosen. If no account
+covers the product set, all three lists come back empty: *cannot be loaded from one
+place.* Account names are numbers (terminal code + digits), never a name.
+
+### The sourcing unit on screen
+Two designs were drawn; **only one ships**. Option 2 became the default.
+
+- **Option 1** — terminal-first source cards.
+- **Option 2** — **one table per product**. Rows are the ranked **R1 / R2 / R3**
+  followed by the unranked. Columns: **Supplier / Terminal · Type · Allocation ·
+  Planned · Available · Lifted · TLC**.
+  Tabs below the ranked rows: **Contracts · Spots · Bulk plants** — spots show TLC
+  only; bulk plants show available, lifted and TLC but no allocation or planned.
+- **Show every contract**, not just the top three.
+
+Known trade-offs carried forward: the tables get long for a multi-product load;
+"one terminal fills the whole load" is harder to see in a per-product layout; and
+**terminal off-route freight is not shown beside TLC** even though TLC depends on it.
+
+### Bulk plant is a first-class source
+Tenant-owned storage, fuel bought at a good rack moment. Its **cost basis** makes it
+compare fairly against contract and spot. Often co-located with a hub; replenished
+by transports, drawn by tank wagons. A load order — or **one product within it** —
+can load at the bulk plant.
+
+### What our prototype has, and what it is missing
+Create order step 3 has three terminals, one supplier each, rack price per product,
+and two modes: *Cheapest per product* and *All at one terminal*.
+
+| Spec'd | In our prototype |
+|---|---|
+| TLC = base + **freight** | Rack price only — no freight, so the "far terminal loses" case cannot happen |
+| Contract · spot · bulk plant | Terminal rack only |
+| Allocation / Planned / Available / Lifted | None |
+| MTQ, pace, must-lift | None |
+| Loading numbers ranked R1/R2/R3 by the buyer | None |
+| Reason on deviating from **preferred** | We prompt on **not cheapest** — the known drift (R10.9) |
+| A terminal holds several contracts from several suppliers | One supplier per terminal |
+| Four-step preference ladder | Only steps 1 and 4 |
+
+---
+
+## 5. Validations
 
 ### V1 — Line-of-service compatibility
 An order may only be load-planned onto a truck whose **LOS matches the products
@@ -168,7 +284,7 @@ The third option is the **only** one available on a Transport (§2).
 
 ---
 
-## 5. What this changes in the shift-planner prototype
+## 6. What this changes in the shift-planner prototype
 
 | Today | Should be |
 |---|---|
@@ -182,7 +298,7 @@ The third option is the **only** one available on a Transport (§2).
 
 ---
 
-## 6. Open questions
+## 7. Open questions
 
 1. ~~Which LOS vocabulary wins~~ — **settled 2026-11-19**, see §2. Still to do:
    carry the four words into `FP-DS-2026`'s context layer and prototypes, and
@@ -192,6 +308,13 @@ The third option is the **only** one available on a Transport (§2).
 4. **Propane:** splitting rules and load source not yet given.
 5. **Lubes:** how a tote and a packaged zone are represented on a rig drawing.
 6. Does the same-delivery-number split (§2) create one order or two in the data?
+7. **Best Buy:** which override flow — buyer-approval-required, or dispatcher-is-buyer?
+   Both were to be designed and shown to the customer.
+8. **Loading number vs loading account** (§4) — do the planning and 3PL models
+   converge, or stay two things?
+9. Is `Available = Allocation − Planned − Lifted`, or `Allocation − Planned`? The
+   second holds only if Planned already includes Lifted. Still unconfirmed.
+10. How the pricing directive is authored or ingested — nobody has specified it.
 
 ## Sources
 
