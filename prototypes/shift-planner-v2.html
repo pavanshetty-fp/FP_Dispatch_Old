@@ -82,7 +82,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
    clamp() and a percentage, so the transition stalls where it started. */
 .sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-card-1);}
 .sp2-body[data-view="v"] .sp2-col-orders{flex-basis:25%;}
-.sp2-body[data-view="n"] .sp2-col-orders{flex-basis:23%;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1a);}
 
 .sp2-col-hdr{min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--fp-stroke-hairline);flex-shrink:0;flex-wrap:wrap;background:var(--fp-surface-1b);}
@@ -153,9 +152,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-vcard{flex:1;min-width:0;margin-left:22px;}
 
 /* ── No timeline — the orders, in the order the day runs them ── */
-.sp2-list{padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px;}
-.sp2-lrow{display:flex;align-items:stretch;gap:10px;}
-.sp2-ltime{width:46px;flex-shrink:0;padding-top:10px;font-size:12px;color:var(--fp-ink-3);font-weight:500;font-variant-numeric:tabular-nums;}
 
 .sp2-flow .sp2-card{position:static;width:auto;height:auto;min-height:0;}
 .sp2-flow .sp2-addr{-webkit-line-clamp:1;}
@@ -441,9 +437,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <button class="sp2-seg-btn" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
             </button>
-            <button class="sp2-seg-btn" data-v="n" onclick="sp2SetView('n')" title="No timeline — ordered list">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
-            </button>
           </div>
 
           <button class="sp2-ico-btn" id="sp2FltBtn" onclick="sp2ToggleFlt(this)" title="Filter orders">
@@ -492,6 +485,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
         <span class="sp2-count" id="sp2DrvCount">0</span>
         <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
           <button class="sp2-seg-btn on" data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
+          <button class="sp2-seg-btn"    data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
           <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
           <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
           <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
@@ -595,7 +589,10 @@ var SP2_DRIVERS = {};
                           comps:spec.caps.map(function (c) { return { cap:c }; }) };
 
     // A truck that is already rolling is rarely empty; one that is off duty is.
+    // A few leave the yard loaded out, with no room left for anything else.
+    var loaded = state !== 'off-duty' && i % 7 === 3;
     var load = spec.caps.map(function (cap, c) {
+      if (loaded) return { p:SP2_PRODS[(i + c) % SP2_PRODS.length], q:cap };
       if (state === 'off-duty' || (i + c) % 3 === 0) return { p:'', q:0 };
       var p = SP2_PRODS[(i + c * 2) % SP2_PRODS.length];
       var frac = (i + c) % 4 === 1 ? 1 : ((i * 7 + c * 13) % 55 + 35) / 100;
@@ -673,7 +670,7 @@ var sp2Layout = 'v2';
 var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
 var sp2Drag = null;          // the order id being dragged
 var sp2SelOrder = null;
-var sp2View = 'h';            // h horizontal · v vertical · n no timeline
+var sp2View = 'h';            // h horizontal · v vertical
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 206;
@@ -762,15 +759,6 @@ function sp2RenderVertical(orders) {
   return '<div class="sp2-vt"><div class="sp2-vt-rail"></div>' + rows + '</div>';
 }
 
-// No axis at all: the orders in the sequence the day runs them.
-function sp2RenderList(orders) {
-  if (!orders.length) return '<div class="sp2-empty">No orders in this window — widen the shift range or clear the filter.</div>';
-  return '<div class="sp2-list">' + orders.map(function(o) {
-    return '<div class="sp2-lrow"><span class="sp2-ltime">' + sp2Hhmm(o.t) + '</span>' +
-      '<div style="flex:1;min-width:0;">' + sp2CardHtml(o) + '</div></div>';
-  }).join('') + '</div>';
-}
-
 function sp2RenderTimeline() {
   var orders = sp2Visible();
   var tl = document.getElementById('sp2Tl');
@@ -778,7 +766,7 @@ function sp2RenderTimeline() {
   if (sp2View !== 'h') {
     tl.classList.add('sp2-flow');
     tl.style.padding = '0';
-    tl.innerHTML = sp2View === 'v' ? sp2RenderVertical(orders) : sp2RenderList(orders);
+    tl.innerHTML = sp2RenderVertical(orders);
     sp2Counts();
     return;
   }
@@ -921,11 +909,21 @@ function sp2Synced(m) {
   var h = Math.round(m / 60);
   return h < 24 ? h + ' hr ago' : Math.round(h / 24) + ' days ago';
 }
+// Available is not a fourth duty state — it crosses them. A driver is
+// available when they are on the roster today and the rig still has room.
+function sp2Avail(d) {
+  if (d.state === 'off-duty') return false;
+  var a = sp2Sum(SP2_TRUCKS[d.truck].comps.map(function (c) { return c.cap; }), d.load);
+  var b = d.trailer ? sp2Sum(SP2_TRAILERS[d.trailer].caps, d.tload) : { cap:0, q:0 };
+  return (a.q + b.q) < (a.cap + b.cap);
+}
+
 function sp2DriverKeys() {
   var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
   return Object.keys(SP2_DRIVERS).filter(function (k) {
     var d = SP2_DRIVERS[k];
-    if (sp2DrvFilter !== 'all' && d.state !== sp2DrvFilter) return false;
+    if (sp2DrvFilter === 'available') { if (!sp2Avail(d)) return false; }
+    else if (sp2DrvFilter !== 'all' && d.state !== sp2DrvFilter) return false;
     if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
@@ -963,6 +961,8 @@ function sp2DrvCounts(shown) {
   var all = Object.keys(SP2_DRIVERS);
   var n = function (s) { return all.filter(function (k) { return SP2_DRIVERS[k].state === s; }).length; };
   document.getElementById('sp2dAll').textContent = all.length;
+  document.getElementById('sp2dAv').textContent =
+    all.filter(function (k) { return sp2Avail(SP2_DRIVERS[k]); }).length;
   document.getElementById('sp2dDr').textContent  = n('driving');
   document.getElementById('sp2dOn').textContent  = n('on-duty');
   document.getElementById('sp2dOff').textContent = n('off-duty');

@@ -119,27 +119,25 @@
       sp2SetShift('am');
       if (am === pm && am !== 0) throw new Error('AM and PM show the same orders');
     });
-    step('three views, and the column resizes with them', () => {
+    step('two views, and the column resizes with them', () => {
       const col = document.querySelector('.sp2-col-orders');
       // measure with the transition off — an animating property reads as the
       // value it is coming FROM, which makes every check a coin flip
       const keep = col.style.transition;
       col.style.transition = 'none';
       const seen = {};
-      ['h', 'v', 'n'].forEach(v => {
+      ['h', 'v'].forEach(v => {
         sp2SetView(v);
         void col.offsetWidth;
         seen[v] = getComputedStyle(col).flexBasis;
       });
       col.style.transition = keep;
-      if (seen.h === seen.v || seen.v === seen.n) {
-        throw new Error('column did not resize: ' + JSON.stringify(seen));
-      }
+      if (seen.h === seen.v) throw new Error('column did not resize: ' + JSON.stringify(seen));
+      if (document.querySelectorAll('[data-v]').length !== 2)
+        throw new Error('the view switch is not down to two');
       sp2SetView('v');
       if (!document.querySelector('.sp2-vt-rail')) throw new Error('vertical rail missing');
-      sp2SetView('n');
-      if (document.querySelector('.sp2-ruler')) throw new Error('no-timeline view still draws an axis');
-      if (!document.querySelectorAll('.sp2-lrow').length) throw new Error('no list rows');
+      if (document.querySelector('.sp2-ruler')) throw new Error('vertical view still draws the top axis');
       sp2SetView('h');
       if (!document.querySelector('.sp2-ruler')) throw new Error('horizontal lost its axis');
     });
@@ -199,6 +197,32 @@
         if (planned && !SP2_DRIVERS[o.driver]) throw new Error(o.id + ' points at no driver');
       });
       if (!SP2_ORDERS.some(o => !o.driver)) throw new Error('no unplanned orders left');
+    });
+    step('available crosses the duty states', () => {
+      sp2SetDrvFilter('all');
+      const all = Object.keys(SP2_DRIVERS);
+      const avail = all.filter(k => sp2Avail(SP2_DRIVERS[k]));
+      if (!avail.length) throw new Error('nobody is available');
+      if (avail.length === all.length) throw new Error('everybody is available — the filter says nothing');
+      if (avail.some(k => SP2_DRIVERS[k].state === 'off-duty'))
+        throw new Error('an off-duty driver counts as available');
+      // a rig with no room is not available, whatever the duty state
+      const k = avail[0], d = SP2_DRIVERS[k];
+      const caps = SP2_TRUCKS[d.truck].comps.map(c => c.cap);
+      const keep = JSON.parse(JSON.stringify(d.load)), hadTrl = d.trailer;
+      d.trailer = null; d.tload = [];
+      d.load = caps.map(c => ({ p:'UNL87', q:c }));
+      if (sp2Avail(d)) throw new Error('a full truck still counts as available');
+      d.load = keep; if (hadTrl) sp2AddTrailer(hadTrl, k);
+      sp2SetDrvFilter('available');
+      if (document.getElementById('sp2dAv').textContent !== String(avail.length))
+        throw new Error('the Available count does not match');
+      // the hidden layout keeps its last render, so count only the one on screen
+      const rows = sp2Layout === 'v2' ? '.sp2-ln' : '.sp2-drow';
+      if (document.querySelectorAll(rows).length !== avail.length)
+        throw new Error('the Available tab shows ' + document.querySelectorAll(rows).length +
+                        ' drivers, not ' + avail.length);
+      sp2SetDrvFilter('all');
     });
     step('the roster filters and searches', () => {
       sp2SetDrvFilter('all');
