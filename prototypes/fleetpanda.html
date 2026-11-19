@@ -5118,7 +5118,7 @@ var TRUCK_ART = {
 
 // design units; the whole thing is drawn at this scale
 var TK = { h:100, chassisY:106, chassisH:46, wheelY:124, wheelR:23.5, tankX:12,
-           H:172, scale:0.62,
+           H:172, scale:0.68,
            shell:'#E0E0DF', divider:'#878686', frame:'#303436', dark:'#242425',
            marker:'#FE8F04', hub:'#8B8A8A' };
 
@@ -5138,11 +5138,21 @@ function sp2Wheel(cx) {
          '<circle cx="' + cx + '" cy="' + (TK.wheelY + TK.wheelR) + '" r="7.5" fill="' + TK.hub + '"/>';
 }
 
-function sp2CompW(cap) { return Math.max(100, Math.round(cap / 1000 * 56)); }
+// Widths come from the space available, so the rig spans the lane instead of
+// sitting small in the corner of it. Capacity still sets the proportion; the
+// floor keeps a compartment at roughly the shape the design drew.
+var TK_MIN_W = 100, TK_GAP = 18, TK_TRACTOR = 185, TK_OVERHANG = 24;
+
+function sp2RigWidths(caps, availUnits, nUnits) {
+  var total = caps.reduce(function (a, c) { return a + c; }, 0);
+  var budget = availUnits - nUnits * TK_OVERHANG - TK_TRACTOR - (nUnits > 1 ? TK_GAP : 0);
+  var w = caps.map(function (c) { return Math.max(TK_MIN_W, Math.round(budget * c / total)); });
+  // if the floors overshot the budget the rig simply runs long and scrolls
+  return w;
+}
 
 // One tank: shell, fuel, dividers, labels — however many compartments it has.
-function sp2TankSvg(x, caps, load, k, unit, uid) {
-  var widths = caps.map(sp2CompW);
+function sp2TankSvg(x, caps, widths, load, k, unit, uid) {
   var tw = widths.reduce(function (a, b) { return a + b; }, 0);
   var h = TK.h, clip = 'ck' + uid;
   var fuel = '', dividers = '', labels = '', hits = '', cx = x;
@@ -5161,8 +5171,8 @@ function sp2TankSvg(x, caps, load, k, unit, uid) {
           'd="' + sp2Wave(w, h * (1 - pct / 100), h) + '" fill="' + col + '"/></g>';
     } else {
       // the design marks an empty compartment with a dashed line at the floor
-      fuel += '<line x1="' + (cx + 6) + '" y1="' + (h - 5) + '" x2="' + (cx + w - 6) + '" y2="' + (h - 5) +
-              '" stroke="' + TK.divider + '" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.8"/>';
+      fuel += '<line x1="' + (cx + 8) + '" y1="' + (h - 6) + '" x2="' + (cx + w - 8) + '" y2="' + (h - 6) +
+              '" stroke="' + TK.divider + '" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.85"/>';
     }
     if (i) dividers += '<rect x="' + (cx - 1) + '" y="0" width="2" height="' + h + '" fill="' + TK.divider + '"/>';
     labels +=
@@ -5177,13 +5187,36 @@ function sp2TankSvg(x, caps, load, k, unit, uid) {
     cx += w;
   });
 
-  return { w: tw, svg:
-    '<defs><clipPath id="' + clip + '">' +
+  return '<defs><clipPath id="' + clip + '">' +
       '<rect x="' + x + '" y="0" width="' + tw + '" height="' + h + '" rx="34"/>' +
     '</clipPath></defs>' +
     '<rect x="' + x + '" y="0" width="' + tw + '" height="' + h + '" rx="34" fill="' + TK.shell + '"/>' +
     '<g clip-path="url(#' + clip + ')">' + fuel + dividers + '</g>' +
-    labels + hits };
+    labels + hits;
+}
+
+// A trailer is its own vehicle in the design — own chassis, own two bogies, own
+// markers — so a hitched one is drawn as a second unit rather than as a second
+// tank hanging off the truck's frame.
+function sp2Unit(x0, caps, widths, load, k, unitKey, uid, label) {
+  var tw = widths.reduce(function (a, b) { return a + b; }, 0);
+  var uw = tw + TK_OVERHANG;
+  var wheelsAt = [x0 + 45.5, x0 + 100.5, x0 + uw - 100.5, x0 + uw - 45.5];
+  var arches = wheelsAt.map(function (cx) {
+    // the fender arch the chassis carries over each wheel
+    return '<path d="M' + (cx - 25.5) + ',' + (TK.wheelY + TK.wheelR) + 'a25.5,25.5 0 0 1 51,0" ' +
+           'fill="none" stroke="' + TK.frame + '" stroke-width="2"/>';
+  }).join('');
+  return '<g>' +
+      '<rect x="' + x0 + '" y="' + TK.chassisY + '" width="' + uw + '" height="12" rx="3" fill="' + TK.frame + '"/>' +
+      '<rect x="' + (x0 + 14) + '" y="' + (TK.chassisY + 10) + '" width="112" height="18" rx="3" fill="' + TK.frame + '"/>' +
+      '<rect x="' + (x0 + uw - 126) + '" y="' + (TK.chassisY + 10) + '" width="112" height="18" rx="3" fill="' + TK.frame + '"/>' +
+      '<rect x="' + (x0 + 134) + '" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>' +
+      '<rect x="' + (x0 + uw - 147) + '" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>' +
+      arches + wheelsAt.map(sp2Wheel).join('') +
+      sp2TankSvg(x0 + 12, caps, widths, load, k, unitKey, uid) +
+      '<text x="' + (x0 + uw / 2) + '" y="' + (TK.H - 4) + '" class="sp2-sv-tag">' + label + '</text>' +
+    '</g>';
 }
 
 // The tractor, from the design: stack, cab, windscreen, mirror, steps, lamp,
@@ -5211,48 +5244,60 @@ function sp2Tractor(x) {
   '</g>';
 }
 
-function sp2RigArt(k) {
+function sp2RigSvg(k, availPx) {
   var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
   var trl = d.trailer ? SP2_TRAILERS[d.trailer] : null;
   var uid = (k + d.truck + (d.trailer || '')).replace(/[^a-z0-9]/gi, '');
-  var x = TK.tankX, tanks = '', tags = '';
+  var truckCaps = t.comps.map(function (c) { return c.cap; });
+  var trlCaps = trl ? trl.caps : [];
+  var nUnits = trl ? 2 : 1;
 
-  // drawn rear to front, because the tractor is at the nose
+  var all = trlCaps.concat(truckCaps);
+  var w = sp2RigWidths(all, availPx / TK.scale, nUnits);
+  var trlW = w.slice(0, trlCaps.length), truckW = w.slice(trlCaps.length);
+
+  var x = 0, body = '';
   if (trl) {
-    var p = sp2TankSvg(x, trl.caps, d.tload, k, 'trailer', uid + 'b');
-    tanks += p.svg;
-    tags += '<text x="' + (x + p.w / 2) + '" y="' + (TK.H - 4) + '" class="sp2-sv-tag">' +
-            d.trailer + ' · ' + trl.type + '</text>';
-    x += p.w + 26;
+    body += sp2Unit(x, trlCaps, trlW, d.tload, k, 'trailer', uid + 'b',
+                    d.trailer + ' · ' + trl.type);
+    x += trlW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG + TK_GAP;
   }
-  var m = sp2TankSvg(x, t.comps.map(function (c) { return c.cap; }), d.load, k, 'truck', uid + 'a');
-  tanks += m.svg;
-  tags += '<text x="' + (x + m.w / 2) + '" y="' + (TK.H - 4) + '" class="sp2-sv-tag">' +
-          d.truck + ' · ' + t.type + '</text>';
+  body += sp2Unit(x, truckCaps, truckW, d.load, k, 'truck', uid + 'a',
+                  d.truck + ' · ' + t.type);
+  var unitEnd = x + truckW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG;
+  var W = unitEnd + TK_TRACTOR;
 
-  var right = x + m.w;                       // where the tank ends
-  var tractorX = right + 12;
-  var W = tractorX + 186;
-  var chassis =
-    '<rect x="0" y="' + TK.chassisY + '" width="' + (right + 12) + '" height="12" rx="3" fill="' + TK.frame + '"/>' +
-    // the brackets the bogies hang from
-    '<rect x="14" y="' + (TK.chassisY + 10) + '" width="112" height="22" rx="3" fill="' + TK.frame + '"/>' +
-    '<rect x="' + (right - 124) + '" y="' + (TK.chassisY + 10) + '" width="112" height="22" rx="3" fill="' + TK.frame + '"/>' +
-    '<rect x="134" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>' +
-    '<rect x="' + (right - 135) + '" y="109" width="13" height="6" rx="2" fill="' + TK.marker + '"/>';
-  var wheels = sp2Wheel(45.5) + sp2Wheel(100.5) + sp2Wheel(right - 89) + sp2Wheel(right - 34);
-
-  return '<div class="sp2-rig" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-      'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')">' +
-    '<svg class="sp2-sv" width="' + Math.round(W * TK.scale) + '" height="' + Math.round(TK.H * TK.scale) +
+  return '<svg class="sp2-sv" width="' + Math.round(W * TK.scale) + '" height="' + Math.round(TK.H * TK.scale) +
       '" viewBox="0 0 ' + W + ' ' + TK.H + '">' +
-      chassis +
-      '<image href="' + TRUCK_ART['kingpin'] + '" x="' + (right - 18) + '" y="119.5" width="54" height="10"/>' +
-      wheels + tanks + tags + sp2Tractor(tractorX) +
-    '</svg>' +
+      '<image href="' + TRUCK_ART['kingpin'] + '" x="' + (unitEnd - 30) + '" y="119.5" width="54" height="10"/>' +
+      body + sp2Tractor(unitEnd) +
+    '</svg>';
+}
+
+function sp2RigArt(k) {
+  return '<div class="sp2-rig" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+      'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')" data-k="' + k + '">' +
+    sp2RigSvg(k, 640) +
     '<div class="sp2-drop-hint">Drop the order here to load it</div>' +
   '</div>';
 }
+
+// The first render cannot know how wide the lane is, so redraw once it does —
+// and again whenever the window changes it.
+function sp2FitRig() {
+  var box = document.querySelector('.sp2-rig');
+  if (!box) return;
+  var avail = box.clientWidth;
+  if (!avail || !SP2_DRIVERS[box.dataset.k]) return;
+  var svg = box.querySelector('.sp2-sv');
+  if (svg && Math.abs(+svg.getAttribute('width') - avail) < 2) return;
+  box.insertAdjacentHTML('afterbegin', sp2RigSvg(box.dataset.k, avail));
+  if (svg) svg.remove();
+}
+window.addEventListener('resize', function () {
+  clearTimeout(window._sp2fit);
+  window._sp2fit = setTimeout(sp2FitRig, 120);
+});
 
 // Every other lane: plain rectangles, filled to the level. No cab, no wheels —
 // enough to see who has room, and nothing more.
@@ -5350,6 +5395,7 @@ function sp2RenderLanes() {
         SP2_ORDERS.filter(function (o) { return !sp2Planned(o); }).length + ' unplanned</span>' +
     '</div>' +
     keys.map(sp2LaneHtml).join('');
+  sp2FitRig();
 }
 
 function sp2RenderUnit() {
