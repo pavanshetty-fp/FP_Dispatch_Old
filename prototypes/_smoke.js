@@ -147,25 +147,160 @@
       const w = document.getElementById('sp2TlWrap');
       if (w.scrollWidth <= w.clientWidth) throw new Error('nothing to scroll');
     });
+    step('both filters sit behind the icon', () => {
+      const hdr = document.querySelector('.sp2-col-orders .sp2-col-hdr');
+      if (hdr.querySelector('[data-q]') || hdr.querySelector('[data-s]'))
+        throw new Error('a filter is still loose in the header');
+      if (!hdr.querySelector('[data-v]')) throw new Error('view switch left the header');
+      const pop = document.getElementById('sp2Flt');
+      if (pop.classList.contains('on')) throw new Error('filters start open');
+      sp2ToggleFlt(document.getElementById('sp2FltBtn'));
+      if (!pop.classList.contains('on')) throw new Error('filters did not open');
+      if (!pop.querySelector('[data-q]') || !pop.querySelector('[data-s]'))
+        throw new Error('status or shift missing from the popover');
+      const r = pop.getBoundingClientRect();
+      if (r.right > innerWidth + 1 || r.bottom > innerHeight + 1 || r.left < 0)
+        throw new Error('popover lands off screen');
+      pop.classList.remove('on');
+    });
+    step('the filter icon says when it is filtering', () => {
+      const dot = document.getElementById('sp2FltDot');
+      sp2SetQuick('all'); sp2SetShift('am');
+      if (getComputedStyle(dot).display !== 'none') throw new Error('dot shows with no filter on');
+      sp2SetQuick('unplanned');
+      if (getComputedStyle(dot).display === 'none') throw new Error('dot missing while filtering');
+      sp2ResetFlt();
+      if (getComputedStyle(dot).display !== 'none') throw new Error('reset left the dot on');
+    });
     step('an order follows to its driver', () => {
       const card = [...document.querySelectorAll('.sp2-card.planned')][0];
       if (!card) throw new Error('no planned order to click');
       card.click();
       if (!document.querySelector('.sp2-card.sel')) throw new Error('selection not shown');
-      if (!document.querySelector('.sp2-drv-name').textContent.trim()) throw new Error('no driver card');
+      const row = document.querySelector('.sp2-drow.on .sp2-drow-name');
+      if (!row || !row.textContent.trim()) throw new Error('driver not opened in the roster');
     });
-    step('compartments report their state', () => {
-      const comps = [...document.querySelectorAll('.sp2-comp')];
-      if (!comps.length) throw new Error('no compartments');
-      const words = comps.map(c => c.querySelector('.sp2-comp-word').textContent);
-      const ok = words.every(w => ['Full','Partially full','Empty'].indexOf(w) >= 0);
-      if (!ok) throw new Error('unexpected compartment state: ' + words.join(','));
+    step('ten drivers in each state', () => {
+      const keys = Object.keys(SP2_DRIVERS);
+      ['driving', 'on-duty', 'off-duty'].forEach(s => {
+        const n = keys.filter(k => SP2_DRIVERS[k].state === s).length;
+        if (n < 10) throw new Error(s + ' has only ' + n + ' drivers');
+      });
+      // a planned order carries a driver, an unplanned one does not
+      SP2_ORDERS.forEach(o => {
+        const planned = !!o.driver;
+        if (planned && !SP2_DRIVERS[o.driver]) throw new Error(o.id + ' points at no driver');
+      });
+      if (!SP2_ORDERS.some(o => !o.driver)) throw new Error('no unplanned orders left');
+    });
+    step('the roster filters and searches', () => {
+      sp2SetDrvFilter('all');
+      const all = document.querySelectorAll('.sp2-drow').length;
+      sp2SetDrvFilter('off-duty');
+      const off = document.querySelectorAll('.sp2-drow').length;
+      if (off >= all || off < 10) throw new Error('state filter did nothing: ' + off + '/' + all);
+      sp2SetDrvFilter('all');
+      const box = document.getElementById('sp2DrvSearch');
+      box.value = SP2_DRIVERS.d0.name.split(' ')[0];
+      sp2RenderDrivers();
+      if (document.querySelectorAll('.sp2-drow').length !== 1) throw new Error('search did not narrow to one');
+      box.value = ''; sp2RenderDrivers();
+    });
+    step('the rig is drawn, not listed', () => {
+      sp2PickDriver('d0');
+      if (!document.querySelector('.sp2-cab')) throw new Error('no cab');
+      if (!document.querySelector('.sp2-tank')) throw new Error('no tank');
+      if (document.querySelectorAll('.sp2-wheel').length < 3) throw new Error('fewer than three wheels');
+      const caps = SP2_TRUCKS[SP2_DRIVERS.d0.truck].comps.length;
+      if (document.querySelectorAll('.sp2-cmp').length !== caps)
+        throw new Error('compartments drawn do not match the truck');
+      // wide compartments and narrow ones are drawn to scale
+      const cmps = [...document.querySelectorAll('.sp2-cmp')];
+      const widest = Math.max(...cmps.map(c => c.getBoundingClientRect().width));
+      const narrow = Math.min(...cmps.map(c => c.getBoundingClientRect().width));
+      if (widest <= narrow) throw new Error('every compartment drawn the same width');
+    });
+    step('compartments report fill and state', () => {
+      const cmps = [...document.querySelectorAll('.sp2-cmp')];
+      if (!cmps.length) throw new Error('no compartments');
+      cmps.forEach(c => {
+        const s = c.querySelector('.sp2-cmp-s').textContent;
+        if (!/^\d+% · (Full|Partially full|Empty)$/.test(s))
+          throw new Error('unexpected compartment state: ' + s);
+        ['.sp2-cmp-p', '.sp2-cmp-q'].forEach(sel => {
+          const el = c.querySelector(sel);
+          if (el.scrollWidth > el.clientWidth) throw new Error('compartment label cut off: ' + el.textContent);
+        });
+        const liq = c.querySelector('.sp2-cmp-liq');
+        const pct = parseInt(s, 10);
+        if (Math.abs(parseFloat(liq.style.height) - pct) > 1)
+          throw new Error('the drawn level does not match the number');
+      });
+    });
+    step('compartment labels survive any product colour', () => {
+      // only the C-number sits straight on the liquid, so it has to be near-black;
+      // everything else rides a near-opaque plate
+      const c = document.querySelector('.sp2-cmp-c');
+      const m = getComputedStyle(c).color.match(/\d+/g).map(Number);
+      if (Math.max(...m.slice(0, 3)) > 60) throw new Error('C-number is too light to sit on a fill');
+      const plate = getComputedStyle(document.querySelector('.sp2-cmp-plate')).backgroundColor;
+      const a = plate.match(/rgba?\([^)]*?([\d.]+)\)/);
+      if (a && parseFloat(a[1]) < 0.85) throw new Error('plate too sheer to carry text');
+    });
+    step('a trailer hitches and unhitches', () => {
+      sp2PickDriver('d20'); sp2Unload();
+      const before = document.querySelectorAll('.sp2-tank').length;
+      sp2AddTrailer('TR-410');
+      if (document.querySelectorAll('.sp2-tank').length !== before + 1) throw new Error('trailer not drawn');
+      if (!document.querySelector('.sp2-hitch')) throw new Error('no hitch between them');
+      const caps = SP2_TRUCKS[SP2_DRIVERS.d20.truck].comps.length + SP2_TRAILERS['TR-410'].caps.length;
+      if (document.querySelectorAll('.sp2-cmp').length !== caps)
+        throw new Error('trailer compartments missing');
+      sp2DropTrailer();
+      if (SP2_DRIVERS.d20.trailer) throw new Error('trailer would not come off an empty rig');
+    });
+    step('dragging an order loads the truck', () => {
+      sp2SetQuick('all'); sp2PickDriver('d20'); sp2Unload();
+      const un = SP2_ORDERS.filter(o => !o.driver)[0];
+      if (!un) throw new Error('no unplanned order to drag');
+      const card = [...document.querySelectorAll('.sp2-card')]
+        .find(c => c.querySelector('.sp2-ord').textContent === un.id);
+      if (!card) throw new Error(un.id + ' is not on the timeline');
+      const dt = new DataTransfer();
+      const fire = (el, type) => { const e = new DragEvent(type, { bubbles:true, cancelable:true, dataTransfer:dt });
+        el.dispatchEvent(e); return e; };
+      fire(card, 'dragstart');
+      if (!document.getElementById('sp2Body').classList.contains('dragging'))
+        throw new Error('drag never started');
+      const wrap = document.getElementById('sp2Veh');
+      if (!fire(wrap, 'dragover').defaultPrevented) throw new Error('the rig refuses the drop');
+      fire(wrap, 'drop');
+      if (un.driver !== 'd20') throw new Error('drop did not plan the order onto the driver');
+      const load = SP2_DRIVERS.d20.load.filter(l => l.q > 0);
+      if (!load.length) throw new Error('nothing went into the compartments');
+      if (load.some(l => !l.p)) throw new Error('a compartment holds gallons but no product');
+      if (document.getElementById('sp2Body').classList.contains('dragging'))
+        throw new Error('drag state left hanging');
+      sp2Unload(); un.driver = '';
+    });
+    step('one product per compartment, blends aside', () => {
+      sp2PickDriver('d20'); sp2Unload();
+      const o = SP2_ORDERS.filter(x => !x.driver)[0];
+      const keep = JSON.parse(JSON.stringify(o.prods));
+      o.prods = [{ p:'UNL87', q:600 }, { p:'CLR DSL', q:600 }];
+      sp2Drag = o.id;
+      sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1);
+      const used = SP2_DRIVERS.d20.load.filter(l => l.q > 0).map(l => l.p);
+      if (new Set(used).size !== used.length) throw new Error('two products share a compartment');
+      o.prods = keep; o.driver = ''; sp2Unload();
     });
     step('every driver maps to a truck', () => {
       Object.keys(SP2_DRIVERS).forEach(k => {
         sp2PickDriver(k);
         if (!document.querySelector('.sp2-truck-id')) throw new Error(k + ' has no truck');
+        if (!document.querySelector('.sp2-tank')) throw new Error(k + ' has no tank drawn');
       });
+      sp2PickDriver('d0');
     });
   }
 

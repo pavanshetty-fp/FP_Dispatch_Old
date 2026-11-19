@@ -1026,20 +1026,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-sec-lbl{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 #scr-plan .sp2-sec-lbl::after{content:'';flex:1;height:1px;background:var(--fp-stroke-hairline);}
 
-#scr-plan .sp2-drv{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:12px;}
-#scr-plan .sp2-drv-top{display:flex;align-items:center;gap:12px;}
-#scr-plan .sp2-av{width:36px;height:36px;border-radius:50%;background:var(--fp-card-1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--fp-ink-1);flex-shrink:0;}
-#scr-plan .sp2-drv-name{font-size:16px;line-height:24px;font-weight:600;color:var(--fp-ink-1);}
-#scr-plan .sp2-drv-shift{font-size:13px;color:var(--fp-ink-3);margin-top:1px;}
-#scr-plan .sp2-drv-state{margin-left:auto;text-align:right;}
 #scr-plan .sp2-state{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:500;white-space:nowrap;}
 #scr-plan .sp2-state.on-duty{background:color-mix(in oklab,var(--status-success) 10%,transparent);color:var(--status-success);}
 #scr-plan .sp2-state.off-duty{background:var(--muted);color:var(--status-neutral);}
 #scr-plan .sp2-state.driving{background:color-mix(in oklab,var(--status-info) 10%,transparent);color:var(--status-info);}
 #scr-plan .sp2-state::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
-#scr-plan .sp2-sync{font-size:12px;color:var(--fp-ink-3);margin-top:6px;}
-#scr-plan .sp2-drv-foot{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--fp-stroke-hairline);}
-#scr-plan .sp2-drv-meta{font-size:13px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 /* the CTA is --primary, near-black. Brand orange is the mark and the ring. */
 #scr-plan .sp2-view{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:none;border-radius:var(--r-md);background:var(--primary);color:var(--primary-foreground);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;}
 #scr-plan .sp2-view:hover{background:color-mix(in oklab,var(--primary) 88%,#fff);}
@@ -1053,20 +1044,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-truck-pct{font-size:18px;line-height:28px;font-weight:600;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
 #scr-plan .sp2-truck-pct-lbl{font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 
-#scr-plan .sp2-comps{padding:14px;display:flex;flex-direction:column;gap:12px;}
-#scr-plan .sp2-comp{display:flex;align-items:center;gap:12px;}
-#scr-plan .sp2-comp-id{width:28px;font-size:12px;font-weight:600;color:var(--fp-ink-3);flex-shrink:0;}
-#scr-plan .sp2-comp-main{flex:1;min-width:0;}
-#scr-plan .sp2-comp-row1{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;}
-#scr-plan .sp2-comp-prod{font-size:13px;color:var(--fp-ink-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#scr-plan .sp2-comp-prod.empty{color:var(--fp-ink-3);font-weight:400;}
-#scr-plan .sp2-comp-qty{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
-#scr-plan .sp2-bar{height:18px;border-radius:6px;background:var(--fp-card-1);overflow:hidden;position:relative;}
-#scr-plan .sp2-bar-fill{height:100%;transition:width .25s;}
-#scr-plan .sp2-bar-striped{position:absolute;inset:0;}
-#scr-plan .sp2-comp-state{width:104px;flex-shrink:0;text-align:right;}
-#scr-plan .sp2-comp-pct{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
-#scr-plan .sp2-comp-word{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-top:1px;}
 #scr-plan .full .sp2-comp-pct,#scr-plan .full .sp2-comp-word{color:var(--status-success);}
 #scr-plan .partial .sp2-comp-pct,#scr-plan .partial .sp2-comp-word{color:var(--status-caution);}
 #scr-plan .empty-c .sp2-comp-pct,#scr-plan .empty-c .sp2-comp-word{color:var(--status-neutral);}
@@ -1074,6 +1051,100 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-none{padding:36px 16px;text-align:center;font-size:14px;color:var(--fp-ink-3);line-height:1.6;}
 
 #scr-plan #sp2Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--r-md);font-size:14px;font-weight:500;z-index:200;display:none;white-space:nowrap;background:var(--primary);color:var(--primary-foreground);box-shadow:0 8px 24px rgba(3,4,5,.18);}
+
+
+/* ── Header tools: the view switch, and everything else behind one icon ── */
+#scr-plan .sp2-hdr-tools{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;}
+#scr-plan .sp2-ico-btn{position:relative;width:36px;height:36px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#scr-plan .sp2-ico-btn:hover{background:var(--fp-emphasis);}
+#scr-plan .sp2-ico-btn.on{border-color:var(--fp-selected-border);background:var(--fp-selected);}
+#scr-plan .sp2-ico-dot{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--brand);border:2px solid var(--fp-surface-1b);}
+#scr-plan .sp2-search{height:36px;flex:1;min-width:0;max-width:280px;background:var(--fp-surface-1b);border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);color:var(--fp-ink-1);font-family:inherit;font-size:13px;padding:0 12px;outline:none;}
+#scr-plan .sp2-search:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+
+/* The columns clip their own overflow, so a popover has to escape them. */
+#scr-plan .sp2-pop{display:none;position:fixed;z-index:120;min-width:280px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);box-shadow:0 8px 24px rgba(3,4,5,.14),0 2px 6px rgba(3,4,5,.08);padding:14px;}
+#scr-plan .sp2-pop.on{display:block;}
+#scr-plan .sp2-pop-row{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+#scr-plan .sp2-pop-row .sp2-seg{align-self:flex-start;}
+#scr-plan .sp2-pop-foot{padding-top:11px;border-top:1px solid var(--fp-stroke-hairline);}
+#scr-plan .sp2-pop-ttl{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:.14em;margin-bottom:9px;}
+#scr-plan .sp2-pop-item{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--fp-outline-1);border-radius:var(--r-md);background:var(--fp-surface-1b);font-family:inherit;cursor:pointer;margin-bottom:6px;}
+#scr-plan .sp2-pop-item:hover{background:var(--fp-emphasis);}
+#scr-plan .sp2-pop-item-id{font-size:14px;font-weight:600;color:var(--fp-ink-1);}
+#scr-plan .sp2-pop-item-sub{font-size:12px;color:var(--fp-ink-3);}
+#scr-plan .sp2-link{border:none;background:none;padding:0;font-family:inherit;font-size:13px;color:var(--fp-ink-3);text-decoration:underline;cursor:pointer;}
+#scr-plan .sp2-link:hover{color:var(--fp-ink-1);}
+
+/* ── Section 1: the roster ─────────────────────────────── */
+#scr-plan .sp2-unit-row{display:flex;align-items:stretch;flex:1;min-height:0;}
+#scr-plan .sp2-sec{padding:16px;min-width:0;display:flex;flex-direction:column;min-height:0;}
+#scr-plan .sp2-sec-drv{flex:0 0 clamp(268px,30%,330px);border-right:1px solid var(--fp-stroke-hairline);}
+#scr-plan .sp2-sec-trk{flex:1;min-width:0;overflow-y:auto;}
+#scr-plan .sp2-drv-tabs{align-self:stretch;margin-bottom:10px;}
+#scr-plan .sp2-drv-tabs .sp2-seg-btn{flex:1;justify-content:center;padding:0 6px;}
+#scr-plan .sp2-drv-list{flex:1;overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px;}
+#scr-plan .sp2-drv-list::-webkit-scrollbar{width:8px;}
+#scr-plan .sp2-drv-list::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:5px;}
+#scr-plan .sp2-grp{position:sticky;top:0;z-index:2;background:var(--fp-surface-1a);display:flex;align-items:center;gap:8px;padding:8px 0 6px;font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:.14em;}
+#scr-plan .sp2-drow{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+#scr-plan .sp2-drow:hover{background:var(--fp-emphasis);}
+#scr-plan .sp2-drow.on{border-color:var(--fp-selected-border);background:var(--fp-selected);}
+#scr-plan .sp2-drow-top{display:flex;align-items:center;gap:8px;}
+#scr-plan .sp2-drow-chev{color:var(--fp-ink-3);display:flex;flex-shrink:0;transition:transform .15s;}
+#scr-plan .sp2-drow.on .sp2-drow-chev{transform:rotate(90deg);}
+#scr-plan .sp2-drow-name{font-size:14px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scr-plan .sp2-drow-top .sp2-state{margin-left:auto;flex-shrink:0;}
+#scr-plan .sp2-drow-sub{font-size:12px;color:var(--fp-ink-3);margin-top:4px;font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-drow-sync{font-size:12px;color:var(--fp-ink-3);margin-top:2px;opacity:.85;}
+#scr-plan .sp2-drow-open{margin-top:10px;padding-top:10px;border-top:1px solid var(--fp-stroke-hairline);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#scr-plan .sp2-drow-meta{font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-drow-open .sp2-view{margin-left:auto;height:32px;padding:0 12px;font-size:13px;}
+
+/* ── Section 2: the rig, drawn ─────────────────────────── */
+#scr-plan .sp2-veh-wrap{position:relative;overflow-x:auto;padding:4px 14px 12px;border-bottom:1px solid var(--fp-stroke-hairline);transition:background .12s;}
+#scr-plan .sp2-veh-wrap.sp2-over{background:var(--fp-selected);}
+#scr-plan .sp2-veh{position:relative;display:flex;align-items:flex-end;padding:18px 0 16px;min-width:min-content;}
+#scr-plan .sp2-cabwrap{position:relative;flex:0 0 54px;}
+#scr-plan .sp2-cab{height:58px;border:2px solid var(--fp-ink-1);border-right:none;border-radius:9px 0 0 4px;background:var(--fp-card-2);position:relative;}
+#scr-plan .sp2-cab-win{position:absolute;left:7px;right:7px;top:7px;height:19px;border-radius:4px 7px 0 0;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-2);}
+#scr-plan .sp2-tankwrap{position:relative;flex-basis:0;min-width:min-content;}
+#scr-plan .sp2-tank{display:flex;height:118px;border:2px solid var(--fp-ink-1);border-radius:4px 11px 11px 4px;overflow:hidden;background:var(--fp-surface-1b);}
+#scr-plan .sp2-wheel{position:absolute;bottom:-11px;width:22px;height:22px;border-radius:50%;background:var(--fp-surface-1b);border:3px solid var(--fp-ink-1);}
+#scr-plan .sp2-hitch{flex:0 0 20px;height:6px;margin-bottom:28px;background:var(--fp-ink-1);border-radius:3px;}
+#scr-plan .sp2-veh-tag{position:absolute;left:0;right:0;top:-15px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fp-ink-3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+
+/* A compartment is as wide as it is big, and the load rises inside it. */
+#scr-plan .sp2-cmp{position:relative;flex-basis:0;min-width:86px;border-right:2px solid var(--fp-ink-1);overflow:hidden;}
+#scr-plan .sp2-cmp:last-child{border-right:none;}
+#scr-plan .sp2-cmp.sp2-over{outline:2px dashed var(--brand);outline-offset:-3px;}
+#scr-plan .sp2-cmp-liq{position:absolute;left:0;right:0;bottom:0;opacity:.85;transition:height .3s ease;}
+#scr-plan .sp2-cmp-txt{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:5px 4px;}
+#scr-plan .sp2-cmp-c{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--fp-ink-1);text-align:center;}
+/* the plate keeps the numbers off the product colour, whatever colour it is */
+#scr-plan .sp2-cmp-plate{margin-top:auto;background:rgba(255,255,255,.9);border-radius:5px;padding:4px 2px 5px;text-align:center;}
+#scr-plan .sp2-cmp-p{font-size:11px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scr-plan .sp2-cmp-p.empty{color:var(--fp-ink-3);font-weight:400;}
+#scr-plan .sp2-cmp-q{font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scr-plan .sp2-cmp-q span{color:var(--fp-ink-3);}
+#scr-plan .sp2-cmp-s{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;line-height:1.3;}
+#scr-plan .sp2-cmp-s.full{color:var(--status-success);}
+#scr-plan .sp2-cmp-s.partial{color:var(--status-caution);}
+#scr-plan .sp2-cmp-s.empty-c{color:var(--fp-ink-3);}
+
+#scr-plan .sp2-drop-hint{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:4px;padding:3px 11px;border-radius:9999px;background:var(--fp-selected);color:var(--fp-selected-strong);font-size:11px;font-weight:600;pointer-events:none;white-space:nowrap;}
+#scr-plan .sp2-body.dragging .sp2-drop-hint{display:block;}
+#scr-plan .sp2-body.dragging .sp2-veh-wrap{outline:2px dashed var(--fp-selected-border);outline-offset:-6px;}
+
+#scr-plan .sp2-veh-wrap::-webkit-scrollbar{height:8px;}
+#scr-plan .sp2-veh-wrap::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:4px;}
+#scr-plan .sp2-veh-scroll{position:relative;}
+#scr-plan .sp2-veh-fade{position:absolute;top:0;bottom:0;right:0;width:44px;pointer-events:none;opacity:0;transition:opacity .15s;background:linear-gradient(to right,rgba(255,255,255,0),var(--fp-surface-1b));}
+#scr-plan .sp2-veh-scroll.more .sp2-veh-fade{opacity:1;}
+#scr-plan .sp2-rig-foot{padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+#scr-plan .sp2-trl-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;}
+#scr-plan .sp2-trl-btn:hover{background:var(--fp-emphasis);}
+#scr-plan .sp2-rig-trl{font-size:13px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 
 
 </style>
@@ -2149,52 +2220,87 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
         <span class="sp2-col-title">Orders</span>
         <span class="sp2-count" id="sp2OrdCount">0</span>
 
-        <div class="sp2-seg" id="sp2Quick">
-          <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
-          <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
-          <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
-        </div>
+        <div class="sp2-hdr-tools">
+          <div class="sp2-seg">
+            <button class="sp2-seg-btn on" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
+            </button>
+            <button class="sp2-seg-btn" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+            </button>
+            <button class="sp2-seg-btn" data-v="n" onclick="sp2SetView('n')" title="No timeline — ordered list">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+            </button>
+          </div>
 
-        <span class="sp2-flt-lbl" style="margin-left:4px;">View</span>
-        <div class="sp2-seg">
-          <button class="sp2-seg-btn on" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
-          </button>
-          <button class="sp2-seg-btn" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
-          </button>
-          <button class="sp2-seg-btn" data-v="n" onclick="sp2SetView('n')" title="No timeline — ordered list">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+          <button class="sp2-ico-btn" id="sp2FltBtn" onclick="sp2ToggleFlt(this)" title="Filter orders">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span class="sp2-ico-dot" id="sp2FltDot"></span>
           </button>
         </div>
+      </div>
 
-        <span class="sp2-flt-lbl" style="margin-left:4px;">Shift</span>
-        <div class="sp2-seg">
-          <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
-          <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
-          <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
+      <!-- Both filters live behind the icon; the view switch stays out. -->
+      <div class="sp2-pop" id="sp2Flt">
+        <div class="sp2-pop-row">
+          <span class="sp2-flt-lbl">Status</span>
+          <div class="sp2-seg" id="sp2Quick">
+            <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+            <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
+            <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
+          </div>
+        </div>
+        <div class="sp2-pop-row">
+          <span class="sp2-flt-lbl">Shift</span>
+          <div class="sp2-seg">
+            <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
+            <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
+            <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
+          </div>
         </div>
         <div class="sp2-custom" id="sp2Custom">
           <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
           <span style="color:var(--fp-ink-3);font-size:13px;">–</span>
           <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
         </div>
+        <div class="sp2-pop-foot">
+          <button class="sp2-link" onclick="sp2ResetFlt()">Reset filters</button>
+        </div>
       </div>
-
       <div class="sp2-tl-wrap" id="sp2TlWrap">
         <div class="sp2-tl" id="sp2Tl"></div>
       </div>
     </div>
 
-    <!-- ══ Column 2 — the driver, and the truck mapped to them ══ -->
+    <!-- ══ Column 2 — the driver, and the rig mapped to them ══ -->
     <div class="sp2-col sp2-col-unit">
       <div class="sp2-col-hdr">
         <span class="sp2-col-title">Driver &amp; truck</span>
-        <select class="sp2-date-inp" id="sp2DrvSel" style="margin-left:auto;min-width:0;flex:1;text-align:left;" onchange="sp2PickDriver(this.value)"></select>
+        <span class="sp2-count" id="sp2DrvCount">0</span>
+        <div class="sp2-hdr-tools">
+          <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2RenderDrivers()">
+        </div>
       </div>
-      <div style="flex:1;overflow-y:auto;min-height:0;" id="sp2Unit"></div>
+
+      <div class="sp2-unit-row">
+        <!-- Section 1 — the roster -->
+        <div class="sp2-sec sp2-sec-drv">
+          <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
+            <button class="sp2-seg-btn on" data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
+            <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
+            <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
+            <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
+          </div>
+          <div class="sp2-drv-list" id="sp2DrvList"></div>
+        </div>
+
+        <!-- Section 2 — the rig -->
+        <div class="sp2-sec sp2-sec-trk" id="sp2Rig"></div>
+      </div>
     </div>
 
+    <!-- the trailers this yard has, picked when one is hitched -->
+    <div class="sp2-pop" id="sp2TrlPop"></div>
   </div>
 </div>
 
@@ -3934,46 +4040,129 @@ var SP2_SHIFTS = {
   l7:{ name:'Late',  from:420, to:900 }, l8:{ name:'Late',  from:480, to:960 },
 };
 
-// Compartment counts and capacities are fixed physical properties; what is in
-// them right now is the day's state.
-var SP2_TRUCKS = {
-  'BT-4':  { type:'Bobtail',    meter:210, comps:[{cap:1200},{cap:900},{cap:700}] },
-  'Hi-12': { type:'Tank wagon', meter:320, comps:[{cap:2000},{cap:2000},{cap:1000}] },
-  'PB-9':  { type:'Tank wagon', meter:380, comps:[{cap:2000},{cap:1500},{cap:1500},{cap:1000}] },
-  'HV-7':  { type:'Transport',  meter:620, comps:[{cap:2000},{cap:2000},{cap:2000},{cap:1500},{cap:1500}] },
+// A truck is a spec plus a number. Compartment counts and capacities are fixed
+// physical properties of the spec; what is in them right now is the day's state.
+var SP2_SPECS = [
+  { pre:'BT', type:'Bobtail',    meter:210, caps:[1200,900,700] },
+  { pre:'TW', type:'Tank wagon', meter:320, caps:[2000,2000,1000] },
+  { pre:'PB', type:'Tank wagon', meter:380, caps:[2000,1500,1500,1000] },
+  { pre:'HV', type:'Transport',  meter:620, caps:[2000,2000,2000,1500,1500] },
+  { pre:'LT', type:'Transport',  meter:580, caps:[2500,2500,2000,2000,1500] },
+];
+
+// A trailer is hitched behind the truck and carries its own compartments.
+var SP2_TRAILERS = {
+  'TR-200': { type:'Pup trailer',   caps:[1800,1200] },
+  'TR-410': { type:'Tandem pup',    caps:[2000,2000,1000] },
+  'TR-660': { type:'Full trailer',  caps:[2500,2500,2000] },
 };
 
-var SP2_DRIVERS = {
-  alex:  { name:'Alex Trebek',  shift:'e6', truck:'Hi-12', state:'driving',  synced:2,  hub:'Denver Hub',
-           load:[{p:'UNL87',q:2000},{p:'UNL87',q:1400},{p:'CLR DSL',q:0}] },
-  ravi:  { name:'Ravi Patel',   shift:'e5', truck:'HV-7',  state:'on-duty',  synced:7,  hub:'Denver Hub',
-           load:[{p:'HO DSL',q:2000},{p:'HO DSL',q:500},{p:'CLR DSL',q:2000},{p:'UNL93',q:900},{p:'',q:0}] },
-  omar:  { name:'Omar Khalid',  shift:'l8', truck:'BT-4',  state:'off-duty', synced:46, hub:'Phoenix Hub',
-           load:[{p:'UNL87',q:1200},{p:'',q:0},{p:'',q:0}] },
-  priya: { name:'Priya Sharma', shift:'e6', truck:'PB-9',  state:'on-duty',  synced:1,  hub:'Denver Hub',
-           load:[{p:'CLR DSL',q:2000},{p:'CLR DSL',q:1200},{p:'UNL87',q:1500},{p:'Diesel DEF',q:800}] },
-};
+// Ten drivers in each of the three states the fleet reports.
+var SP2_ROSTER = [
+  ['driving',  'Arpita Shah'],     ['driving',  'Marcus Webb'],    ['driving',  'Linh Tran'],
+  ['driving',  'Diego Fuentes'],   ['driving',  'Samuel Okafor'],  ['driving',  'Nadia Rahman'],
+  ['driving',  'Grace Okonkwo'],   ['driving',  'Hector Alvarez'], ['driving',  'Mei Lin Chow'],
+  ['driving',  'Ivan Petrov'],
+  ['on-duty',  'Priya Sharma'],    ['on-duty',  'Alex Moreau'],    ['on-duty',  'Ravi Patel'],
+  ['on-duty',  'Dana Whitfield'],  ['on-duty',  'Yusuf Demir'],    ['on-duty',  'Carla Mendes'],
+  ['on-duty',  'Owen Fitzgerald'], ['on-duty',  'Aisha Bello'],    ['on-duty',  'Pablo Ruiz'],
+  ['on-duty',  'Jenny Kwon'],
+  ['off-duty', 'Omar Khalid'],     ['off-duty', 'Beatrice Lang'],  ['off-duty', 'Kofi Mensah'],
+  ['off-duty', 'Svetlana Orlov'],  ['off-duty', 'Tomas Herrera'],  ['off-duty', 'Rachel Nguyen'],
+  ['off-duty', 'Miles Donovan'],   ['off-duty', 'Farah Haddad'],   ['off-duty', 'Gus Lindqvist'],
+  ['off-duty', 'Noor Siddiqui'],
+];
+
+var SP2_HUBS   = ['Denver Hub','Phoenix Hub','Portland Hub','Tampa Hub','San Jose Hub'];
+var SP2_SHIFTK = ['e6','e5','l7','l8'];
+var SP2_PRODS  = ['UNL87','CLR DSL','HO DSL','UNL93','Diesel DEF','Kerosene'];
+
+var SP2_TRUCKS = {};
+var SP2_DRIVERS = {};
+(function buildFleet() {
+  SP2_ROSTER.forEach(function (row, i) {
+    var state = row[0], name = row[1];
+    var spec  = SP2_SPECS[i % SP2_SPECS.length];
+    var truck = spec.pre + '-' + (4 + i * 3);
+    SP2_TRUCKS[truck] = { type:spec.type, meter:spec.meter,
+                          comps:spec.caps.map(function (c) { return { cap:c }; }) };
+
+    // A truck that is already rolling is rarely empty; one that is off duty is.
+    var load = spec.caps.map(function (cap, c) {
+      if (state === 'off-duty' || (i + c) % 3 === 0) return { p:'', q:0 };
+      var p = SP2_PRODS[(i + c * 2) % SP2_PRODS.length];
+      var frac = (i + c) % 4 === 1 ? 1 : ((i * 7 + c * 13) % 55 + 35) / 100;
+      return { p:p, q:Math.round(cap * frac / 50) * 50 };
+    });
+
+    // Transports tend to pull a trailer; the rest start without one.
+    var trl = spec.type === 'Transport' && i % 2 === 0
+            ? Object.keys(SP2_TRAILERS)[i % 3] : null;
+
+    SP2_DRIVERS['d' + i] = {
+      name:name, state:state, truck:truck, shift:SP2_SHIFTK[i % 4],
+      hub:SP2_HUBS[i % SP2_HUBS.length],
+      synced: state === 'off-duty' ? 90 + i * 7 : state === 'driving' ? 1 + (i % 9) : 4 + (i % 26),
+      load:load,
+      trailer:trl,
+      tload: trl ? SP2_TRAILERS[trl].caps.map(function () { return { p:'', q:0 }; }) : [],
+    };
+  });
+})();
 
 // Order type is a field on the order: Delivery · Extraction · Transfer.
-var SP2_ORDERS = [
-  { id:'D-5157060', ship:'Morris Group — Upstairs Hub',  addr:'1180 Wewatta St, Denver CO 80202',        t:390,  type:'Delivery',   driver:'alex',  prods:[{p:'UNL87',q:3000},{p:'CLR DSL',q:1500}] },
-  { id:'D-5157061', ship:'Acme Fuel Co — Branch 1A',     addr:'20400 Stevens Creek Blvd, Cupertino CA',  t:495,  type:'Delivery',   driver:'alex',  prods:[{p:'UNL87',q:2000}] },
-  { id:'D-5157062', ship:'Dean Ltd — SJ Main',           addr:'2130 N First St, San Jose CA 95131',      t:420,  type:'Delivery',   driver:'ravi',  prods:[{p:'HO DSL',q:2500}] },
-  { id:'D-5157063', ship:'Aguilar and Sons — Tampa HQ',  addr:'4221 W Boy Scout Blvd, Tampa FL 33607',   t:630,  type:'Transfer',   driver:'ravi',  prods:[{p:'CLR DSL',q:2000},{p:'UNL93',q:1000}] },
-  { id:'D-5157064', ship:"Jeff's Jalopies — Tucson Main", addr:'3760 E Speedway Blvd, Tucson AZ 85716',  t:1140, type:'Delivery',   driver:'omar',  prods:[{p:'UNL87',q:1800}] },
-  { id:'D-5157065', ship:'Sunbelt Pump — PC268',         addr:'1409 John Sims Pkwy, Niceville FL 32578', t:405,  type:'Delivery',   driver:'priya', prods:[{p:'CLR DSL',q:3200}] },
-  { id:'D-5157066', ship:'Clearwater Utilities — Portland', addr:'1500 SW 1st Ave, Portland OR 97201',   t:560,  type:'Delivery',   driver:'priya', prods:[{p:'Diesel DEF',q:800},{p:'UNL87',q:1800}] },
-  { id:'D-5157067', ship:'Morris Group — Downtown',      addr:'1601 Blake St, Denver CO 80202',          t:660,  type:'Extraction', driver:'',      prods:[{p:'UNL93',q:900}] },
-  { id:'D-5157068', ship:'Dean Ltd — Oakland Depot',     addr:'800 Embarcadero W, Oakland CA 94607',     t:810,  type:'Delivery',   driver:'',      prods:[{p:'HO DSL',q:1400}] },
-  { id:'D-5157069', ship:'Morris Group — East Depot',    addr:'5400 Havana St, Denver CO 80239',         t:915,  type:'Transfer',   driver:'',      prods:[{p:'CLR DSL',q:1100}] },
+// A planned order carries a driver; an unplanned one has none yet.
+var SP2_SHIPTOS = [
+  ['Morris Group — Upstairs Hub',     '1180 Wewatta St, Denver CO 80202'],
+  ['Acme Fuel Co — Branch 1A',        '20400 Stevens Creek Blvd, Cupertino CA 95014'],
+  ['Dean Ltd — SJ Main',              '2130 N First St, San Jose CA 95131'],
+  ['Aguilar and Sons — Tampa HQ',     '4221 W Boy Scout Blvd, Tampa FL 33607'],
+  ["Jeff's Jalopies — Tucson Main",   '3760 E Speedway Blvd, Tucson AZ 85716'],
+  ['Sunbelt Pump — PC268',            '1409 John Sims Pkwy, Niceville FL 32578'],
+  ['Clearwater Utilities — Portland', '1500 SW 1st Ave, Portland OR 97201'],
+  ['Morris Group — Downtown',         '1601 Blake St, Denver CO 80202'],
+  ['Dean Ltd — Oakland Depot',        '800 Embarcadero W, Oakland CA 94607'],
+  ['Morris Group — East Depot',       '5400 Havana St, Denver CO 80239'],
+  ['Granite Ridge Quarry — Pit 3',    '7725 W Colfax Ave, Lakewood CO 80214'],
+  ['Northwind Transit — Yard B',      '2800 NE Holman St, Portland OR 97211'],
+  ['Cactus Freight — Gate 12',        '4402 E Elwood St, Phoenix AZ 85040'],
+  ['Pinecrest Schools — Bus Barn',    '9015 SW Barbur Blvd, Portland OR 97219'],
+  ['Harbor Marine — Slip 40',         '1 Ferry Plaza, San Francisco CA 94111'],
+  ['Redrock Mining — Haul Road',      '1550 S Highway 191, Moab UT 84532'],
+  ['Valley Co-op — Silo Row',         '600 N Main St, Greeley CO 80631'],
+  ['Summit Builders — Site 7',        '3300 E 1st Ave, Denver CO 80206'],
 ];
+var SP2_TYPES = ['Delivery','Delivery','Delivery','Transfer','Delivery','Extraction'];
+
+var SP2_ORDERS = (function buildOrders() {
+  var out = [], n = 36;
+  for (var i = 0; i < n; i++) {
+    var st = SP2_SHIPTOS[i % SP2_SHIPTOS.length];
+    // two products on every third order, one otherwise
+    var prods = [{ p:SP2_PRODS[i % SP2_PRODS.length], q:(((i * 5) % 7) + 8) * 200 }];
+    if (i % 3 === 1) prods.push({ p:SP2_PRODS[(i + 2) % SP2_PRODS.length], q:(((i * 3) % 5) + 4) * 200 });
+    // two thirds of the day's orders are already planned, spread over the roster
+    var planned = i % 3 !== 2;
+    out.push({
+      id:'D-' + (5157060 + i),
+      ship:st[0], addr:st[1],
+      t:305 + ((i * 47) % 740),                 // 05:05 through 21:25
+      type:SP2_TYPES[i % SP2_TYPES.length],
+      driver: planned ? 'd' + ((i * 7) % 30) : '',
+      prods:prods,
+    });
+  }
+  return out;
+})();
 
 // ══════════════════════════════════════════════════════════
 //  State
 // ══════════════════════════════════════════════════════════
 var sp2Quick = 'all';          // all · unplanned · planned
 var sp2Shift_ = 'am';          // am · pm · custom
-var sp2Driver = 'alex';
+var sp2Driver = 'd0';
+var sp2DrvFilter = 'all';   // all · driving · on-duty · off-duty
+var sp2Drag = null;          // the order id being dragged
 var sp2SelOrder = null;
 var sp2View = 'h';            // h horizontal · v vertical · n no timeline
 
@@ -4026,7 +4215,8 @@ function sp2CardHtml(o, style) {
   }).join('');
   return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
       (sp2SelOrder === o.id ? ' sel' : '') + '" ' + (style ? 'style="' + style + '" ' : '') +
-      'onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + ' · ' + o.addr + '">' +
+      'draggable="true" ondragstart="sp2DragStart(event,\'' + o.id + '\')" ondragend="sp2DragEnd()" ' +
+      'onclick="sp2PickOrder(\'' + o.id + '\')" title="Drag onto the truck to load it · ' + o.ship + '">' +
     '<div class="sp2-card-top"><span class="sp2-ord">' + o.id + '</span>' +
       '<span class="sp2-time-lbl">' + sp2Hhmm(o.t) + '</span></div>' +
     '<div class="sp2-ship">' + o.ship + '</div>' +
@@ -4148,7 +4338,7 @@ function sp2SetQuick(q) {
   document.querySelectorAll('#sp2Quick .sp2-seg-btn').forEach(function(b) {
     b.classList.toggle('on', b.dataset.q === q);
   });
-  sp2RenderTimeline();
+  sp2RenderTimeline(); sp2FltDot();
 }
 function sp2SetView(v) {
   sp2View = v;
@@ -4167,17 +4357,40 @@ function sp2SetShift(s) {
     b.classList.toggle('on', b.dataset.s === s);
   });
   document.getElementById('sp2Custom').classList.toggle('on', s === 'custom');
-  sp2RenderTimeline();
+  sp2RenderTimeline(); sp2FltDot();
 }
+
+// Only two controls sit in the header: the view switch, and this. Everything
+// that narrows the list lives behind it, with a dot when it is narrowing.
+function sp2FltDot() {
+  var on = sp2Quick !== 'all' || sp2Shift_ !== 'am';
+  document.getElementById('sp2FltDot').style.display = on ? 'block' : 'none';
+  document.getElementById('sp2FltBtn').classList.toggle('on', on);
+}
+function sp2PopAt(id, btn) {
+  var p = document.getElementById(id), open = !p.classList.contains('on');
+  document.querySelectorAll('.sp2-pop').forEach(function (x) { x.classList.remove('on'); });
+  if (!open) return false;
+  p.classList.add('on');
+  var r = btn.getBoundingClientRect();
+  p.style.top  = (r.bottom + 6) + 'px';
+  p.style.left = Math.max(8, Math.min(window.innerWidth - p.offsetWidth - 8,
+                                      r.right - p.offsetWidth)) + 'px';
+  return true;
+}
+function sp2ToggleFlt(btn) { sp2PopAt('sp2Flt', btn); }
+function sp2ResetFlt() { sp2SetQuick('all'); sp2SetShift('am'); }
+document.addEventListener('mousedown', function (e) {
+  if (e.target.closest('.sp2-pop') || e.target.closest('.sp2-ico-btn') ||
+      e.target.closest('.sp2-trl-btn')) return;
+  document.querySelectorAll('.sp2-pop').forEach(function (x) { x.classList.remove('on'); });
+});
 
 // picking an order shows the driver it is planned on
 function sp2PickOrder(id) {
   sp2SelOrder = id;
   var o = SP2_ORDERS.filter(function(x){ return x.id === id; })[0];
-  if (o && o.driver) {
-    sp2Driver = o.driver;
-    document.getElementById('sp2DrvSel').value = o.driver;
-  }
+  if (o && o.driver) sp2Driver = o.driver;
   sp2Render();
   if (o && !o.driver) sp2Toast(o.id + ' has no driver yet — it sits unplanned');
 }
@@ -4185,99 +4398,326 @@ function sp2PickOrder(id) {
 // ══════════════════════════════════════════════════════════
 //  Column 2 — driver, and the truck mapped to them
 // ══════════════════════════════════════════════════════════
-function sp2RenderUnit() {
-  var d = SP2_DRIVERS[sp2Driver];
-  var host = document.getElementById('sp2Unit');
-  if (!d) { host.innerHTML = '<div class="sp2-none">Pick a driver to see their truck.</div>'; return; }
+// ══════════════════════════════════════════════════════════
+//  Column 2 · Section 1 — the roster
+// ══════════════════════════════════════════════════════════
+var SP2_STATES = [['driving','Driving'], ['on-duty','On duty'], ['off-duty','Off duty']];
 
+function sp2StateWord(s) {
+  for (var i = 0; i < SP2_STATES.length; i++) if (SP2_STATES[i][0] === s) return SP2_STATES[i][1];
+  return s;
+}
+function sp2Synced(m) {
+  if (m < 60) return m + ' min ago';
+  var h = Math.round(m / 60);
+  return h < 24 ? h + ' hr ago' : Math.round(h / 24) + ' days ago';
+}
+function sp2DriverKeys() {
+  var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
+  return Object.keys(SP2_DRIVERS).filter(function (k) {
+    var d = SP2_DRIVERS[k];
+    if (sp2DrvFilter !== 'all' && d.state !== sp2DrvFilter) return false;
+    if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+}
 
-  var s = SP2_SHIFTS[d.shift];
-  var stateWord = d.state === 'driving' ? 'Driving' : d.state === 'on-duty' ? 'On duty' : 'Off duty';
-  var mine = SP2_ORDERS.filter(function(o){ return o.driver === sp2Driver; });
-  var gal = mine.reduce(function(a,o){ return a + sp2Gal(o); }, 0);
+// One row per driver. The chosen one opens in place — its orders, its gallons
+// and the way into the full record — so the roster never leaves the screen.
+function sp2DrvRow(k) {
+  var d = SP2_DRIVERS[k], on = k === sp2Driver;
+  var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; });
+  var gal  = mine.reduce(function (a, o) { return a + sp2Gal(o); }, 0);
+  var open = on
+    ? '<div class="sp2-drow-open">' +
+        '<div class="sp2-drow-meta">' + d.hub + ' · ' + mine.length + ' order' +
+          (mine.length === 1 ? '' : 's') + ' · ' + gal.toLocaleString() + ' gal planned</div>' +
+        '<button class="sp2-view" onclick="event.stopPropagation();sp2ViewDriver()">View details' +
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+        '</button>' +
+      '</div>'
+    : '';
+  return '<div class="sp2-drow' + (on ? ' on' : '') + '" onclick="sp2PickDriver(\'' + k + '\')">' +
+      '<div class="sp2-drow-top">' +
+        '<span class="sp2-drow-chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>' +
+        '<span class="sp2-drow-name">' + d.name + '</span>' +
+        '<span class="sp2-state ' + d.state + '">' + sp2StateWord(d.state) + '</span>' +
+      '</div>' +
+      '<div class="sp2-drow-sub">' + sp2ShiftLabel(d.shift) + ' · ' + d.truck +
+        (d.trailer ? ' + ' + d.trailer : '') + '</div>' +
+      '<div class="sp2-drow-sync">Last synced ' + sp2Synced(d.synced) + '</div>' +
+      open +
+    '</div>';
+}
 
-  var drv = '<div class="sp2-sec sp2-sec-drv">' +
-      '<div class="sp2-sec-lbl">Driver</div>' +
-      '<div class="sp2-drv">' +
-        '<div class="sp2-drv-top">' +
-          '<div class="sp2-av">' + d.name.split(' ').map(function(x){return x[0];}).join('').slice(0,2) + '</div>' +
-          '<div><div class="sp2-drv-name">' + d.name + '</div>' +
-            '<div class="sp2-drv-shift">' + sp2ShiftLabel(d.shift) + ' · ' + d.hub + '</div></div>' +
-          '<div class="sp2-drv-state">' +
-            '<span class="sp2-state ' + d.state + '">' + stateWord + '</span>' +
-            '<div class="sp2-sync">Last synced ' + (d.synced < 60 ? d.synced + ' min ago' : 'over an hour ago') + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="sp2-drv-foot">' +
-          '<span class="sp2-drv-meta">' + mine.length + ' order' + (mine.length===1?'':'s') +
-            ' · ' + gal.toLocaleString() + ' gal</span>' +
-          '<button class="sp2-view" onclick="sp2ViewDriver()">View details' +
-            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
-          '</button>' +
+function sp2RenderDrivers() {
+  var keys = sp2DriverKeys(), host = document.getElementById('sp2DrvList');
+  var all = Object.keys(SP2_DRIVERS);
+  var n = function (s) { return all.filter(function (k) { return SP2_DRIVERS[k].state === s; }).length; };
+  document.getElementById('sp2dAll').textContent = all.length;
+  document.getElementById('sp2dDr').textContent  = n('driving');
+  document.getElementById('sp2dOn').textContent  = n('on-duty');
+  document.getElementById('sp2dOff').textContent = n('off-duty');
+  document.getElementById('sp2DrvCount').textContent = keys.length;
+
+  if (!keys.length) { host.innerHTML = '<div class="sp2-empty">No driver matches that.</div>'; return; }
+
+  // grouped by state while the tabs are on All, flat once one state is chosen
+  if (sp2DrvFilter !== 'all') { host.innerHTML = keys.map(sp2DrvRow).join(''); return; }
+  host.innerHTML = SP2_STATES.map(function (st) {
+    var ks = keys.filter(function (k) { return SP2_DRIVERS[k].state === st[0]; });
+    if (!ks.length) return '';
+    return '<div class="sp2-grp">' + st[1] + '<span class="sp2-count">' + ks.length + '</span></div>' +
+           ks.map(sp2DrvRow).join('');
+  }).join('');
+}
+
+function sp2SetDrvFilter(f) {
+  sp2DrvFilter = f;
+  document.querySelectorAll('[data-d]').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.d === f);
+  });
+  sp2RenderDrivers();
+}
+
+// ══════════════════════════════════════════════════════════
+//  Column 2 · Section 2 — the rig, drawn
+// ══════════════════════════════════════════════════════════
+// Truck and trailer are the same thing twice, so one function draws both. The
+// compartments divide the tank by capacity, and the load rises inside them.
+function sp2Tank(caps, load, unit) {
+  var cells = caps.map(function (cap, i) {
+    var l = load[i] || { p:'', q:0 };
+    var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
+    var cls = pct >= 99 ? 'full' : pct > 0 ? 'partial' : 'empty-c';
+    var word = pct + '% · ' + (pct >= 99 ? 'Full' : pct > 0 ? 'Partially full' : 'Empty');
+    var col = SP2_PROD_COLORS[l.p] || 'transparent';
+    return '<div class="sp2-cmp ' + cls + '" style="flex-grow:' + cap + ';" ' +
+        'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+        'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ')" ' +
+        'title="C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity">' +
+      '<div class="sp2-cmp-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
+      '<div class="sp2-cmp-txt">' +
+        '<div class="sp2-cmp-c">C' + (i + 1) + '</div>' +
+        '<div class="sp2-cmp-plate">' +
+          '<div class="sp2-cmp-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
+          '<div class="sp2-cmp-q">' + l.q.toLocaleString() + '<span>/' + cap.toLocaleString() + '</span></div>' +
+          '<div class="sp2-cmp-s ' + cls + '">' + word + '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
-
-  var t = SP2_TRUCKS[d.truck];
-  if (!t) return host.innerHTML = '<div class="sp2-unit-row">' + drv +
-    '<div class="sp2-sec sp2-sec-trk"><div class="sp2-none">No truck mapped to this driver.</div></div></div>';
-
-  var totalCap = t.comps.reduce(function(a,c){ return a+c.cap; }, 0);
-  var onboard  = d.load.reduce(function(a,l){ return a+l.q; }, 0);
-  var pct = totalCap ? Math.round(onboard/totalCap*100) : 0;
-
-  var comps = t.comps.map(function(cmp, i) {
-    var l = d.load[i] || { p:'', q:0 };
-    var p = cmp.cap ? Math.round(l.q / cmp.cap * 100) : 0;
-    // Full, partially full, or empty — the three states a compartment is in
-    var cls  = p >= 99 ? 'full' : p > 0 ? 'partial' : 'empty-c';
-    var word = p >= 99 ? 'Full' : p > 0 ? 'Partially full' : 'Empty';
-    var col  = SP2_PROD_COLORS[l.p] || 'var(--fp-outline-2)';
-    return '<div class="sp2-comp ' + cls + '">' +
-        '<span class="sp2-comp-id">C' + (i+1) + '</span>' +
-        '<div class="sp2-comp-main">' +
-          '<div class="sp2-comp-row1">' +
-            (l.p ? '<span class="sp2-dot" style="background:' + col + ';"></span>' : '') +
-            '<span class="sp2-comp-prod' + (l.p ? '' : ' empty') + '">' + (l.p || 'empty') + '</span>' +
-            '<span class="sp2-comp-qty">' + l.q.toLocaleString() + ' / ' + cmp.cap.toLocaleString() + ' gal</span>' +
-          '</div>' +
-          '<div class="sp2-bar"><div class="sp2-bar-striped"></div>' +
-            '<div class="sp2-bar-fill" style="width:' + p + '%;background:' + (l.p ? col : 'transparent') + ';opacity:.85;"></div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="sp2-comp-state"><div class="sp2-comp-pct">' + p + '%</div>' +
-          '<div class="sp2-comp-word">' + word + '</div></div>' +
-      '</div>';
   }).join('');
-
-  host.innerHTML = '<div class="sp2-unit-row">' + drv +
-    '<div class="sp2-sec sp2-sec-trk">' +
-      '<div class="sp2-sec-lbl">Truck &amp; compartments</div>' +
-      '<div class="sp2-truck">' +
-        '<div class="sp2-truck-top">' +
-          '<div class="sp2-truck-ico">' +
-            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6fd4ff" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' +
-          '</div>' +
-          '<div><div class="sp2-truck-id">' + d.truck + '</div>' +
-            '<div class="sp2-truck-sub">' + t.type + ' · ' + totalCap.toLocaleString() + ' gal · ' +
-              t.comps.length + ' comps · ' + t.meter + ' gpm</div></div>' +
-          '<div class="sp2-truck-cap"><div class="sp2-truck-pct">' + pct + '%</div>' +
-            '<div class="sp2-truck-pct-lbl">' + onboard.toLocaleString() + ' gal aboard</div></div>' +
-        '</div>' +
-        '<div class="sp2-comps">' + comps + '</div>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
+  return '<div class="sp2-tank" data-unit="' + unit + '">' + cells + '</div>';
 }
+
+function sp2Sum(caps, load) {
+  var cap = caps.reduce(function (a, c) { return a + c; }, 0);
+  var q = caps.reduce(function (a, c, i) { return a + ((load[i] && load[i].q) || 0); }, 0);
+  return { cap:cap, q:q, pct:cap ? Math.round(q / cap * 100) : 0 };
+}
+
+function sp2RenderRig() {
+  var d = SP2_DRIVERS[sp2Driver], host = document.getElementById('sp2Rig');
+  if (!d) { host.innerHTML = '<div class="sp2-none">Pick a driver to see their truck.</div>'; return; }
+  var t = SP2_TRUCKS[d.truck];
+  if (!t) { host.innerHTML = '<div class="sp2-none">No truck mapped to ' + d.name + '.</div>'; return; }
+
+  var caps = t.comps.map(function (c) { return c.cap; });
+  var trl  = d.trailer ? SP2_TRAILERS[d.trailer] : null;
+  var tcaps = trl ? trl.caps : [];
+  var a = sp2Sum(caps, d.load), b = sp2Sum(tcaps, d.tload);
+  var cap = a.cap + b.cap, q = a.q + b.q, pct = cap ? Math.round(q / cap * 100) : 0;
+
+  var trailerArt = trl
+    ? '<div class="sp2-hitch"></div>' +
+      '<div class="sp2-tankwrap" style="flex-grow:' + b.cap + ';">' +
+        sp2Tank(tcaps, d.tload, 'trailer') +
+        '<span class="sp2-wheel" style="left:14px;"></span>' +
+        '<span class="sp2-wheel" style="right:16px;"></span>' +
+        '<span class="sp2-wheel" style="right:44px;"></span>' +
+        '<div class="sp2-veh-tag">' + d.trailer + ' · ' + trl.type + '</div>' +
+      '</div>'
+    : '';
+
+  host.innerHTML =
+    '<div class="sp2-sec-lbl">Truck &amp; compartments</div>' +
+    '<div class="sp2-truck">' +
+      '<div class="sp2-truck-top">' +
+        '<div class="sp2-truck-ico">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' +
+        '</div>' +
+        '<div><div class="sp2-truck-id">' + d.truck + (trl ? ' + ' + d.trailer : '') + '</div>' +
+          '<div class="sp2-truck-sub">' + t.type + ' · ' + (caps.length + tcaps.length) +
+            ' compartments · ' + t.meter + ' gpm</div></div>' +
+        '<div class="sp2-truck-cap"><div class="sp2-truck-pct">' + pct + '%</div>' +
+          '<div class="sp2-truck-pct-lbl">' + q.toLocaleString() + ' of ' +
+            cap.toLocaleString() + ' gal aboard</div></div>' +
+      '</div>' +
+
+      '<div class="sp2-veh-scroll">' +
+      '<div class="sp2-veh-wrap" id="sp2Veh" ondragover="sp2DragOver(event)" ' +
+           'ondragleave="sp2DragLeave(event)" ondrop="sp2Drop(event,\'auto\',-1)">' +
+        '<div class="sp2-veh">' +
+          '<div class="sp2-cabwrap">' +
+            '<div class="sp2-cab"><div class="sp2-cab-win"></div></div>' +
+            '<span class="sp2-wheel" style="left:8px;"></span>' +
+          '</div>' +
+          '<div class="sp2-tankwrap" style="flex-grow:' + a.cap + ';">' +
+            sp2Tank(caps, d.load, 'truck') +
+            '<span class="sp2-wheel" style="right:16px;"></span>' +
+            '<span class="sp2-wheel" style="right:44px;"></span>' +
+            '<div class="sp2-veh-tag">' + d.truck + ' · ' + a.q.toLocaleString() + ' / ' +
+              a.cap.toLocaleString() + ' gal</div>' +
+          '</div>' +
+          trailerArt +
+        '</div>' +
+        '<div class="sp2-drop-hint">Drop the order here to load it</div>' +
+      '</div>' +
+      '<span class="sp2-veh-fade"></span></div>' +
+
+      '<div class="sp2-rig-foot">' +
+        (trl
+          ? '<span class="sp2-rig-trl">' + d.trailer + ' · ' + trl.type + ' · ' +
+              b.cap.toLocaleString() + ' gal</span>' +
+            '<button class="sp2-link" onclick="sp2DropTrailer()">Remove trailer</button>'
+          : '<button class="sp2-trl-btn" onclick="sp2TrailerPop(this)">' +
+              '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+              'Add trailer</button>') +
+        '<button class="sp2-link" style="margin-left:auto;" onclick="sp2Unload()">Unload</button>' +
+      '</div>' +
+    '</div>';
+
+  // a long rig runs off the panel; say so rather than let the trailer hide
+  var w = document.getElementById('sp2Veh');
+  w.parentNode.classList.toggle('more', w.scrollWidth > w.clientWidth + 2);
+}
+
+// ── the trailer yard ──────────────────────────────────────
+function sp2TrailerPop(btn) {
+  var p = document.getElementById('sp2TrlPop');
+  p.innerHTML = '<div class="sp2-pop-ttl">Hitch a trailer</div>' +
+    Object.keys(SP2_TRAILERS).map(function (k) {
+      var tr = SP2_TRAILERS[k];
+      var cap = tr.caps.reduce(function (a, c) { return a + c; }, 0);
+      return '<button class="sp2-pop-item" onclick="sp2AddTrailer(\'' + k + '\')">' +
+          '<span class="sp2-pop-item-id">' + k + '</span>' +
+          '<span class="sp2-pop-item-sub">' + tr.type + ' · ' + tr.caps.length +
+            ' comps · ' + cap.toLocaleString() + ' gal</span>' +
+        '</button>';
+    }).join('');
+  sp2PopAt('sp2TrlPop', btn);
+}
+function sp2AddTrailer(k) {
+  var d = SP2_DRIVERS[sp2Driver];
+  d.trailer = k;
+  d.tload = SP2_TRAILERS[k].caps.map(function () { return { p:'', q:0 }; });
+  document.getElementById('sp2TrlPop').classList.remove('on');
+  sp2RenderRig(); sp2RenderDrivers();
+  sp2Toast(k + ' hitched to ' + d.truck);
+}
+function sp2DropTrailer() {
+  var d = SP2_DRIVERS[sp2Driver], had = d.trailer;
+  var left = d.tload.reduce(function (a, l) { return a + l.q; }, 0);
+  if (left) return sp2Toast(had + ' still holds ' + left.toLocaleString() + ' gal — unload it first');
+  d.trailer = null; d.tload = [];
+  sp2RenderRig(); sp2RenderDrivers();
+  sp2Toast(had + ' unhitched');
+}
+function sp2Unload() {
+  var d = SP2_DRIVERS[sp2Driver];
+  d.load.forEach(function (l) { l.p = ''; l.q = 0; });
+  d.tload.forEach(function (l) { l.p = ''; l.q = 0; });
+  sp2RenderRig();
+  sp2Toast(d.truck + ' emptied — the orders stay planned');
+}
+
+// ══════════════════════════════════════════════════════════
+//  Drag an order onto the rig
+// ══════════════════════════════════════════════════════════
+function sp2DragStart(e, id) {
+  sp2Drag = id;
+  e.dataTransfer.effectAllowed = 'copy';
+  try { e.dataTransfer.setData('text/plain', id); } catch (x) {}
+  document.getElementById('sp2Body').classList.add('dragging');
+}
+function sp2DragEnd() {
+  sp2Drag = null;
+  document.getElementById('sp2Body').classList.remove('dragging');
+  document.querySelectorAll('.sp2-over').forEach(function (x) { x.classList.remove('sp2-over'); });
+}
+function sp2DragOver(e) {
+  if (!sp2Drag) return;
+  e.preventDefault(); e.stopPropagation();
+  e.dataTransfer.dropEffect = 'copy';
+  var el = e.currentTarget;
+  if (!el.classList.contains('sp2-over')) {
+    document.querySelectorAll('.sp2-over').forEach(function (x) { x.classList.remove('sp2-over'); });
+    el.classList.add('sp2-over');
+  }
+}
+function sp2DragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('sp2-over');
+}
+
+// One product per compartment — the rule only bends for a blend, and none of
+// these are blends. So a line fills what already holds it, then takes an empty.
+function sp2Drop(e, unit, idx) {
+  e.preventDefault(); e.stopPropagation();
+  var id = sp2Drag || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
+  sp2DragEnd();
+  if (!id) return;
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var d = SP2_DRIVERS[sp2Driver];
+  if (!o || !d) return;
+
+  var cells = [];
+  var push = function (caps, load, u) {
+    caps.forEach(function (cap, i) { cells.push({ cap:cap, l:load[i], u:u, i:i }); });
+  };
+  push(SP2_TRUCKS[d.truck].comps.map(function (c) { return c.cap; }), d.load, 'truck');
+  if (d.trailer) push(SP2_TRAILERS[d.trailer].caps, d.tload, 'trailer');
+
+  // dropped on one compartment in particular? try that one first
+  if (idx >= 0) cells.sort(function (a, b) {
+    return (b.u === unit && b.i === idx) - (a.u === unit && a.i === idx);
+  });
+
+  var short = [], put = 0;
+  o.prods.forEach(function (pr) {
+    var left = pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.l.p === pr.p, empty = !c.l.p || c.l.q === 0;
+        if (pass === 1 ? !(same && c.l.q > 0) : !empty) return;
+        if (pass === 2) c.l.p = pr.p;
+        var take = Math.min(c.cap - c.l.q, left);
+        c.l.q += take; left -= take; put += take;
+      });
+    });
+    if (left) short.push(pr.p + ' ' + left.toLocaleString() + ' gal');
+  });
+
+  var was = o.driver;
+  o.driver = sp2Driver;
+  sp2SelOrder = o.id;
+  sp2Render();
+
+  if (short.length)
+    sp2Toast(o.id + ' on ' + d.truck + ' — ' + short.join(', ') + ' would not fit' +
+             (d.trailer ? '' : '; hitch a trailer'));
+  else
+    sp2Toast(o.id + ' loaded onto ' + d.truck + ' · ' + put.toLocaleString() + ' gal' +
+             (was && was !== sp2Driver ? ' (moved from ' + SP2_DRIVERS[was].name + ')' : ''));
+}
+
+function sp2RenderUnit() { sp2RenderDrivers(); sp2RenderRig(); }
 
 function sp2PickDriver(k) {
   sp2Driver = k;
-  // keep the picker honest when the driver is chosen by clicking an order
-  var sel = document.getElementById('sp2DrvSel');
-  if (sel && sel.value !== k) sel.value = k;
   sp2RenderUnit();
 }
-function sp2ViewDriver(){ sp2Toast(SP2_DRIVERS[sp2Driver].name + ' — driver details would open here'); }
+function sp2ViewDriver() { sp2Toast(SP2_DRIVERS[sp2Driver].name + ' — driver details would open here'); }
 
 // ══════════════════════════════════════════════════════════
 //  Shell
@@ -4312,12 +4752,8 @@ function sp2Toast(msg) {
 }
 
 (function () {
-  var sel = document.getElementById('sp2DrvSel');
-  sel.innerHTML = Object.keys(SP2_DRIVERS).map(function(k) {
-    return '<option value="' + k + '">' + SP2_DRIVERS[k].name + ' · ' + SP2_DRIVERS[k].truck + '</option>';
-  }).join('');
-  sel.value = sp2Driver;
   document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor);
+  sp2FltDot();
   sp2Render();
 })();
 
