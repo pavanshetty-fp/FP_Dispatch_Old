@@ -417,64 +417,86 @@
         throw new Error('lanes do not match the drivers on screen');
       if (!document.querySelector('.sp2-ln-hdr')) throw new Error('no lane header');
     });
-    step('every lane draws its rig', () => {
+    step('the selected lane is drawn, the rest are bars', () => {
       const lanes = [...document.querySelectorAll('.sp2-ln')];
-      if (document.querySelectorAll('.sp2-r2').length !== lanes.length)
-        throw new Error('only ' + document.querySelectorAll('.sp2-r2').length + ' of ' + lanes.length + ' lanes are drawn');
-      if (document.querySelector('.sp2-boxes')) throw new Error('a lane still has the old boxes');
-      lanes.forEach(l => {
-        const art = l.querySelector('.sp2-r2');
-        if (!art.querySelector('.sp2-r2-cab')) throw new Error(l.dataset.k + ' has no cab');
-        if (!art.querySelector('.sp2-r2-tank')) throw new Error(l.dataset.k + ' has no tank');
-        if (art.querySelectorAll('.sp2-r2-wheel').length < 3) throw new Error(l.dataset.k + ' has fewer than three wheels');
+      const svgs = document.querySelectorAll('.sp2-sv');
+      if (svgs.length !== 1)
+        throw new Error('expected one tanker on screen, got ' + svgs.length);
+      const sel = lanes.find(l => l.classList.contains('on'));
+      if (!sel) throw new Error('no lane is selected');
+      if (!sel.querySelector('.sp2-sv')) throw new Error('the tanker is not on the selected lane');
+      if (sel.querySelector('.sp2-bars')) throw new Error('the selected lane also has bars');
+      lanes.filter(l => l !== sel).forEach(l => {
+        if (!l.querySelector('.sp2-bars')) throw new Error(l.dataset.k + ' has no bars');
+        if (l.querySelector('.sp2-sv')) throw new Error(l.dataset.k + ' is drawn but not selected');
       });
     });
-    step('every drawing agrees with its own load', () => {
-      [...document.querySelectorAll('.sp2-ln')].forEach(l => {
-        const k = l.dataset.k, d = SP2_DRIVERS[k];
-        let caps = SP2_TRUCKS[d.truck].comps.map(c => c.cap), load = d.load.slice();
-        if (d.trailer) { caps = caps.concat(SP2_TRAILERS[d.trailer].caps); load = load.concat(d.tload); }
-        const cmps = [...l.querySelectorAll('.sp2-r2-cmp')];
-        if (cmps.length !== caps.length) throw new Error(k + ': compartments drawn do not match the rig');
-        cmps.forEach((c, i) => {
-          const want = Math.min(100, Math.round((load[i].q || 0) / caps[i] * 100));
-          const h = parseFloat(c.querySelector('.sp2-r2-liq').style.height);
-          if (Math.abs(h - want) > 1) throw new Error(k + ' C' + (i + 1) + ' drawn at ' + h + '% but holds ' + want + '%');
-          // every fact is inside the compartment, not in a row underneath
-          if (!c.querySelector('.sp2-r2-c') || !c.querySelector('.sp2-r2-p') || !c.querySelector('.sp2-r2-q'))
-            throw new Error(k + ' C' + (i + 1) + ' is missing its number, product or quantity');
-          if (load[i].q > 0 && !c.querySelector('.sp2-r2-s'))
-            throw new Error(k + ' C' + (i + 1) + ' holds fuel but states no fill');
-        });
-      });
-      if (document.querySelector('.sp2-r2-scale')) throw new Error('the old label row is back');
+    step('the tanker is a tanker', () => {
+      const svg = document.querySelector('.sp2-sv');
+      // tank, fuel, domes, wheels, chassis and a tractor — the parts that make
+      // it read as a truck rather than a bar chart
+      if (svg.querySelectorAll('circle').length < 6) throw new Error('fewer than three wheels (two circles each)');
+      if (!svg.querySelector('clipPath')) throw new Error('the tank does not clip its fuel');
+      if (!svg.querySelector('linearGradient')) throw new Error('the shell has no metal on it');
+      if (!svg.querySelector('.sp2-sv-tag')) throw new Error('the tank is not named');
+      const k = document.querySelector('.sp2-ln.on').dataset.k;
+      const n = SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.length +
+                (SP2_DRIVERS[k].trailer ? SP2_TRAILERS[SP2_DRIVERS[k].trailer].caps.length : 0);
+      if (svg.querySelectorAll('.sp2-sv-strip').length !== n)
+        throw new Error('compartments drawn do not match the rig');
+      // a wave, not a flat lid: the surface path has to curve
+      const liq = [...svg.querySelectorAll('.sp2-sv-liq')];
+      if (liq.length && !/q/.test(liq[0].getAttribute('d')))
+        throw new Error('the fuel surface is flat');
     });
-    step('the cab sits on the chassis, in every lane', () => {
-      [...document.querySelectorAll('.sp2-ln')].forEach(l => {
-        const cab = l.querySelector('.sp2-r2-cab').getBoundingClientRect();
-        const tank = l.querySelector('.sp2-r2-tank').getBoundingClientRect();
-        if (Math.abs(cab.bottom - tank.bottom) > 2)
-          throw new Error(l.dataset.k + ': the cab floats off by ' + Math.round(cab.bottom - tank.bottom) + 'px');
+    step('the fuel stands at the level it says', () => {
+      const svg = document.querySelector('.sp2-sv');
+      const k = document.querySelector('.sp2-ln.on').dataset.k, d = SP2_DRIVERS[k];
+      let caps = SP2_TRUCKS[d.truck].comps.map(c => c.cap), load = d.load.slice();
+      if (d.trailer) { caps = caps.concat(SP2_TRAILERS[d.trailer].caps); load = load.concat(d.tload); }
+      const liq = [...svg.querySelectorAll('.sp2-sv-liq')];
+      const filled = caps.filter((c, i) => (load[i].q || 0) > 0).length;
+      if (liq.length !== filled) throw new Error('fuel drawn in ' + liq.length + ' of ' + filled + ' loaded compartments');
+      // read the surface back off the path and check it against the gallons
+      let seen = 0;
+      caps.forEach((cap, i) => {
+        if (!(load[i].q > 0)) return;
+        const pct = Math.min(100, Math.round(load[i].q / cap * 100));
+        const want = TK.y + TK.h * (1 - pct / 100);
+        const got = parseFloat(liq[seen++].dataset.top);
+        if (Math.abs(got - want) > 0.6)
+          throw new Error('C' + (i + 1) + ' stands at ' + got + ' but ' + pct + '% is ' + want.toFixed(1));
       });
+      // and every compartment still states its own facts
+      if (svg.querySelectorAll('.sp2-sv-p').length !== caps.length)
+        throw new Error('a compartment has no product label');
+      if (svg.querySelectorAll('.sp2-sv-q').length !== caps.length)
+        throw new Error('a compartment has no quantity label');
     });
-    step('no label is cut off, trailer or not', () => {
-      const noClip = where => {
-        document.querySelectorAll('.sp2-r2-c, .sp2-r2-p, .sp2-r2-q').forEach(el => {
-          if (el.scrollWidth > el.clientWidth)
-            throw new Error('label cut off ' + where + ': ' + el.textContent);
-        });
-        document.querySelectorAll('.sp2-r2-tank').forEach(tk => {
-          if (tk.scrollWidth > tk.clientWidth + 1)
-            throw new Error('compartments overflow the tank ' + where);
-        });
-      };
-      noClip('as it stands');
-      // a trailer halves the truck's share of the width — the tightest it gets
-      const k = document.querySelectorAll('.sp2-ln')[0].dataset.k;
+    step('the drawing survives a trailer', () => {
+      const k = document.querySelector('.sp2-ln.on').dataset.k;
       const had = SP2_DRIVERS[k].trailer;
+      const before = document.querySelector('.sp2-sv').querySelectorAll('.sp2-sv-strip').length;
       sp2AddTrailer('TR-660', k);
-      noClip('with a trailer hitched');
+      const svg = document.querySelector('.sp2-sv');
+      if (!svg) throw new Error('the tanker vanished when a trailer was hitched');
+      if (svg.querySelectorAll('.sp2-sv-strip').length !== before + SP2_TRAILERS['TR-660'].caps.length)
+        throw new Error('the trailer compartments were not drawn');
+      if (svg.querySelectorAll('clipPath').length < 2) throw new Error('the two tanks share one clip');
       if (!had) sp2DropTrailer(k); else sp2AddTrailer(had, k);
+    });
+    step('bars show the level without the truck', () => {
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
+      const k = lane.dataset.k, d = SP2_DRIVERS[k];
+      let caps = SP2_TRUCKS[d.truck].comps.map(c => c.cap), load = d.load.slice();
+      if (d.trailer) { caps = caps.concat(SP2_TRAILERS[d.trailer].caps); load = load.concat(d.tload); }
+      const bars = [...lane.querySelectorAll('.sp2-bar2')];
+      if (bars.length !== caps.length) throw new Error(k + ': bars do not match the rig');
+      bars.forEach((b, i) => {
+        const want = Math.min(100, Math.round((load[i].q || 0) / caps[i] * 100));
+        const got = parseFloat(b.querySelector('.sp2-bar2-fill').style.height);
+        if (Math.abs(got - want) > 1) throw new Error(k + ' C' + (i + 1) + ': bar at ' + got + '%, holds ' + want + '%');
+      });
     });
     step('compact fits more drivers, and keeps the one you are on', () => {
       const h = () => [...document.querySelectorAll('.sp2-ln')].map(l => l.getBoundingClientRect().height);
@@ -488,17 +510,14 @@
       const other = sel === 0 ? 1 : 0;
       if (comp[other] >= full[other] - 40)
         throw new Error('compact saved only ' + Math.round(full[other] - comp[other]) + 'px');
-      // the tank keeps its shape and its fuel; only the writing goes
+      // the chosen lane keeps its tanker; the rest keep bars and lose the writing
+      if (!document.querySelector('.sp2-ln.on .sp2-sv')) throw new Error('compact took the tanker away');
       [...document.querySelectorAll('.sp2-ln')].forEach((l, i) => {
         if (i === sel) return;
-        if (!l.querySelector('.sp2-r2-tank')) throw new Error('compact dropped the tank');
-        if (!l.querySelector('.sp2-r2-liq')) throw new Error('compact dropped the fuel');
-        const cab = l.querySelector('.sp2-r2-cab').getBoundingClientRect();
-        const tank = l.querySelector('.sp2-r2-tank').getBoundingClientRect();
-        if (Math.abs(cab.bottom - tank.bottom) > 2)
-          throw new Error('compact floats the cab by ' + Math.round(cab.bottom - tank.bottom) + 'px');
-        const tk = l.querySelector('.sp2-r2-tank');
-        if (tk.scrollWidth > tk.clientWidth + 1) throw new Error('compact clips the compartments');
+        if (!l.querySelector('.sp2-bars')) throw new Error('compact dropped the bars');
+        if (!l.querySelector('.sp2-bar2-fill')) throw new Error('compact dropped the fuel');
+        if (getComputedStyle(l.querySelector('.sp2-bar2-p')).display !== 'none')
+          throw new Error('compact still writes the product on every bar');
       });
     });
     step('the density switch is V2 only', () => {
@@ -583,8 +602,9 @@
       out.layout.push('clipped: "' + (e.value || e.textContent || '').trim().slice(0, 24) + '" ' + e.clientWidth + '<' + e.scrollWidth);
     }
   });
-  // icons that forgot their size
-  document.querySelectorAll('svg').forEach(s => {
+  // icons that forgot their size — an illustration is sized on purpose, so it
+  // declares itself with a class rather than being caught by this
+  document.querySelectorAll('svg:not(.sp2-sv)').forEach(s => {
     const r = s.getBoundingClientRect();
     if (r.width > 40 || r.height > 40) out.layout.push('oversized svg: ' + Math.round(r.width) + 'x' + Math.round(r.height));
   });

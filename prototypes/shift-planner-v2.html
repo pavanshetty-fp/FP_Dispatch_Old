@@ -329,34 +329,33 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
 
 /* ── the tanker, drawn ────────────────────────────────────
-   A capsule tank cut into compartments by capacity, with the fuel standing in
-   each one. The numbers go underneath, where no product colour is behind them. */
-.sp2-r2{display:flex;align-items:flex-start;margin-top:10px;}
-.sp2-r2-cabwrap{flex:0 0 52px;}
-.sp2-r2-cab{height:74px;margin-top:36px;border:2px solid var(--fp-ink-1);border-right:none;border-radius:11px 3px 2px 2px;background:var(--fp-card-2);position:relative;}
-.sp2-r2-win{position:absolute;left:7px;right:4px;top:8px;height:21px;border-radius:4px 6px 0 0;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-2);}
-.sp2-r2-art{flex:1;display:flex;align-items:flex-start;min-width:0;overflow-x:auto;padding-bottom:2px;}
-.sp2-r2-unit{display:flex;flex-direction:column;flex-basis:0;min-width:min-content;}
-.sp2-r2-rail{height:4px;margin:0 20px 2px;border-radius:2px;background:var(--fp-outline-2);}
-.sp2-r2-tank{display:flex;height:104px;border:2px solid var(--fp-ink-1);border-radius:9999px;overflow:hidden;background:var(--fp-surface-1b);}
-.sp2-r2-cmp{position:relative;flex-basis:0;min-width:76px;border-right:2px solid var(--fp-ink-1);}
-.sp2-r2-cmp:last-child{border-right:none;}
-.sp2-r2-cmp.sp2-over{background:var(--fp-selected);}
-.sp2-r2-liq{position:absolute;left:0;right:0;bottom:0;opacity:.85;border-top:2px solid rgba(3,4,5,.18);transition:height .3s ease;}
-/* vertically centred, so the text stays in the tank's full-width middle band
-   rather than running into the capsule's rounded ends */
-.sp2-r2-in{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 5px;text-align:center;}
-.sp2-r2-c{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--fp-ink-1);opacity:.62;font-variant-numeric:tabular-nums;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-p{font-size:12px;font-weight:600;color:var(--fp-ink-1);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-p.empty{font-weight:400;opacity:.6;}
-.sp2-r2-q{font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
-.sp2-r2-q span{opacity:.6;}
-.sp2-r2-s{display:flex;align-items:center;justify-content:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--fp-ink-1);line-height:1.3;margin-top:1px;}
-.sp2-r2-s.empty-c{opacity:.6;font-weight:400;}
-.sp2-r2-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.7);}
-.sp2-r2-dot.full{background:var(--status-success);}
-.sp2-r2-dot.partial{background:var(--status-caution);}
-.sp2-r2-dot.empty-c{background:var(--fp-outline-2);}
+   Natural size, scrolled rather than scaled, so a compartment's numbers stay
+   the same size whatever truck is under them. */
+.sp2-rig{position:relative;margin-top:10px;overflow-x:auto;padding-bottom:2px;}
+.sp2-rig::-webkit-scrollbar{height:7px;}
+.sp2-rig::-webkit-scrollbar-thumb{background:var(--fp-outline-2);border-radius:4px;}
+.sp2-sv{display:block;}
+.sp2-sv text{font-family:inherit;text-anchor:middle;dominant-baseline:middle;}
+.sp2-sv-c{font-size:9px;font-weight:700;letter-spacing:.04em;fill:var(--fp-ink-1);opacity:.62;}
+.sp2-sv-p{font-size:12px;font-weight:600;fill:var(--fp-ink-1);}
+.sp2-sv-p.empty{font-weight:400;opacity:.55;}
+.sp2-sv-q{font-size:11px;fill:var(--fp-ink-1);}
+.sp2-sv-s{font-size:9px;font-weight:600;letter-spacing:.04em;fill:var(--fp-ink-1);text-transform:uppercase;}
+.sp2-sv-tag{font-size:9px;font-weight:600;letter-spacing:.09em;fill:var(--fp-ink-3);text-transform:uppercase;}
+/* the strip along the bottom of a compartment carries its state in colour,
+   so the words above it never have to sit on a status tint */
+.sp2-sv-strip.full{fill:var(--status-success);}
+.sp2-sv-strip.partial{fill:var(--status-caution);}
+.sp2-sv-strip.empty-c{fill:var(--fp-outline-1);}
+
+/* ── every other lane: plain rectangles ── */
+.sp2-bars{display:flex;gap:5px;margin-top:9px;height:52px;}
+.sp2-bar2{position:relative;flex-basis:0;min-width:34px;border:1.5px solid var(--fp-outline-2);border-radius:var(--r-md);overflow:hidden;background:var(--fp-surface-1b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+.sp2-bar2.sp2-over{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);}
+.sp2-bar2-fill{position:absolute;left:0;right:0;bottom:0;opacity:.85;transition:height .3s ease;}
+.sp2-bar2-c{position:relative;z-index:1;font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--fp-ink-1);opacity:.62;}
+.sp2-bar2-p{position:relative;z-index:1;font-size:10px;font-weight:600;color:var(--fp-ink-1);max-width:100%;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-bar2-gap{flex:0 0 9px;}
 .sp2-r2-chassis{height:5px;margin:0 12px 0 0;background:var(--fp-ink-1);border-radius:0 0 3px 3px;}
 .sp2-r2-cabframe{height:5px;margin-left:5px;background:var(--fp-ink-1);}
 .sp2-r2-axles{position:relative;height:20px;}
@@ -368,29 +367,15 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
 
 /* ── Compact: a density, not a second drawing ─────────────
-   The tank keeps its shape and its fuel — what goes is the writing inside it,
-   which you only need for the rig you are actually loading. That one is the
-   chosen lane, and it stays full. */
+   The selected lane keeps the tanker whatever the density; the rest keep their
+   bars and lose the writing, which you only need for the rig you are loading. */
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on){padding:7px 16px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-day{padding:7px 10px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-sync{display:none;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-shift{margin-top:3px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-drv .sp2-state{margin-top:5px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2{margin-top:6px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-rail{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-tank{height:40px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-cab{height:32px;margin-top:8px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-win{top:5px;height:12px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-cmp{min-width:26px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-in{padding:2px 3px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-ccap{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-p,
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-q,
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-s,
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-tag{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-axles{height:12px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-wheel{width:13px;height:13px;border-width:2px;top:-1px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-r2-hitch{margin-top:40px;}
+.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-bars{height:30px;margin-top:7px;}
+.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-bar2-p{display:none;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:6px;padding-top:5px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-stop{display:none;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-trl-btn,
@@ -1256,70 +1241,199 @@ function sp2Drop(e, unit, idx, k) {
 // V1 shows one rig at a time and makes you choose first. A lane shows every
 // rig at once, so an order goes straight to whichever driver has room.
 
-// The tanker, drawn: a capsule tank cut into compartments by capacity, the
-// fuel standing in each one. The numbers go underneath, where no product
-// colour can sit behind them.
-function sp2ArtUnit(caps, load, k, unit, tag, axles) {
-  var tank = caps.map(function (cap, i) {
-    var l = load[i] || { p:'', q:0 };
+// ══════════════════════════════════════════════════════════
+//  The rig, drawn
+// ══════════════════════════════════════════════════════════
+// The selected lane gets the tanker: a capsule tank cut into compartments by
+// capacity, fuel standing in each one under a wavy surface, dome covers on top
+// and the tractor at the front. Every other lane gets plain bars — thirty
+// tankers on one screen is noise, and you only read the rig you are loading.
+//
+// Drawn at its natural size and scrolled rather than scaled, so the numbers
+// inside a compartment stay the same size whatever the truck is carrying.
+var TK = { y:16, h:60, chassisY:76, chassisH:7, wheelY:93, wheelR:12.5, hubR:5.5, H:110 };
+
+// A liquid surface is never flat. Three gentle crests across the compartment,
+// clipped by the tank, so a full one reads as full rather than as a flat lid.
+function sp2Wave(x0, x1, top, bottom) {
+  var w = x1 - x0, seg = w / 3, amp = 3.4, d = 'M' + x0 + ',' + top;
+  for (var i = 0; i < 3; i++) {
+    d += ' q' + (seg / 4).toFixed(1) + ',' + (-amp) + ' ' + (seg / 2).toFixed(1) + ',0' +
+         ' q' + (seg / 4).toFixed(1) + ',' + amp + ' ' + (seg / 2).toFixed(1) + ',0';
+  }
+  return d + ' L' + x1 + ',' + bottom + ' L' + x0 + ',' + bottom + ' Z';
+}
+
+function sp2CompW(cap) { return Math.max(86, Math.round(cap / 1000 * 46)); }
+
+// One tank: the shell, the fuel, the dividers, the domes and the labels.
+function sp2TankSvg(x, caps, load, k, unit, uid) {
+  var widths = caps.map(sp2CompW);
+  var tw = widths.reduce(function (a, b) { return a + b; }, 0);
+  var y = TK.y, h = TK.h, r = h / 2, bot = y + h;
+  var clip = 'clip' + uid;
+
+  var liquid = '', dividers = '', domes = '', labels = '', strips = '', hits = '';
+  var cx = x;
+  caps.forEach(function (cap, i) {
+    var w = widths[i], l = load[i] || { p:'', q:0 };
     var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
     var cls = pct >= 99 ? 'full' : pct > 0 ? 'partial' : 'empty-c';
     var word = pct >= 99 ? 'Full' : pct > 0 ? 'Partially full' : 'Empty';
     var col = SP2_PROD_COLORS[l.p] || 'transparent';
-    // Everything reads in near-black, which clears every product colour we
-    // use; the state keeps its colour in the dot, where contrast is not text.
-    return '<div class="sp2-r2-cmp" style="flex-grow:' + cap + ';" ' +
-        'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-        'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')" ' +
-        'title="C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity">' +
-      '<div class="sp2-r2-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
-      '<div class="sp2-r2-in">' +
-        '<div class="sp2-r2-c">C' + (i + 1) +
-          '<span class="sp2-r2-ccap"> · ' + cap.toLocaleString() + '</span></div>' +
-        '<div class="sp2-r2-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
-        '<div class="sp2-r2-q">' + l.q.toLocaleString() + ' gal</div>' +
-        (l.p
-          ? '<div class="sp2-r2-s"><span class="sp2-r2-dot ' + cls + '"></span>' +
-              pct + '% · ' + word + '</div>'
-          : '') +
-      '</div>' +
-    '</div>';
-  }).join('');
+    var mid = cx + w / 2;
 
-  var wheels = '';
-  for (var w = 0; w < axles; w++) wheels += '<span class="sp2-r2-wheel" style="right:' + (14 + w * 26) + 'px;"></span>';
+    if (pct > 0) {
+      var top = y + h * (1 - pct / 100);
+      liquid += '<path class="sp2-sv-liq" data-c="' + i + '" data-top="' + top.toFixed(1) + '" d="' +
+                  sp2Wave(cx, cx + w, top, bot) + '" fill="' + col + '" opacity="0.85"/>' +
+                '<path d="' + sp2Wave(cx, cx + w, top, top + 2.2) + '" fill="rgba(3,4,5,0.18)"/>';
+    }
+    if (i) dividers += '<line x1="' + cx + '" y1="' + y + '" x2="' + cx + '" y2="' + bot +
+                       '" stroke="var(--fp-ink-1)" stroke-width="2.5"/>';
+    // the manhole each compartment is filled through
+    domes += '<rect x="' + (mid - 12) + '" y="' + (y - 9) + '" width="24" height="11" rx="4" ' +
+             'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.2"/>';
+    strips += '<rect x="' + (cx + 2) + '" y="' + (bot - 5) + '" width="' + (w - 4) + '" height="3" rx="1.5" ' +
+              'class="sp2-sv-strip ' + cls + '"/>';
+    labels +=
+      '<text x="' + mid + '" y="' + (y + 15) + '" class="sp2-sv-c">C' + (i + 1) + ' · ' + cap.toLocaleString() + '</text>' +
+      '<text x="' + mid + '" y="' + (y + 30) + '" class="sp2-sv-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</text>' +
+      '<text x="' + mid + '" y="' + (y + 43) + '" class="sp2-sv-q">' + l.q.toLocaleString() + ' gal</text>' +
+      (l.p ? '<text x="' + mid + '" y="' + (y + 54) + '" class="sp2-sv-s">' + pct + '% · ' + word + '</text>' : '');
+    // a transparent panel per compartment, so a drop can aim at one
+    hits += '<rect x="' + cx + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="transparent" ' +
+            'style="cursor:copy;" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+            'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')">' +
+            '<title>C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity</title></rect>';
+    cx += w;
+  });
 
-  var cap = caps.reduce(function (a, c) { return a + c; }, 0);
-  return '<div class="sp2-r2-unit" style="flex-grow:' + cap + ';">' +
-      '<div class="sp2-r2-rail"></div>' +
-      '<div class="sp2-r2-tank">' + tank + '</div>' +
-      '<div class="sp2-r2-chassis"></div>' +
-      '<div class="sp2-r2-axles">' + wheels + '</div>' +
-      (tag ? '<div class="sp2-r2-tag">' + tag + '</div>' : '') +
-    '</div>';
+  return {
+    w: tw,
+    svg:
+      '<defs><clipPath id="' + clip + '">' +
+        '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '"/>' +
+      '</clipPath>' +
+      '<linearGradient id="shell' + uid + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#ffffff"/>' +
+        '<stop offset="0.42" stop-color="var(--fp-surface-1b)"/>' +
+        '<stop offset="1" stop-color="var(--fp-card-1)"/>' +
+      '</linearGradient></defs>' +
+      domes +
+      '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '" fill="url(#shell' + uid + ')"/>' +
+      '<g clip-path="url(#' + clip + ')">' + liquid +
+        // the sheen that makes it read as a polished tank rather than a box
+        '<rect x="' + x + '" y="' + (y + 3) + '" width="' + tw + '" height="9" rx="4.5" fill="#fff" opacity="0.30"/>' +
+        dividers + strips +
+      '</g>' +
+      '<rect x="' + x + '" y="' + y + '" width="' + tw + '" height="' + h + '" rx="' + r + '" fill="none" ' +
+        'stroke="var(--fp-ink-1)" stroke-width="2.5"/>' +
+      labels + hits
+  };
 }
 
+function sp2Wheels(cx, n) {
+  var out = '';
+  for (var i = 0; i < n; i++) {
+    var x = cx + i * 28;
+    out += '<circle cx="' + x + '" cy="' + TK.wheelY + '" r="' + TK.wheelR + '" fill="var(--fp-ink-1)"/>' +
+           '<circle cx="' + x + '" cy="' + TK.wheelY + '" r="' + TK.hubR + '" fill="var(--fp-surface-1b)"/>';
+  }
+  return out;
+}
+
+// The tractor, nose to the right, as in the reference: sleeper, windscreen,
+// hood, stack, steer axle and drive tandem.
+function sp2Tractor(x) {
+  var y = TK.y, bot = TK.chassisY;
+  return '<g>' +
+    // stack, behind the sleeper
+    '<rect x="' + (x + 3) + '" y="' + (y - 8) + '" width="7" height="40" rx="3.5" ' +
+      'fill="var(--fp-outline-2)" stroke="var(--fp-ink-1)" stroke-width="2"/>' +
+    // hood first, so the cab overlaps it rather than the other way round
+    '<path d="M' + (x + 72) + ',' + (y + 44) + ' L' + (x + 100) + ',' + (y + 44) +
+      ' q8,0 8,7 L' + (x + 108) + ',' + bot + ' L' + (x + 72) + ',' + bot + ' Z" ' +
+      'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.5" stroke-linejoin="round"/>' +
+    // sleeper + cab, raked into the windscreen
+    '<path d="M' + (x + 14) + ',' + bot + ' L' + (x + 14) + ',' + (y + 8) +
+      ' q0,-6 6,-6 L' + (x + 58) + ',' + (y + 2) + ' q5,0 7,5 L' + (x + 76) + ',' + (y + 44) +
+      ' L' + (x + 76) + ',' + bot + ' Z" ' +
+      'fill="var(--fp-card-2)" stroke="var(--fp-ink-1)" stroke-width="2.5" stroke-linejoin="round"/>' +
+    // windscreen, on the same rake as the nose
+    '<path d="M' + (x + 60) + ',' + (y + 10) + ' q3,0 4,3 L' + (x + 72) + ',' + (y + 38) +
+      ' L' + (x + 60) + ',' + (y + 38) + ' Z" ' +
+      'fill="var(--fp-surface-1b)" stroke="var(--fp-outline-2)" stroke-width="1.5"/>' +
+    // side glass
+    '<rect x="' + (x + 23) + '" y="' + (y + 11) + '" width="29" height="19" rx="3" ' +
+      'fill="var(--fp-surface-1b)" stroke="var(--fp-outline-2)" stroke-width="1.5"/>' +
+    // grille
+    '<rect x="' + (x + 95) + '" y="' + (y + 50) + '" width="13" height="13" rx="2.5" fill="var(--fp-outline-2)"/>' +
+    sp2Wheels(x + 28, 2) + sp2Wheels(x + 92, 1) +
+  '</g>';
+}
+
+// A tank wagon carries its tank on the same chassis as the cab; a transport
+// pulls it on a trailer. Same drawing either way, different gap.
 function sp2RigArt(k) {
   var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
-  var caps = t.comps.map(function (c) { return c.cap; });
-  var a = sp2Sum(caps, d.load);
   var trl = d.trailer ? SP2_TRAILERS[d.trailer] : null;
-  var art = sp2ArtUnit(caps, d.load, k, 'truck', trl
-      ? d.truck + ' · ' + a.q.toLocaleString() + ' / ' + a.cap.toLocaleString() + ' gal' : '', 2);
+  var uid = (k + '-' + d.truck + (d.trailer || '')).replace(/[^a-z0-9]/gi, '');
+  var pad = 8, x = pad, parts = '', tags = '';
+
+  // drawn rear-to-front, because the tractor is at the right
   if (trl) {
-    var b = sp2Sum(trl.caps, d.tload);
-    art += '<div class="sp2-r2-hitch"></div>' +
-      sp2ArtUnit(trl.caps, d.tload, k, 'trailer',
-        d.trailer + ' · ' + b.q.toLocaleString() + ' / ' + b.cap.toLocaleString() + ' gal', 3);
+    var p = sp2TankSvg(x, trl.caps, d.tload, k, 'trailer', uid + 'b');
+    parts += p.svg + sp2Wheels(x + 30, 2);
+    tags += '<text x="' + (x + p.w / 2) + '" y="' + (TK.H - 2) + '" class="sp2-sv-tag">' + d.trailer + ' · ' + trl.type + '</text>';
+    x += p.w;
+    parts += '<rect x="' + x + '" y="' + (TK.chassisY - 4) + '" width="22" height="6" rx="3" fill="var(--fp-ink-1)"/>';
+    x += 22;
   }
-  return '<div class="sp2-r2">' +
-      '<div class="sp2-r2-cabwrap">' +
-        '<div class="sp2-r2-cab"><div class="sp2-r2-win"></div></div>' +
-        '<div class="sp2-r2-cabframe"></div>' +
-        '<div class="sp2-r2-axles"><span class="sp2-r2-wheel" style="left:4px;"></span></div>' +
-      '</div>' +
-      '<div class="sp2-r2-art">' + art + '</div>' +
-    '</div>';
+  var m = sp2TankSvg(x, t.comps.map(function (c) { return c.cap; }), d.load, k, 'truck', uid + 'a');
+  parts += m.svg + sp2Wheels(x + 30, 2);
+  tags += '<text x="' + (x + m.w / 2) + '" y="' + (TK.H - 2) + '" class="sp2-sv-tag">' + d.truck + ' · ' + t.type + '</text>';
+  var chassisFrom = pad, chassisTo = x + m.w + 6;
+  x += m.w + 6;
+  parts += sp2Tractor(x);
+  var W = x + 116 + pad;
+
+  return '<div class="sp2-rig" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+      'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')">' +
+    '<svg class="sp2-sv" width="' + W + '" height="' + TK.H + '" viewBox="0 0 ' + W + ' ' + TK.H + '">' +
+      '<rect x="' + chassisFrom + '" y="' + TK.chassisY + '" width="' + (chassisTo - chassisFrom) +
+        '" height="' + TK.chassisH + '" rx="2" fill="var(--fp-ink-1)"/>' +
+      parts + tags +
+    '</svg>' +
+    '<div class="sp2-drop-hint">Drop the order here to load it</div>' +
+  '</div>';
+}
+
+// Every other lane: plain rectangles, filled to the level. No cab, no wheels —
+// enough to see who has room, and nothing more.
+function sp2SimpleBars(k) {
+  var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
+  var row = function (caps, load, unit) {
+    return caps.map(function (cap, i) {
+      var l = load[i] || { p:'', q:0 };
+      var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
+      var cls = pct >= 99 ? 'full' : pct > 0 ? 'partial' : 'empty-c';
+      var col = SP2_PROD_COLORS[l.p] || 'transparent';
+      return '<div class="sp2-bar2 ' + cls + '" style="flex-grow:' + cap + ';" ' +
+          'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+          'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')" ' +
+          'title="C' + (i + 1) + ' · ' + (l.p || 'Empty') + ' · ' +
+            l.q.toLocaleString() + ' / ' + cap.toLocaleString() + ' gal">' +
+        '<div class="sp2-bar2-fill" style="height:' + pct + '%;background:' + col + ';"></div>' +
+        '<span class="sp2-bar2-c">C' + (i + 1) + '</span>' +
+        '<span class="sp2-bar2-p">' + (l.p || '') + '</span>' +
+      '</div>';
+    }).join('');
+  };
+  var out = row(t.comps.map(function (c) { return c.cap; }), d.load, 'truck');
+  if (d.trailer) out += '<div class="sp2-bar2-gap"></div>' +
+                        row(SP2_TRAILERS[d.trailer].caps, d.tload, 'trailer');
+  return '<div class="sp2-bars">' + out + '</div>';
 }
 
 function sp2LaneHtml(k) {
@@ -1368,7 +1482,7 @@ function sp2LaneHtml(k) {
         '<button class="sp2-link" onclick="event.stopPropagation();sp2Unload(\'' + k + '\')">Unload</button>' +
       '</div>' +
 
-      sp2RigArt(k) +
+      (k === sp2Driver ? sp2RigArt(k) : sp2SimpleBars(k)) +
 
       '<div class="sp2-ln-stops">' +
         '<span class="sp2-ln-stops-lbl">' + mine.length + ' order' + (mine.length === 1 ? '' : 's') +
