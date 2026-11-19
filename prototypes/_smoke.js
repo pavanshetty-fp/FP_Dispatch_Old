@@ -170,6 +170,10 @@
   if (out.page.startsWith('shift-planner')) {
     step('orders on the timeline', () => {
       if (document.querySelectorAll('.sp2-card').length < 3) throw new Error('too few order cards');
+      // runs before anything touches the view, so this is the state it opened in
+      if (sp2View !== 'v') throw new Error('the first column opened on "' + sp2View + '", not the vertical timeline');
+      if (!document.querySelector('.sp2-vt-rail')) throw new Error('no vertical rail on load');
+      if (document.querySelector('.sp2-ruler')) throw new Error('the top axis is drawn on load');
     });
     step('quick filter narrows', () => {
       const all = document.querySelectorAll('.sp2-card').length;
@@ -210,10 +214,15 @@
       if (document.querySelector('.sp2-ruler')) throw new Error('vertical view still draws the top axis');
       sp2SetView('h');
       if (!document.querySelector('.sp2-ruler')) throw new Error('horizontal lost its axis');
+      sp2SetView('v');
     });
-    step('timeline scrolls horizontally', () => {
+    step('the horizontal timeline scrolls', () => {
+      // only that view draws a scale wide enough to run off the column
+      sp2SetView('h');
       const w = document.getElementById('sp2TlWrap');
       if (w.scrollWidth <= w.clientWidth) throw new Error('nothing to scroll');
+      sp2SetView('v');
+      if (w.scrollWidth > w.clientWidth + 2) throw new Error('the vertical view scrolls sideways too');
     });
     step('both filters sit behind the icon', () => {
       const hdr = document.querySelector('.sp2-col-orders .sp2-col-hdr');

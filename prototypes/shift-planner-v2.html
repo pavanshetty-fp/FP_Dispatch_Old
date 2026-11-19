@@ -82,6 +82,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
    clamp() and a percentage, so the transition stalls where it started. */
 .sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-card-1);}
 .sp2-body[data-view="v"] .sp2-col-orders{flex-basis:25%;}
+.sp2-body[data-view="v"] .sp2-tl-wrap{overflow-x:hidden;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1a);}
 
 .sp2-col-hdr{min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--fp-stroke-hairline);flex-shrink:0;flex-wrap:wrap;background:var(--fp-surface-1b);}
@@ -406,7 +407,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
     </div>
   </div>
 
-  <div class="sp2-body" id="sp2Body" data-view="h">
+  <div class="sp2-body" id="sp2Body" data-view="v">
 
     <!-- ══ Column 1 — the orders, on a timeline ══ -->
     <div class="sp2-col sp2-col-orders">
@@ -416,10 +417,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
         <div class="sp2-hdr-tools">
           <div class="sp2-seg">
-            <button class="sp2-seg-btn on" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
+            <button class="sp2-seg-btn" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
             </button>
-            <button class="sp2-seg-btn" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
+            <button class="sp2-seg-btn on" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
             </button>
           </div>
@@ -655,7 +656,7 @@ var sp2Layout = 'v2';
 var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
 var sp2Drag = null;          // the order id being dragged
 var sp2SelOrder = null;
-var sp2View = 'h';            // h horizontal · v vertical
+var sp2View = 'v';            // v vertical (the default) · h horizontal
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 206;
