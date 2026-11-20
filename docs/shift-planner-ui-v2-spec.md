@@ -235,3 +235,102 @@ constituent chips) are skipped for V2, which has its own: the card's bands, the
 inner card's 6px inset, the blend brackets, the ratio-preserving edit, the
 suggestion rules, and a guard that at least 15 drivers — 4 of them part-loaded —
 can be offered a real order from the day's own pool.
+
+---
+
+## Cleaning up the right column (2026-11-20, round 4)
+
+Pavan's spec again, in his order.
+
+### The driver
+Avatar · name · **an edit pencil** (changes the driver) · **a forward chevron**
+(opens the record). Then the shift time behind a clock icon, and under it what
+is left of it — "starts in 30m", "4h 12m left", "ended 1h ago", "Off duty" —
+**dotted-underlined**, because there is more behind it.
+
+**Hovering the shift** opens a card holding everything about that driver's
+clock: the shift drawn with its buffer, the four Samsara boxes, and a filled
+**Open driver details** CTA. The card sits inside the hovered group with no
+gap, so the pointer can travel into it.
+
+Off the lane: the duty-state pill, the hub and sync line, the always-on HOS
+strip, the "Change driver" link. **Cost, stated:** the at-a-glance HOS warning
+chip is gone — a driver near a limit now only shows it on hover.
+
+**The driver is its own card**, standing beside the truck's: white, outline
+rim, 10px corners, a resting shadow lifting on hover, the selected rim on the
+chosen lane. The column behind them is white and its sticky header with it;
+the lane is only the row that holds the two cards. Width 180 → 264px, because
+the longest name in the roster ("Owen Fitzgerald", 109px) has to sit beside the
+avatar, the grip and two controls.
+
+### Moving a lane
+The **Move** link is gone. **Six dots** at the head of the driver card, grab
+cursor. It indicates; clicking it runs the same move the link did. *True
+drag-to-reorder is not built.*
+
+### The truck, collapsed
+With **nothing planned**, the card says only what the rig is — `LT-46 ·
+Transport · 5 compartments · 10,500 gal` — and then **"Load planning not
+started."** No empty compartment boxes, no divider, no "0 orders", no
+"0% · 0 of 10,500 gal".
+
+With **load on it**, the order count moves up into the head as its own group
+and the divider above the stops goes:
+`TW-7 · Tank wagon · 3 compartments   1 order   62% · 3,100 of 5,000 gal`
+
+---
+
+## Rearranging fuel: the load is a table (2026-11-20, round 5)
+
+Pavan: *"not satisfactory, or not even intuitive."* Three ways went to him in
+`prototypes/ui2-move-fuel.html`; he picked **A**.
+
+**What was wrong.** Five steps — click the source, read a toast, click the
+target, set a number in a popover, press Move. It was a mode, and the mode was
+invisible between the two clicks. It was the one thing on the screen you
+clicked twice. The rules (full, wrong product) only arrived after you had
+picked. And the number field being asked for was already there, three clicks
+deep.
+
+**A, as built.** The compartments are the lines table: **Comp · Product ·
+Gallons · Full**, the gallons typed in place. It is a budget you balance — take
+400 out of C3 and the card holds **"400 gal of CLR DSL still to place"**, the
+rim goes amber, and every empty compartment reads **"Empty — takes CLR DSL"**.
+Type it into C4, or press **Put it where it fits**. **Undo** restores the whole
+round, not the last keystroke.
+
+The rules now arrive as you type: a compartment clamps to its capacity and says
+why; one product per compartment is refused by name; a second product cannot be
+loosened while one is still loose. *Only one product is loose at a time — two
+pools would need the foot to list both.*
+
+The two-click move is retired. Compartments on the drawing are still drop
+targets for orders.
+
+---
+
+## The open lane's middle, side by side (2026-11-20, round 6)
+
+The compartment table on the **left at 300px**, the truck drawn **beside it on
+the right**, one band instead of two. Head and foot of the card unchanged.
+
+**The drawing drops its numbers there.** It used to print `C1 · 1,200 / Empty /
+0 gal / 0% · Empty` in every compartment — all four now sit in the table a few
+inches away. Beside the table it keeps `C1 C2 C3` and does what it is for: the
+shape, the fill levels, the colours. It scales to its column rather than
+scrolling.
+
+Checked on the worst case — a transport **and** a trailer, eight compartments:
+eight table rows, the drawing a readable silhouette at 52px. *Cost, stated: on
+a full rig the drawing is a thumbnail.*
+
+One real bug this surfaced: `sp2FitRig` redraws the SVG after layout once it
+knows the width, and it did not know about the split — it was putting the
+labels back and sizing to the card. It now draws bare and measures the column.
+
+### Checks
+V2 **55/55**, V1 **54/54**, merged file green, no console errors and no clip
+findings at 1512×950. Checks that read the drawing's product, gallons and fill
+now read the **table**, and one asserts the drawing does not repeat it; the rig
+geometry check measures "fits its column" rather than V1's fixed side padding.

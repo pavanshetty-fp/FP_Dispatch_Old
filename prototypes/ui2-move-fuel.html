@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1340">
+<title>Moving fuel between compartments — three ways</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#f1f2f4; --paper:#ffffff; --fill:#e8eaed; --head:#f1f2f2;
+  --ink1:#16191d; --ink2:#5b636e; --ink3:#8c939d;
+  --line:#c8c9cd; --rim:#cfd3d9; --line2:#adaeb4; --field:#91949b;
+  --ok:#15803d; --warn:#b45309; --bad:#dc2626; --primary:#090c0f;
+  --gold:#c4a319; --dsl:#2f9be0; --ker:#e07b39; --def:#7c8aa0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*{scrollbar-width:none;}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--page);color:var(--ink1);
+  padding:30px 34px 90px;-webkit-font-smoothing:antialiased;}
+h1{font-size:18px;font-weight:600;}
+.lede{font-size:13px;color:var(--ink2);margin-top:7px;max-width:860px;line-height:1.65;}
+.sec{margin-top:28px;background:var(--paper);border:1px solid var(--rim);border-radius:10px;
+  padding:20px 22px 24px;}
+.sec-n{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);}
+.sec-t{font-size:16px;font-weight:600;margin-top:5px;}
+.sec-s{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.7;max-width:900px;}
+.sec-s b{color:var(--ink1);font-weight:500;}
+.steps{counter-reset:s;margin-top:12px;}
+.step{position:relative;padding-left:26px;font-size:13px;color:var(--ink2);line-height:1.7;}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:3px;
+  width:17px;height:17px;border-radius:50%;background:var(--fill);color:var(--ink2);
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.cols{display:flex;gap:24px;margin-top:20px;align-items:flex-start;}
+.col{flex:1 1 0;min-width:0;}
+.col-h{display:flex;align-items:baseline;gap:9px;}
+.col-k{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink3);}
+.col-n{font-size:15px;font-weight:600;}
+.pick{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);}
+.col-w{font-size:12.5px;color:var(--ink2);line-height:1.65;margin:9px 0 14px;min-height:90px;}
+.col-w b{color:var(--ink1);font-weight:500;}
+.cost{font-size:12px;color:var(--ink2);margin-top:14px;padding-top:12px;border-top:1px solid var(--rim);
+  line-height:1.65;}
+.cost b{color:var(--ink1);font-weight:500;}
+.gest{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+  margin:14px 0 8px;}
+
+/* the rig, drawn small */
+.rig{display:flex;gap:4px;height:74px;}
+.c{flex:1;position:relative;border:1px solid var(--line2);border-radius:5px;overflow:hidden;
+  background:var(--fill);display:flex;flex-direction:column;justify-content:flex-end;}
+.c i{display:block;}
+.c .lab{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1px;font-size:9px;color:var(--ink1);}
+.c .lab b{font-size:10px;font-weight:600;}
+.c.src{border-color:var(--primary);box-shadow:0 0 0 2px rgba(22,25,29,.18);}
+.c.ok-t{border-color:var(--ok);box-shadow:0 0 0 2px rgba(21,128,61,.18);}
+.c.no-t{opacity:.4;}
+.c.drop{border-style:dashed;border-color:var(--ok);}
+
+/* the table */
+.tbl{border:1px solid var(--rim);border-radius:8px;overflow:hidden;}
+.tr{display:grid;grid-template-columns:44px 1fr 104px 58px;align-items:center;
+  border-bottom:1px solid var(--line);}
+.tr:last-child{border-bottom:none;}
+.th{background:var(--head);font-size:11px;font-weight:500;color:var(--ink1);}
+.th>span{padding:8px 10px;}
+.td{height:38px;}
+.td>span{padding:0 10px;font-size:12.5px;display:flex;align-items:center;height:100%;}
+.cell{height:100%;width:100%;border:none;background:transparent;font-family:inherit;font-size:12.5px;
+  padding:0 10px;outline:none;color:var(--ink1);}
+.cell:hover{background:var(--fill);}
+.cell:focus{background:#f4f5f8;box-shadow:inset 0 0 0 2px rgba(22,25,29,.25);}
+.dot{width:7px;height:7px;border-radius:50%;margin-right:7px;flex-shrink:0;}
+.pctbar{height:5px;border-radius:999px;background:var(--fill);overflow:hidden;margin-right:10px;flex:1;}
+.pctbar i{display:block;height:100%;background:var(--line2);}
+.foot{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;}
+.foot .left{color:var(--warn);font-weight:500;}
+.foot .ok{color:var(--ok);font-weight:500;}
+.btn{height:28px;padding:0 13px;border:none;border-radius:8px;background:var(--primary);
+  color:#f0f2f5;font-family:inherit;font-size:12.5px;font-weight:500;}
+.btn.out{background:transparent;border:1px solid var(--field);color:var(--ink1);}
+.spacer{margin-left:auto;}
+.ghost{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:7px;
+  background:var(--primary);color:#fff;font-size:11px;}
+.note{font-size:12px;color:var(--ink2);margin-top:12px;line-height:1.6;}
+.note b{color:var(--ink1);font-weight:500;}
+</style>
+</head>
+<body>
+
+<h1>Moving fuel between compartments — three ways</h1>
+<p class="lede">
+  Greyscale and lo-fi; what is being decided is the gesture, not the finish.
+  The same rig in every option: a 5-compartment transport carrying UNL87 in
+  C1 and C2, 1,000 gal of CLR DSL in a 2,000 gal C3, C4 empty, and 945 gal of
+  kerosene in a 1,500 gal C5.
+</p>
+
+<div class="sec">
+  <div class="sec-n">Where we are</div>
+  <div class="sec-t">What it takes today, and why it does not land</div>
+  <div class="steps">
+    <div class="step">Click the compartment you are taking fuel out of.</div>
+    <div class="step">A toast says &ldquo;pick the compartment it goes into&rdquo;, then fades.</div>
+    <div class="step">Click the compartment it goes into.</div>
+    <div class="step">A popover opens with a slider, a number, 25 / 50 / All.</div>
+    <div class="step">Press Move.</div>
+  </div>
+  <div class="sec-s" style="margin-top:14px">
+    <b>It is a mode, and the mode is invisible.</b> Between the first and second
+    click the screen is in a state nothing on it shows — the only notice was a
+    toast that has gone. Click the wrong compartment and you get an error and
+    the mode drops.<br>
+    <b>It is the one thing on this screen you click twice.</b> Orders are
+    dragged onto trucks; fuel is the exception, with no reason to be.<br>
+    <b>The rules arrive last.</b> That a compartment is full, or holds another
+    product, is only said after you have picked it — never before.<br>
+    <b>Five steps to move one number.</b> And the number field you are asking
+    for is already in there — it is just three clicks deep.
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-n">Three ways</div>
+  <div class="sec-t">Each is a different answer to &ldquo;what is the gesture?&rdquo;</div>
+  <div class="sec-s">
+    <b>A</b> says you are balancing a load, so type it. <b>B</b> says you are
+    moving a thing, so drag it. <b>C</b> says the machine should do it and you
+    should correct it.
+  </div>
+
+  <div class="cols">
+
+    <!-- ── A ── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">A</span><span class="col-n">The load is a table</span>
+        <span class="pick">my pick</span></div>
+      <div class="col-w">The compartments become the <b>same lines table the
+        order card now uses</b> — one row each, the gallons typed in place. You
+        are balancing a budget: take 400 out of C3 and the card holds <b>400 gal
+        to place</b> until you put it somewhere. No mode, no second click, and
+        every compartment&rsquo;s room is on screen the whole time.</div>
+
+      <div class="gest">Type a number</div>
+      <div class="tbl">
+        <div class="tr th"><span>Comp</span><span>Product</span><span>Gallons</span><span>Full</span></div>
+        <div class="tr td"><span>C1</span><span><i class="dot" style="background:var(--gold)"></i>UNL87</span>
+          <input class="cell" value="2,000"><span>100%</span></div>
+        <div class="tr td"><span>C2</span><span><i class="dot" style="background:var(--gold)"></i>UNL87</span>
+          <input class="cell" value="2,000"><span>100%</span></div>
+        <div class="tr td"><span>C3</span><span><i class="dot" style="background:var(--dsl)"></i>CLR DSL</span>
+          <input class="cell" value="600"><span>30%</span></div>
+        <div class="tr td"><span>C4</span><span style="color:var(--ink3)">Empty &mdash; takes CLR DSL</span>
+          <input class="cell" value="400"><span>27%</span></div>
+        <div class="tr td"><span>C5</span><span><i class="dot" style="background:var(--ker)"></i>Kerosene</span>
+          <input class="cell" value="945"><span>63%</span></div>
+      </div>
+      <div class="foot">
+        <span class="ok">Balanced &mdash; 5,945 gal placed</span>
+        <button class="btn out spacer">Undo</button>
+      </div>
+      <div class="note">And mid-edit, after 400 has left C3 and not landed yet:</div>
+      <div class="foot" style="margin-top:8px">
+        <span class="left">400 gal still to place</span>
+        <button class="btn spacer">Put it in C4</button>
+      </div>
+
+      <div class="cost"><b>The cost:</b> it is a table, not the truck &mdash; you
+        lose the picture while you are editing. Worth pinning the drawing above
+        it so both are on screen.</div>
+    </div>
+
+    <!-- ── B ── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">B</span><span class="col-n">Drag the fuel</span></div>
+      <div class="col-w">The same gesture as everything else on this screen.
+        Pick up a compartment&rsquo;s fuel and drop it on another. <b>The legal
+        targets light up the moment you start dragging</b> and the illegal ones
+        go dim, so the rules arrive first rather than last. Drop and it moves as
+        much as fits; the toast says how much and offers Undo.</div>
+
+      <div class="gest">Drag C3 onto C4 &mdash; mid-drag</div>
+      <div class="rig">
+        <div class="c"><i style="height:100%;background:var(--gold)"></i>
+          <span class="lab"><b>C1</b>2,000</span></div>
+        <div class="c"><i style="height:100%;background:var(--gold)"></i>
+          <span class="lab"><b>C2</b>2,000</span></div>
+        <div class="c src"><i style="height:50%;background:var(--dsl)"></i>
+          <span class="lab"><b>C3</b>1,000</span></div>
+        <div class="c ok-t drop"><span class="lab"><b>C4</b>takes 1,500</span></div>
+        <div class="c no-t"><i style="height:63%;background:var(--ker)"></i>
+          <span class="lab"><b>C5</b>Kerosene</span></div>
+      </div>
+      <div style="margin-top:11px"><span class="ghost">1,000 gal CLR DSL</span></div>
+      <div class="note"><b>C4</b> is lit: empty, room for 1,500.
+        <b>C5</b> is dim: it holds kerosene, and one product cannot share a
+        compartment. <b>C1 and C2</b> are dim: full.</div>
+
+      <div class="gest">Need less than all of it? Hold, or drop and adjust</div>
+      <div class="foot">
+        <input class="cell" style="border:1px solid var(--field);border-radius:8px;height:30px;width:92px;" value="600">
+        <span style="font-size:12px;color:var(--ink2)">of 1,000 &middot; room 1,500</span>
+        <button class="btn spacer">Move</button>
+      </div>
+
+      <div class="cost"><b>The cost:</b> a precise number still needs a second
+        step, and dragging a 4px-tall bar on a laptop trackpad is fiddly. Fine
+        for &ldquo;tip it all in&rdquo;, poor for &ldquo;move exactly 350&rdquo;.</div>
+    </div>
+
+    <!-- ── C ── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">C</span><span class="col-n">Let it pack, then correct</span></div>
+      <div class="col-w">One button. The planner repacks the load the way it
+        would have if you had dropped the orders in the best order &mdash;
+        fewest compartments broken, biggest runs kept whole &mdash; and tells you
+        what it changed. <b>You only touch the exceptions.</b> Undo puts it back
+        exactly as it was.</div>
+
+      <div class="gest">Before</div>
+      <div class="rig" style="height:56px">
+        <div class="c"><i style="height:100%;background:var(--gold)"></i><span class="lab"><b>C1</b></span></div>
+        <div class="c"><i style="height:100%;background:var(--gold)"></i><span class="lab"><b>C2</b></span></div>
+        <div class="c"><i style="height:50%;background:var(--dsl)"></i><span class="lab"><b>C3</b></span></div>
+        <div class="c"><span class="lab" style="color:var(--ink3)"><b>C4</b></span></div>
+        <div class="c"><i style="height:63%;background:var(--ker)"></i><span class="lab"><b>C5</b></span></div>
+      </div>
+      <div class="gest">After &mdash; one press</div>
+      <div class="rig" style="height:56px">
+        <div class="c"><i style="height:100%;background:var(--gold)"></i><span class="lab"><b>C1</b></span></div>
+        <div class="c"><i style="height:100%;background:var(--gold)"></i><span class="lab"><b>C2</b></span></div>
+        <div class="c"><i style="height:100%;background:var(--dsl)"></i><span class="lab"><b>C3</b></span></div>
+        <div class="c"><i style="height:33%;background:var(--ker)"></i><span class="lab"><b>C4</b></span></div>
+        <div class="c"><i style="height:100%;background:var(--ker)"></i><span class="lab"><b>C5</b></span></div>
+      </div>
+      <div class="foot" style="margin-top:12px">
+        <span style="font-size:12px;color:var(--ink2)">CLR DSL filled to C3 &middot;
+          kerosene split C5/C4</span>
+        <button class="btn out spacer">Undo</button>
+      </div>
+
+      <div class="cost"><b>The cost:</b> it is the only one that changes the load
+        without you saying how, so it needs a clear Undo and a line saying what
+        moved. On its own it does not answer &ldquo;move exactly this&rdquo;.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-n">What I would do</div>
+  <div class="sec-t">A as the way, B as the shortcut, C as a button beside them</div>
+  <div class="sec-s">
+    These are not really alternatives &mdash; they answer different questions.
+    <b>A is the one to build</b>: it kills the mode, it shows every
+    compartment&rsquo;s room at once, it is the table you have just endorsed for
+    the order card, and typing is the only gesture that is exact. <b>B</b> is a
+    shortcut on top of it for the common &ldquo;tip it all into the empty
+    one&rdquo; &mdash; cheap once A exists, because A has already worked out
+    which targets are legal. <b>C</b> is one button above the table, and the
+    thing most dispatchers would actually press first.<br><br>
+    Built in that order, each one is useful before the next exists.
+  </div>
+</div>
+
+</body>
+</html>
