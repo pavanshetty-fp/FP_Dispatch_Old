@@ -149,6 +149,27 @@ compartment one fill colour. Options, none obviously right:
 This is a real design question, not a detail — the whole point of the drawing
 is that you can read the load at a glance.
 
+### 3.10 Every order carrying a blend says so
+Any order with a blend on it shows a **Blend** label. Cheap once the product
+model exists, but it has to appear in every place an order's products are
+listed, or it will be the one screen that does not say it:
+
+| Where | Today |
+|---|---|
+| Shift planner — order cards in column 1 | No badge of any kind |
+| Shift planner — order chips in a driver's lane | No badge |
+| Create order — the lines table | `badge-blend` exists, fed by an empty list |
+| Edit order — the lines table and compartment labels | `badge-blend` and the "(blend)" suffix exist, fed by `['CLR DSL']`, which is wrong |
+
+So two of the three prototypes already draw the badge and neither has real data
+behind it. The work is the product model, not the label.
+
+Worth deciding at the same time: the order says **E20** and the truck carries
+**UNL87 + Ethanol**. The label belongs to the order's product. A compartment
+mid-run is not "a blend order" — it is a compartment holding two constituents
+that make one — so the compartment's own marker is a different thing from this
+label, and should not be the same component reused.
+
 ---
 
 ## 4. Decisions
@@ -192,7 +213,9 @@ that you can read the load by looking at it.
 ## 5. If we build it, the order to do it in
 
 1. Product model with constituents and ratio, plus the constituent products.
-   Fix the `CLR DSL` sample data at the same time.
+   Fix the `CLR DSL` sample data at the same time, and wire the **Blend** label
+   (§3.10) to it everywhere an order's products are listed — including the two
+   places in the planner that have no badge at all.
 2. Compartment shape that can hold a blend, and everything that reads it.
 3. Packer: explode an order line into constituents, place in ratio.
 4. Ratio guards on the two tools that can break a blend — the fuel move and the
