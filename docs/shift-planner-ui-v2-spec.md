@@ -460,3 +460,166 @@ bottom of the truck and the bottom of the card are the same line.
 - *Off-duty drivers no longer carry planned orders.* They have no shift to run
   one in. Yard rigs still read "Load planning not started", which is the point
   of the yard.
+
+---
+
+## The head of a column (round 10)
+
+Both columns are now built the same way, and nothing that narrows a list sits
+on the line that names it.
+
+```
+Orders 54                               [funnel] [sort] [≡ ⋮] [↗]
+[ Unplanned 54 | Planned 45 | Outside 3 | All 99 ]
+
+Driver & truck 30   [search driver, truck or hub]           [↗]
+[ All 30 | Available 20 | Driving 10 | On duty 10 | Off duty 10 ]  [🕐 All AM PM]
+```
+
+- **The count sits with the name**, not out in the row.
+- **Quick filters are out**, on their own line under the name: Unplanned ·
+  Planned · **Outside** · All for the orders, the availability tabs and the
+  shift for the drivers.
+- **Outside** is new: the planned orders a run does not reach inside the window
+  the customer was given. It is a property of the *run*, not of the order — the
+  same order on another rig may well be made — so it is read off the routes
+  once per render, and the quick filter and its count come from that one read.
+- **The funnel** holds the rest of the filters. Blend lives there now, and the
+  funnel carries a dot whenever anything behind it is narrowing the list, so a
+  short list never passes for the whole list.
+- **Sorting is its own icon** beside it: Time · Fit · **Driver**. Only one of
+  the two menus stands open at a time.
+  - *Driver* puts every driver's orders together, in the order their day runs
+    them. It is a planned reading, so orders nobody has taken fall to the
+    bottom rather than scattering through the list.
+  - *Fit* is offered only while a rig is chosen, and names the rig it would
+    rank against. Clicking the open lane lets go of it — and letting go puts
+    the list back in time order.
+  - A time axis cannot be re-ordered, so the horizontal view is locked under
+    any sort but Time.
+- **The shift unit names itself from the inside** — a clock in the unit instead
+  of a SHIFT label beside it.
+- **`fit vs BT-4` is gone.** The rig the fit is measured against is now named
+  on the Fit row in the sort menu, where the fit sort is chosen.
+- **Collapse / expand is gone**, root and branch: the switch, the handler, the
+  state and the eighteen compact rules.
+
+**Said out loud.**
+
+- *Every lane is now drawn in full.* Dropping compact cost about a third of the
+  drivers that used to fit on a screen.
+- *The driver column's funnel has nothing to hold yet*, so it has none. Hub
+  would be the obvious first filter to put behind one.
+
+---
+
+## Built on the design system's own unit (round 11)
+
+The head was in two control rows. **`unit.toolbar` forbids that** — *"Don't add
+a second toolbar row"* — and the second row was also the bug: a menu opened
+from the tools dropped straight onto the quick filters underneath it. Both
+columns are now the DS list page:
+
+```
+Orders 54                                              ← the name, alone
+[ Unplanned · Planned · Outside · All ] [⚲] [⇅]   [≡][⋮] [↗]   ← unit.toolbar
+```
+
+Taken from `unit.toolbar` and `template.list-page`:
+
+- **One control row, never two.** Left narrows, right scopes and presents.
+- **Quick filters lead the left, before search** — *they decide which set you
+  then search inside* (ui §10c).
+- **Every control in the row is 32px.** Search is the DS's 320px, shrinking
+  before it wraps.
+- **The display switch is icon tools on the right, the current one on the chip
+  fill** — `--chip`, not the accent (ui §10p).
+- **Filters carries its applied count** in a bubble, the way the DS's trigger
+  does. Sort carries what the list is in — nothing while it is in time order,
+  because that is the list's natural order and not something the reader did.
+- Both are icon triggers named by their tooltip, as the DS's icon tools are.
+
+**The bug.** Two things were wrong and both are fixed: the menu hung off its
+own button, so on a two-row head it landed on the filters — it now hangs off
+the **head**, lines itself up under whichever button opened it, and always
+clears the head onto the list. And picking a sort left the menu standing open
+over a list it had just re-ordered — a sort is one choice, so the menu closes
+behind it. Filters is a set, so that one stays open until you click away.
+
+**Said out loud.**
+
+- *The availability tabs no longer stretch.* They filled the row because they
+  were told to; they are 376px of content now, not 735px of air.
+- *Both heads come out at 83px*, one toolbar row each, with 4px to spare in the
+  orders column at the default split — which is what makes the two columns
+  behave alike. A test holds them to it.
+- *Filters and Sort lost their words* to make that 4px. The tooltip names them,
+  which is how the DS names an icon tool, but a word is always clearer than a
+  glyph — if the orders column were wider they could carry one.
+
+---
+
+## The card states its load, and opens for the detail (round 12)
+
+An order card is a table most of the time, and most of the time nobody needs
+the table. So at rest the card ends in **one line** instead:
+
+```
+▸  3 products        Blend        5,700 gal
+```
+
+- **The count is the table's own rows**, so what the line says and what opening
+  it shows are the same thing — a splash blend's constituents count as the
+  products they are.
+- **The total is the table's total**, printed by the same code.
+- **A blend says so on the line.** Every place an order's products are listed
+  has to carry that label (blends §3.10), and a summary is such a place.
+- Opening swaps the line for the table **inside the same frame**, so the card
+  changes its contents and not its shape. The caret moves to the Total row,
+  which is where you shut it again.
+- **One icon does the lot**, in the toolbar's right cluster beside the view
+  switch: expand every order, or collapse every one. The glyph and the tooltip
+  say which it will do next.
+- **Everything starts collapsed.**
+
+The cards drop from ~340px to 150px, so the column holds four or five orders
+at a glance instead of one and a half. The horizontal view's lane heights know
+the difference — a shut card is one line, an open one is a row per line the
+table actually draws.
+
+**Also.** The pop-out moved from the toolbar to the name line. It is a window
+action, not a view tool, and the toolbar needed the 36px: with the new icon in
+it, the orders row was wrapping again and the two column heads stopped matching.
+They are both 95px now, one control row each, with 24px to spare.
+
+---
+
+## A planned order answers with its own rig (round 13)
+
+A planned order already has a driver, and therefore a truck. Nobody else can
+take it without releasing it first. So the question "which rig?" is already
+answered, and thirty rows of fleet are thirty rows in the way of the answer.
+
+Selecting a planned order now:
+
+- **opens that driver's lane** — the truck, the compartments, the load and the
+  whole day's route, with this order's stop marked as the one selected;
+- **shows that rig and no other.** The column is pinned to it, whatever the
+  availability tabs and the shift filter say, because those narrow a search and
+  this is not a search any more;
+- **carries no tick.** The checkbox gathers orders to drag onto a rig; a
+  planned order is already on one.
+
+Picking another planned order moves the column to that rig. Three things let
+the fleet back: picking an unplanned order (any rig might take it), pressing an
+availability tab, or typing in the search — each of them is the reader asking
+the column a question of their own.
+
+**Said out loud.**
+
+- *The pin has no control of its own.* There is no "show all" button; the way
+  out is to ask the column something, which is what a reader does next anyway.
+  If it turns out to strand people, a chip on the driver head is the fix.
+- *The counts on the availability tabs still describe the fleet*, not the one
+  rig shown. They are what you would get if you pressed them, which is the
+  useful reading.

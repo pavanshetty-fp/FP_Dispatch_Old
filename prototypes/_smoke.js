@@ -504,7 +504,7 @@
         if (Math.abs(got - want) > 1) throw new Error(k + ' C' + (i + 1) + ': bar at ' + got + '%, holds ' + want + '%');
       });
     });
-    step('compact fits more drivers, and keeps the one you are on', () => {
+    if (!V2) step('compact fits more drivers, and keeps the one you are on', () => {
       const h = () => [...document.querySelectorAll('.sp2-ln')].map(l => l.getBoundingClientRect().height);
       sp2SetDense('full');
       const full = h();
@@ -514,25 +514,189 @@
       if (sel < 0) throw new Error('no lane is chosen');
       if (comp[sel] !== full[sel]) throw new Error('the chosen lane shrank in compact');
       const other = sel === 0 ? 1 : 0;
-      // V2's resting lane is already short, so compact has less left to take
-      const least = V2 ? 10 : 40;
-      if (comp[other] >= full[other] - least)
+      if (comp[other] >= full[other] - 40)
         throw new Error('compact saved only ' + Math.round(full[other] - comp[other]) + 'px');
-      // the chosen lane keeps its tanker; the rest keep bars and lose the writing
       if (!document.querySelector('.sp2-ln.on .sp2-sv')) throw new Error('compact took the tanker away');
       [...document.querySelectorAll('.sp2-ln')].forEach((l, i) => {
         if (i === sel) return;
-        if (V2 && !SP2_ORDERS.some(o => o.driver === l.dataset.k)) return;  // nothing to draw
         if (!l.querySelector('.sp2-bars')) throw new Error('compact dropped the bars');
         if (!l.querySelector('.sp2-bar2-fill')) throw new Error('compact dropped the fuel');
-        if (!V2 && getComputedStyle(l.querySelector('.sp2-bar2-p')).display !== 'none')
+        if (getComputedStyle(l.querySelector('.sp2-bar2-p')).display !== 'none')
           throw new Error('compact still writes the product on every bar');
-        // V2 keeps the shift and its reading at every density — they are the
-        // point of the block; compact tightens the furniture instead
-        if (V2 && getComputedStyle(l.querySelector('.sp2-ln-left')).display === 'none')
-          throw new Error('compact took the shift reading away');
       });
     });
+
+    if (V2) step('both columns are headed the same way', () => {
+      sp2ResetWidth();
+      // the DS list page: the name on its own line, then ONE control row —
+      // quick filters leading the left, the display tools on the right
+      ['.sp2-col-orders', '.sp2-col-unit'].forEach(sel => {
+        const hdr = document.querySelector(sel + ' .sp2-col-hdr');
+        const top = hdr.querySelector('.sp2-col-top');
+        const bar = hdr.querySelector('.sp2-tools');
+        if (!top || !bar) throw new Error(sel + ' is not built as name + toolbar');
+        if (hdr.querySelectorAll('.sp2-tools').length !== 1)
+          throw new Error(sel + ' has a second control row');
+        if (bar.getBoundingClientRect().top < top.getBoundingClientRect().bottom - 1)
+          throw new Error(sel + ': the toolbar is not under the name');
+        const id = top.querySelector('.sp2-col-id');
+        const name = id.querySelector('.sp2-col-title').getBoundingClientRect();
+        const n = id.querySelector('.sp2-count').getBoundingClientRect();
+        if (n.left - name.right > 10)
+          throw new Error(sel + ': the count sits ' + Math.round(n.left - name.right) + 'px off the name');
+        if (top.querySelector('.sp2-seg')) throw new Error(sel + ': a filter is still on the naming line');
+
+        // quick filters lead the left, then search, then the rest — the row
+        // wraps on a narrow column, so the order is the DOM's, not the page's
+        const left = bar.querySelector('.sp2-tools-l');
+        const order = [...left.children].map(c => c.className);
+        if (order[0].indexOf('sp2-seg') < 0)
+          throw new Error(sel + ': the quick filters do not lead the row');
+        const si = order.findIndex(c => c.indexOf('sp2-search') >= 0);
+        const fi = order.findIndex(c => c.indexOf('sp2-fltwrap') >= 0);
+        if (si >= 0 && fi >= 0 && si > fi)
+          throw new Error(sel + ': Filters comes before search');
+
+        // every control in the row is the DS's 32px, and none of them stretch
+        [...bar.querySelectorAll('.sp2-seg,.sp2-tool-btn,.sp2-ico-tool,.sp2-search')].forEach(c => {
+          const h = c.getBoundingClientRect().height;
+          if (Math.abs(h - 32) > 2)
+            throw new Error(sel + ': a control is ' + Math.round(h) + 'px, not 32');
+        });
+        const tabs = bar.querySelector('.sp2-drv-tabs');
+        if (tabs && tabs.getBoundingClientRect().width > 380)
+          throw new Error('the availability tabs are ' + Math.round(tabs.getBoundingClientRect().width) + 'px wide');
+      });
+
+      // and the two heads come out the same height, because they are the
+      // same unit holding the same number of rows
+      const a = document.querySelector('.sp2-col-orders .sp2-col-hdr').getBoundingClientRect().height;
+      const b = document.querySelector('.sp2-col-unit .sp2-col-hdr').getBoundingClientRect().height;
+      if (Math.abs(a - b) > 2)
+        throw new Error('the heads are ' + Math.round(a) + 'px and ' + Math.round(b) + 'px');
+
+      // collapse and expand are gone, root and branch
+      if (document.getElementById('sp2DenseSeg')) throw new Error('the density switch is still here');
+      if (document.querySelector('[data-z]')) throw new Error('a density button is still here');
+      if (typeof sp2SetDense !== 'undefined') throw new Error('density left its handler behind');
+      if (document.querySelector('[data-dense]')) throw new Error('the lanes still carry a density');
+
+      // the shift unit names itself from the inside
+      const shift = document.querySelector('.sp2-shift-seg');
+      if (!shift) throw new Error('the shift filter is gone');
+      if (!shift.querySelector('.sp2-seg-ico svg')) throw new Error('the shift unit carries no icon');
+      if (document.querySelector('.sp2-flt-lbl')) throw new Error('a filter label is still outside its unit');
+      if (document.getElementById('sp2Vs')) throw new Error('"fit vs" is still on the column');
+    });
+
+    if (V2) step('sort and the rest of the filters live behind their own icons', () => {
+      const quick = [...document.querySelectorAll('#sp2Quick .sp2-seg-btn')].map(b => b.dataset.q);
+      ['unplanned', 'planned', 'outside', 'all'].forEach(q => {
+        if (quick.indexOf(q) < 0) throw new Error(q + ' is not a quick filter');
+      });
+
+      // Blend went behind the funnel, and the funnel says when it is on
+      const pop = document.getElementById('sp2FltPop');
+      const btn = document.getElementById('sp2FltBtn');
+      if (!pop || !btn) throw new Error('there is no filter icon');
+      if (getComputedStyle(pop).display !== 'none') throw new Error('the filters are open at rest');
+      if (!pop.contains(document.getElementById('sp2BlendBtn'))) throw new Error('Blend is not behind the funnel');
+      sp2FltToggle();
+      if (getComputedStyle(pop).display === 'none') throw new Error('the funnel does not open');
+      // a menu opened from the toolbar drops onto the LIST, not onto the
+      // controls — which is the whole reason the row is one row
+      const hdr = document.querySelector('.sp2-col-orders .sp2-col-hdr');
+      if (pop.getBoundingClientRect().top < hdr.getBoundingClientRect().bottom - 1)
+        throw new Error('the menu opens on top of the toolbar');
+      sp2ToggleBlend();
+      if (!btn.classList.contains('on')) throw new Error('a narrowed list does not show on Filters');
+      if (document.getElementById('sp2FltN').textContent !== '1')
+        throw new Error('Filters does not count what is applied');
+      sp2ToggleBlend();
+      if (btn.classList.contains('on')) throw new Error('Filters still reads as narrowed');
+      sp2FltClose();
+
+      // sorting is its own icon, and the two never stand open together
+      const spop = document.getElementById('sp2SortPop');
+      if (!spop) throw new Error('there is no sort icon');
+      ['time', 'fit', 'driver'].forEach(o => {
+        if (!spop.querySelector('[data-o="' + o + '"]')) throw new Error(o + ' is not a sort');
+      });
+      sp2SortToggle();
+      if (getComputedStyle(spop).display === 'none') throw new Error('the sort does not open');
+      sp2FltToggle();
+      if (getComputedStyle(spop).display !== 'none') throw new Error('both menus stand open');
+      sp2FltClose();
+
+      // picking a sort is one choice, so the menu closes behind it and the
+      // button says what the list is now in
+      sp2SortToggle();
+      spop.querySelector('[data-o="driver"]').click();
+      if (getComputedStyle(spop).display !== 'none')
+        throw new Error('the sort menu stays open over the list it just re-ordered');
+      if (document.getElementById('sp2SortN').textContent !== 'Driver')
+        throw new Error('the Sort button does not say what the list is in');
+      sp2SetSort('time');
+      if (document.getElementById('sp2SortBtn').classList.contains('on'))
+        throw new Error('the natural order still reads as sorted');
+
+      // fit needs a rig; without one it is offered but not usable
+      const keep = sp2Driver;
+      sp2LaneClick(keep);                        // clicking the open lane lets go
+      if (sp2Driver) throw new Error('the lane did not let go');
+      if (!spop.querySelector('[data-o="fit"]').disabled)
+        throw new Error('fit is offered with no rig to fit');
+      if (sp2Sort !== 'time') throw new Error('the list is still ranked against nothing');
+      sp2PickDriver(keep);
+      if (spop.querySelector('[data-o="fit"]').disabled)
+        throw new Error('fit is still locked with a rig chosen');
+    });
+
+    if (V2) step('sorting by driver puts each run together', () => {
+      sp2SetQuick('all');
+      sp2SetSort('driver');
+      const seen = {};
+      let last = '';
+      sp2Visible().forEach(o => {
+        const who = o.driver ? SP2_DRIVERS[o.driver].name : '';
+        if (who !== last) {
+          if (seen[who]) throw new Error(who + "'s orders are split up the list");
+          seen[who] = true;
+          if (!who && last === '') throw new Error('unplanned work leads a driver sort');
+          last = who;
+        }
+      });
+      // and the unplanned fall to the bottom, since this is a planned reading
+      const list = sp2Visible();
+      const firstBare = list.findIndex(o => !o.driver);
+      if (firstBare >= 0 && list.slice(firstBare).some(o => o.driver))
+        throw new Error('an unplanned order is above a planned one');
+      // a time axis cannot carry it
+      if (!document.querySelector('[data-v="h"]').disabled)
+        throw new Error('the horizontal view is still offered under a driver sort');
+      sp2SetSort('time');
+      sp2SetQuick('unplanned');
+    });
+
+    if (V2) step('Outside is the orders a run does not reach in time', () => {
+      sp2SetQuick('outside');
+      const shown = sp2Visible();
+      const late = {};
+      Object.keys(SP2_DRIVERS).forEach(k => sp2Route(k).forEach(r => {
+        if (r.kind === 'late') late[r.o.id] = true;
+      }));
+      if (!Object.keys(late).length) throw new Error('nothing in the day misses its window');
+      shown.forEach(o => {
+        if (!late[o.id]) throw new Error(o.id + ' is shown as outside and makes its window');
+      });
+      Object.keys(late).forEach(id => {
+        if (!shown.some(o => o.id === id)) throw new Error(id + ' misses its window and is not shown');
+      });
+      if (+document.getElementById('sp2nOut').textContent !== Object.keys(late).length)
+        throw new Error('the count does not match the list');
+      sp2SetQuick('unplanned');
+    });
+
     step('a lane takes the drop, whoever is selected', () => {
       sp2SetDrvFilter('all');
       const lanes = [...document.querySelectorAll('.sp2-ln')];
@@ -565,8 +729,8 @@
       sp2DropTrailer(k);
       if (SP2_DRIVERS[k].trailer) throw new Error('trailer would not come off');
     });
-    step('the filters sit in the headers, not behind an icon', () => {
-      if (document.getElementById('sp2Flt')) throw new Error('the filter popover is still here');
+    step('each column carries its own filters, and only its own', () => {
+      if (document.getElementById('sp2Flt')) throw new Error('the old filter popover is still here');
       const c1 = document.querySelector('.sp2-col-orders .sp2-col-hdr');
       if (!c1.querySelector('[data-q]')) throw new Error('planned/unplanned is not in the orders header');
       if (!c1.querySelector('[data-v]')) throw new Error('the view switch left the orders header');
@@ -574,14 +738,7 @@
       const c2 = document.querySelector('.sp2-col-unit .sp2-col-hdr');
       if (!c2.querySelector('[data-s]')) throw new Error('the shift filter did not move to driver & truck');
       if (!c2.querySelector('[data-d]')) throw new Error('the driver tabs left their header');
-      // search first on the left, every filter to its right
-      sp2ResetWidth();
-      const search = c2.querySelector('#sp2DrvSearch').getBoundingClientRect();
-      const tools = c2.querySelector('.sp2-hdr-tools').getBoundingClientRect();
-      // ahead of them on the line, or above them when the column is too narrow
-      const sameRow = Math.abs(search.top - tools.top) < 6;
-      if (sameRow ? search.left >= tools.left : search.top > tools.top)
-        throw new Error('search is not ahead of the filters');
+      if (c2.querySelector('[data-q]')) throw new Error('the order filters are on the driver column');
       if (document.getElementById('sp2LayoutSeg')) throw new Error('the V1/V2 switch is still here');
       if (typeof sp2Layout !== 'undefined') throw new Error('V1 left its state behind');
     });
@@ -703,8 +860,6 @@
       if (document.querySelector('.sp2-card .sp2-fit'))
         throw new Error('a planned order still carries a fit');
       sp2SetQuick('unplanned');
-      if (!/fit vs /.test(document.getElementById('sp2Vs').textContent))
-        throw new Error('the column does not say which rig the fit is against');
     });
     step('the fit is the number a drop would really give', () => {
       const k = 'd0';
@@ -971,8 +1126,12 @@
         // V2 says it in the load band's foot ("3 products · 2 in a blend")
         // rather than as a sixth pill in the head; the round-3 card says it
         // on the line itself, because its table lists what was ordered
+        // the round-3 card says it on the line itself when its table is open,
+        // and on the summary line when it is shut — either way, every place an
+        // order's products are listed says when one of them is a blend
         const badged = !V2 ? !!c.querySelector('.sp2-pill-blend')
-          : c.classList.contains('sp2-v3') ? !!c.querySelector('.sp2-lt.blended')
+          : c.classList.contains('sp2-v3')
+            ? !!(c.querySelector('.sp2-lt.blended') || c.querySelector('.sp2-lsum .sp2-pill-blend'))
           : /in a blend/.test(c.querySelector('.sp2-load-n').textContent);
         if (sp2HasBlend(o) !== badged)
           throw new Error(id + (badged ? ' is labelled a blend and is not' : ' carries a blend and is not labelled'));
@@ -1126,17 +1285,29 @@
       if (byKey.join() !== Object.keys(SP2_DRIVERS).filter(k => byKey.indexOf(k) >= 0).join())
         throw new Error('All is no longer in roster order');
     });
-    step('the driver header sits on one line', () => {
+    step('the driver header sits on its two lines', () => {
       sp2ResetWidth();
       const hdr = document.querySelector('.sp2-col-unit .sp2-col-hdr');
       const mid = el => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
-      const title = hdr.querySelector('.sp2-col-title');
       const tabs = hdr.querySelector('.sp2-drv-tabs');
       const search = hdr.querySelector('#sp2DrvSearch');
-      if (Math.abs(mid(tabs) - mid(title)) > 2)
-        throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(title)) + 'px off the title');
-      if (Math.abs(mid(tabs) - mid(search)) > 2)
-        throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(search)) + 'px off the search');
+      if (V2) {
+        // the name on its own line, everything that narrows on the one below
+        const title = hdr.querySelector('.sp2-col-title');
+        if (tabs.getBoundingClientRect().top < title.getBoundingClientRect().bottom - 1)
+          throw new Error('the tabs are still up on the naming line');
+        const sh = hdr.querySelector('.sp2-shift-seg');
+        if (Math.abs(mid(tabs) - mid(sh)) > 2)
+          throw new Error('the shift unit is off the filter line');
+        if (sh.getBoundingClientRect().right > hdr.getBoundingClientRect().right)
+          throw new Error('the shift unit spills past the column');
+      } else {
+        const title = hdr.querySelector('.sp2-col-title');
+        if (Math.abs(mid(tabs) - mid(title)) > 2)
+          throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(title)) + 'px off the title');
+        if (Math.abs(mid(tabs) - mid(search)) > 2)
+          throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(search)) + 'px off the search');
+      }
       if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
         throw new Error('the tabs still carry the margin from when they were in a panel');
     });
@@ -1270,6 +1441,131 @@
       });
     });
 
+    if (V2) step('an order card states its load and opens for the detail', () => {
+      sp2SetQuick('all');
+      sp2SetSort('time');
+      sp2CardOpen = {};
+      sp2RenderTimeline();
+
+      // at rest every card is shut, and says what it is carrying in one line
+      const cards = [...document.querySelectorAll('.sp2-card')];
+      if (!cards.length) throw new Error('no order cards');
+      if (document.querySelector('.sp2-card .sp2-lt'))
+        throw new Error('a card opens with its table showing');
+      const card = cards[0];
+      const id = card.dataset.id;
+      const o = SP2_ORDERS.filter(x => x.id === id)[0];
+      const sum = card.querySelector('.sp2-lsum');
+      if (!sum) throw new Error('a shut card does not state its load');
+      const n = sp2Lines(o).length;
+      if (sum.querySelector('.sp2-lsum-n').textContent.trim() !== n + ' product' + (n === 1 ? '' : 's'))
+        throw new Error('the summary miscounts the products');
+      if (sum.querySelector('.sp2-lsum-q').textContent.trim() !== sp2Totals(o).join(' \u00b7 '))
+        throw new Error('the summary and the table disagree on the total');
+
+      // opening it swaps the line for the table, and the total is the same
+      const shutH = card.getBoundingClientRect().height;
+      sum.click();
+      const open = document.querySelector('.sp2-card[data-id="' + id + '"]');
+      const tbl = open.querySelector('.sp2-lt');
+      if (!tbl) throw new Error('opening a card does not show the table');
+      if (open.querySelector('.sp2-lsum')) throw new Error('the summary stayed behind');
+      if (tbl.querySelectorAll('.sp2-lt-row').length !== n)
+        throw new Error('the table does not draw every line');
+      if (open.getBoundingClientRect().height <= shutH)
+        throw new Error('an open card is no taller than a shut one');
+      if (!open.querySelector('.sp2-lt-tot .sp2-caret.open'))
+        throw new Error('there is no way to shut it again');
+      open.querySelector('.sp2-lt-tot .sp2-caret.open').click();
+      if (!document.querySelector('.sp2-card[data-id="' + id + '"] .sp2-lsum'))
+        throw new Error('it did not shut again');
+
+      // and one act does the lot, the icon saying which way it will go
+      const all = document.getElementById('sp2AllBtn');
+      if (!all) throw new Error('there is no expand-all');
+      if (!/Expand/.test(all.title)) throw new Error('with all shut it does not offer to expand');
+      all.click();
+      if (document.querySelector('.sp2-card .sp2-lsum'))
+        throw new Error('expand all left a card shut');
+      if (!/Collapse/.test(all.title)) throw new Error('with all open it does not offer to collapse');
+      all.click();
+      if (document.querySelector('.sp2-card .sp2-lt'))
+        throw new Error('collapse all left a card open');
+
+      // the horizontal view has to give a shut card room too
+      sp2SetView('h');
+      [...document.querySelectorAll('.sp2-card')].forEach(c => {
+        const lane = c.closest('.sp2-lane');
+        if (lane && c.getBoundingClientRect().bottom > lane.getBoundingClientRect().bottom + 2)
+          throw new Error('a shut card hangs out of its lane');
+      });
+      sp2SetView('v');
+      sp2SetQuick('unplanned');
+    });
+
+    if (V2) step('a planned order answers with its own rig, and only its own', () => {
+      sp2SetQuick('planned');
+      sp2SetDrvFilter('available');
+      const card = document.querySelector('.sp2-card');
+      if (!card) throw new Error('nothing planned to select');
+      const id = card.dataset.id;
+      const o = SP2_ORDERS.filter(x => x.id === id)[0];
+      if (!o.driver) throw new Error('the planned list is showing an unplanned order');
+
+      // a planned order cannot be gathered up and dragged — it is already on a rig
+      [...document.querySelectorAll('.sp2-card')].forEach(c => {
+        if (c.querySelector('.sp2-cbx')) throw new Error(c.dataset.id + ' still offers a tick');
+      });
+
+      card.click();
+      const lanes = [...document.querySelectorAll('.sp2-ln')];
+      if (lanes.length !== 1)
+        throw new Error('the column still shows ' + lanes.length + ' rigs');
+      if (lanes[0].dataset.k !== o.driver)
+        throw new Error('the column shows the wrong rig');
+      if (!lanes[0].classList.contains('on')) throw new Error("the rig's day is not open");
+      if (sp2Driver !== o.driver) throw new Error('the open rig is not the order\'s');
+      // and it is the whole day, not just this drop
+      if (!lanes[0].querySelector('.sp2-rt-row')) throw new Error("the day's route is not shown");
+      if (!lanes[0].querySelector('.sp2-ct')) throw new Error('the load is not shown');
+      // the stop for THIS order reads as the selected one
+      const mine = [...lanes[0].querySelectorAll('.sp2-rt-row')]
+        .filter(r => r.textContent.indexOf(id) >= 0);
+      if (!mine.length) throw new Error(id + ' is not a stop on its own rig');
+      if (!mine[0].classList.contains('sel')) throw new Error('the stop is not marked as the one selected');
+
+      // picking another planned order moves the column to that rig
+      const other = [...document.querySelectorAll('.sp2-card')]
+        .find(c => SP2_ORDERS.filter(x => x.id === c.dataset.id)[0].driver !== o.driver);
+      if (other) {
+        const o2 = SP2_ORDERS.filter(x => x.id === other.dataset.id)[0];
+        other.click();
+        const now = [...document.querySelectorAll('.sp2-ln')];
+        if (now.length !== 1 || now[0].dataset.k !== o2.driver)
+          throw new Error('picking another planned order did not move the column');
+      }
+
+      // an unplanned order puts the whole fleet back, because any rig might take it
+      sp2SetQuick('unplanned');
+      const free = document.querySelector('.sp2-card');
+      if (free) {
+        free.click();
+        if (document.querySelectorAll('.sp2-ln').length < 2)
+          throw new Error('an unplanned order still shows one rig');
+      }
+      // so does asking the column a question of your own
+      sp2SetQuick('planned');
+      document.querySelector('.sp2-card').click();
+      if (document.querySelectorAll('.sp2-ln').length !== 1) throw new Error('the pin did not take');
+      sp2SetDrvFilter('all');
+      if (document.querySelectorAll('.sp2-ln').length < 2)
+        throw new Error('the filters cannot get the fleet back');
+      sp2SetDrvFilter('available');
+      sp2SetQuick('unplanned');
+      sp2SelOrder = null;
+      sp2Render();
+    });
+
     if (V2) step('a loaded driver card runs the day down a rail', () => {
       sp2SetDrvFilter('all');
       const k = Object.keys(SP2_DRIVERS)
@@ -1376,12 +1672,16 @@
       const other = all.filter(c2 => !c2.classList.contains('sp2-v3'));
       if (other.length)
         throw new Error(other.length + ' cards are still on the old shape');
-      const c = all[0];
+      let c = all[0];
 
       // the head says which order it is, and nothing about fit
-      ['.sp2-cbx', '.sp2-ord', '.sp2-kind', '.sp2-pill', '.sp2-chev'].forEach(sel => {
+      ['.sp2-ord', '.sp2-kind', '.sp2-pill', '.sp2-chev'].forEach(sel => {
         if (!c.querySelector('.sp2-card-top ' + sel)) throw new Error(sel + ' is not in the head');
       });
+      // the tick is only on what can still be dragged somewhere
+      const o0 = SP2_ORDERS.filter(x => x.id === c.dataset.id)[0];
+      if (!!c.querySelector('.sp2-card-top .sp2-cbx') === !!o0.driver)
+        throw new Error(o0.driver ? 'a planned order carries a tick' : 'an unplanned order has no tick');
       if (c.querySelector('.sp2-card-top .sp2-open'))
         throw new Error('the head still uses the old open icon');
       // the status and the way in share the right edge
@@ -1412,6 +1712,11 @@
       // the table sits in a card of its own, 4–6px off the order card's left,
       // right and bottom edges; that inner rim is what divides the two units,
       // so no second rule is drawn above it
+      // the table is a click away at rest, so open it to read it
+      if (c.querySelector('.sp2-lsum')) {
+        c.querySelector('.sp2-lsum').click();
+        c = document.querySelector('.sp2-card[data-id="' + c.dataset.id + '"]');
+      }
       const lt0 = c.querySelector('.sp2-lt');
       if (!lt0) throw new Error('the two units are not divided');
       const cs = getComputedStyle(lt0);
@@ -1873,7 +2178,7 @@
       if (Math.abs(after - before) < 40) throw new Error('the column did not move: ' + Math.round(before) + ' → ' + Math.round(after));
       sp2ResetWidth();
       if (typeof sp2PopOut !== 'function') throw new Error('a column cannot be popped out');
-      if (document.querySelectorAll('.sp2-col-hdr .sp2-ico-btn').length < 2)
+      if (document.querySelectorAll('.sp2-col-hdr .sp2-ico-btn,.sp2-col-hdr .sp2-ico-tool').length < 2)
         throw new Error('only one column offers to pop out');
       // and the popped-out page shows one column
       body.setAttribute('data-only', 'drivers');

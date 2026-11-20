@@ -87,8 +87,80 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-body[data-view="v"] .sp2-tl-wrap{overflow-x:hidden;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1b);}
 
-.sp2-col-hdr{min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--fp-stroke-hairline);flex-shrink:0;flex-wrap:wrap;background:var(--fp-surface-1b);}
+/* ── The head of a column ──────────────────────────────────
+   Built as the design system's list page is: the name on its own line, then
+   ONE control row — unit.toolbar. Left narrows (quick filters, then search,
+   then Filters), right scopes and presents. Never a second control row: a
+   menu dropped from the toolbar then lands on the list, which is where a menu
+   belongs, and not on top of the filters.  (FPDS unit.toolbar, template.list-page) */
+.sp2-col-hdr{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:10px;
+  padding:10px 16px;border-bottom:1px solid var(--fp-stroke-hairline);
+  flex-shrink:0;background:var(--fp-surface-1b);}
+.sp2-col-top{display:flex;align-items:center;gap:12px;min-width:0;}
+/* the count belongs to the name, not to the row */
+.sp2-col-id{display:flex;align-items:center;gap:6px;min-width:0;}
 .sp2-col-title{font-size:14px;line-height:20px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;}
+
+.sp2-tools{display:flex;flex-wrap:wrap;align-items:flex-start;
+  justify-content:space-between;gap:12px;min-width:0;}
+.sp2-tools-l{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+.sp2-pop-out{margin-left:auto;}
+.sp2-tools-r{display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;}
+/* every control in the row is 32px tall, as the DS has it */
+.sp2-tools .sp2-seg{padding:2px;}
+.sp2-tools .sp2-seg-btn{height:26px;}
+.sp2-tools .sp2-search{height:32px;flex:1 1 180px;min-width:120px;max-width:320px;}
+.sp2-drv-tabs .sp2-seg-btn,.sp2-tools #sp2Quick .sp2-seg-btn{padding:0 6px;}
+
+/* an icon standing in for the label a unit used to carry outside it */
+.sp2-seg-ico{display:inline-flex;align-items:center;padding:0 5px 0 7px;color:var(--fp-ink-3);flex-shrink:0;}
+
+/* Filters and Sort: icon triggers, named by their tooltip. Each carries what
+   it is doing the way the DS's Filters trigger carries its applied count — so
+   a narrowed or re-ordered list never passes for the plain one. */
+.sp2-tool-btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 8px;
+  border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);
+  background:var(--fp-surface-1b);color:var(--fp-ink-1);
+  font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.sp2-tool-btn:hover{background:var(--fp-emphasis-hover);}
+.sp2-tool-btn svg{color:var(--fp-ink-3);}
+.sp2-tool-btn.on{border-color:var(--fp-outline-2);}
+.sp2-tool-btn.on svg{color:var(--fp-ink-1);}
+.sp2-bubble{display:none;align-items:center;justify-content:center;min-width:18px;height:18px;
+  padding:0 6px;border-radius:9999px;background:var(--chip);color:var(--fp-ink-1);
+  font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;}
+.sp2-tool-btn.on .sp2-bubble{display:inline-flex;}
+
+/* the display switch: icon tools, the current one on the chip fill */
+.sp2-ico-tool{display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border:none;border-radius:var(--r-md);background:none;
+  color:var(--fp-ink-3);cursor:pointer;flex-shrink:0;}
+.sp2-ico-tool:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+.sp2-ico-tool.on{background:var(--chip);color:var(--fp-ink-1);}
+.sp2-ico-tool:disabled{opacity:.4;cursor:not-allowed;}
+.sp2-ico-tool:disabled:hover{background:none;color:var(--fp-ink-3);}
+
+/* ── More filters ──────────────────────────────────────────
+   The rest of the filters live behind a funnel, which carries a dot while any
+   of them is on, so a narrowed list never looks like the whole list. */
+.sp2-fltwrap{position:static;}
+.sp2-fltpop{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:70;
+  min-width:184px;padding:6px;background:var(--fp-surface-1b);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);
+  box-shadow:0 8px 20px -6px rgba(3,4,5,.18),0 2px 6px -2px rgba(3,4,5,.1);}
+.sp2-fltpop.on{display:block;}
+.sp2-fltpop-h{padding:4px 8px 6px;font-size:11px;color:var(--fp-ink-3);}
+.sp2-fltrow{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;
+  border:none;border-radius:var(--r-sm,6px);background:none;font-family:inherit;
+  font-size:13px;color:var(--fp-ink-1);cursor:pointer;text-align:left;}
+.sp2-fltrow:hover{background:var(--fp-emphasis-hover);}
+.sp2-fltrow:disabled{opacity:.45;cursor:not-allowed;}
+.sp2-fltrow:disabled:hover{background:none;}
+.sp2-fltrow-n{margin-left:auto;font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-fltrow .sp2-tick{width:14px;color:var(--fp-selected-strong);visibility:hidden;}
+.sp2-fltrow.on .sp2-tick{visibility:visible;}
+
+
 .sp2-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;border-radius:9999px;background:var(--muted);font-size:12px;font-weight:500;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 
 .sp2-seg{display:flex;background:var(--muted);border:1px solid var(--fp-outline-1);border-radius:var(--r-md);padding:2px;}
@@ -96,7 +168,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-seg-btn:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
 .sp2-seg-btn.on{background:var(--primary);color:var(--primary-foreground);font-weight:600;}
 .sp2-seg-n{font-size:11px;opacity:.75;font-variant-numeric:tabular-nums;}
-.sp2-flt-lbl{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.12em;}
 .sp2-custom{display:none;align-items:center;gap:6px;}
 .sp2-custom.on{display:flex;}
 .sp2-time{height:32px;width:72px;background:var(--fp-surface-1b);border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);color:var(--fp-ink-1);font-family:inherit;font-size:13px;padding:0 8px;outline:none;text-align:center;font-variant-numeric:tabular-nums;}
@@ -339,8 +410,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-sec{padding:16px;min-width:0;display:flex;flex-direction:column;min-height:0;}
 .sp2-sec-drv{flex:0 0 clamp(268px,30%,330px);border-right:1px solid var(--fp-stroke-hairline);}
 .sp2-sec-trk{flex:1;min-width:0;overflow-y:auto;}
-.sp2-drv-tabs{align-self:stretch;margin-bottom:10px;}
-.sp2-drv-tabs .sp2-seg-btn{flex:1;justify-content:center;padding:0 6px;}
 .sp2-drv-list{flex:1;overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px;}
 .sp2-grp{position:sticky;top:0;z-index:2;background:var(--fp-surface-1a);display:flex;align-items:center;gap:8px;padding:8px 0 6px;font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:.14em;}
 .sp2-drow{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
@@ -536,24 +605,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* ── Compact: a density, not a second drawing ─────────────
    The selected lane keeps the tanker whatever the density; the rest keep their
    bars and lose the writing, which you only need for the rig you are loading. */
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on){padding:7px 16px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-day{padding:7px 10px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-sync{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-shift{margin-top:3px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-drv .sp2-state{margin-top:5px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-bars{height:30px;margin-top:7px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-bar2-p{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on){padding-top:8px;padding-bottom:8px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-av{width:26px;height:26px;font-size:11px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-hv{margin-top:6px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-bars{height:12px;margin-top:7px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:7px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:6px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-stop{display:none;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-rt{margin-top:7px;padding-top:7px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-rt-row{padding-top:3px;padding-bottom:3px;}
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-trl-btn,
-.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-truck .sp2-link{display:none;}
 
 /* ── where the driver is in their shift ─────────────────── */
 .sp2-shift{margin-top:9px;padding-top:9px;border-top:1px solid var(--fp-stroke-hairline);}
@@ -616,7 +667,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-move-of{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 .sp2-move-quick{display:flex;align-items:center;gap:6px;margin-top:11px;}
 /* ── how much of this order the chosen rig could take ── */
-.sp2-vs{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;}
 /* The fit belongs beside the order number, not across the foot — it answers
    "is this one mine?", which is the head's question. */
 .sp2-fit,.sp2-who{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;
@@ -646,8 +696,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-prods{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
 
 /* the driver tabs sit on the header line like everything else on it */
-.sp2-drv-tabs{align-self:center;margin-bottom:0;}
-.sp2-col-hdr{align-items:center;}
+
+.sp2-col-hdr{align-items:stretch;}
 /* ── the order card: who and where on the left, what on the right ── */
 /* Three bands, grouped by space, no rules between them. */
 .sp2-card-l{min-width:0;margin-top:10px;}
@@ -834,6 +884,21 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
    negative margins take it back out to that inset. The inner card's rim is
    what divides the two units; a rule above it as well would be two strokes
    saying one thing. */
+/* The card at rest: one line for the whole load, in the frame the table would
+   have filled, so opening it changes the contents and not the shape. */
+.sp2-lsum{display:flex;align-items:center;gap:8px;height:44px;
+  margin:12px -9px -7px;width:calc(100% + 18px);padding:0 12px;
+  background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-md);font-family:inherit;cursor:pointer;text-align:left;}
+.sp2-lsum:hover{background:var(--fp-emphasis-hover);}
+.sp2-lsum-n{font-size:14px;color:var(--fp-ink-1);white-space:nowrap;}
+.sp2-lsum-q{margin-left:auto;font-size:14px;font-weight:600;color:var(--fp-ink-1);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sp2-caret{display:inline-flex;align-items:center;justify-content:center;
+  width:16px;flex-shrink:0;color:var(--fp-ink-3);transition:transform .12s;}
+.sp2-caret.open{transform:rotate(90deg);cursor:pointer;margin-right:4px;}
+.sp2-lt-tot>span:first-child{display:flex;align-items:center;}
+
 .sp2-lt{display:grid;grid-template-columns:minmax(0,1fr) 110px 64px;
   margin:12px -9px -7px;background:var(--fp-surface-1b);
   border:1px solid var(--fp-outline-1);border-radius:var(--r-md);overflow:hidden;}
@@ -948,37 +1013,72 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
     <!-- ══ Column 1 — the orders, on a timeline ══ -->
     <div class="sp2-col sp2-col-orders">
       <div class="sp2-col-hdr">
-        <span class="sp2-col-title">Orders</span>
-        <span class="sp2-count" id="sp2OrdCount">0</span>
-        <span class="sp2-vs" id="sp2Vs"></span>
-        <span class="sp2-picked" id="sp2PickBar">
-          <b id="sp2PickN">0</b> picked
-          <button class="sp2-link" onclick="sp2ClearPicks()">Clear</button>
-        </span>
+        <div class="sp2-col-top">
+          <span class="sp2-col-id">
+            <span class="sp2-col-title">Orders</span>
+            <span class="sp2-count" id="sp2OrdCount">0</span>
+          </span>
+          <span class="sp2-picked" id="sp2PickBar">
+            <b id="sp2PickN">0</b> picked
+            <button class="sp2-link" onclick="sp2ClearPicks()">Clear</button>
+          </span>
+          <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('orders')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
+        </div>
 
-        <div class="sp2-hdr-tools">
-          <div class="sp2-seg" id="sp2Quick">
-            <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
-            <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
-            <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+        <!-- unit.toolbar — left narrows, right scopes and presents -->
+        <div class="sp2-tools">
+          <div class="sp2-tools-l">
+            <div class="sp2-seg" id="sp2Quick">
+              <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
+              <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
+              <button class="sp2-seg-btn"    data-q="outside"   onclick="sp2SetQuick('outside')" title="Planned orders the run does not reach inside their window">Outside <span class="sp2-seg-n" id="sp2nOut"></span></button>
+              <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+            </div>
+
+            <div class="sp2-fltwrap">
+              <button class="sp2-tool-btn" id="sp2FltBtn" onclick="sp2FltToggle(event)" title="Filters">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><span class="sp2-bubble" id="sp2FltN">1</span>
+              </button>
+              <div class="sp2-fltpop" id="sp2FltPop" onclick="event.stopPropagation()">
+                <div class="sp2-fltpop-h">Narrow the list</div>
+                <button class="sp2-fltrow" id="sp2BlendBtn" onclick="sp2ToggleBlend()"
+                  title="Only orders carrying a blended product">
+                  <span class="sp2-tick">\u2713</span>Blend
+                  <span class="sp2-fltrow-n" id="sp2nBl"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="sp2-fltwrap">
+              <button class="sp2-tool-btn" id="sp2SortBtn" onclick="sp2SortToggle(event)" title="Sort">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg><span class="sp2-bubble" id="sp2SortN"></span>
+              </button>
+              <div class="sp2-fltpop" id="sp2SortPop" onclick="event.stopPropagation()">
+                <div class="sp2-fltpop-h">Sort by</div>
+                <button class="sp2-fltrow on" data-o="time" onclick="sp2SetSort('time')"
+                  title="In the order the day runs them"><span class="sp2-tick">\u2713</span>Time</button>
+                <button class="sp2-fltrow" data-o="fit" onclick="sp2SetSort('fit')"
+                  title="Best fit for the chosen rig first"><span class="sp2-tick">\u2713</span>Fit
+                  <span class="sp2-fltrow-n" id="sp2SortFitVs"></span></button>
+                <button class="sp2-fltrow" data-o="driver" onclick="sp2SetSort('driver')"
+                  title="Every driver\u2019s orders together"><span class="sp2-tick">\u2713</span>Driver</button>
+              </div>
+            </div>
           </div>
-          <div class="sp2-seg">
-            <button class="sp2-seg-btn" id="sp2BlendBtn" onclick="sp2ToggleBlend()" title="Only orders carrying a blended product">Blend <span class="sp2-seg-n" id="sp2nBl"></span></button>
-          </div>
-          <span class="sp2-flt-lbl">Sort</span>
-          <div class="sp2-seg">
-            <button class="sp2-seg-btn on" data-o="time" onclick="sp2SetSort('time')" title="In the order the day runs them">Time</button>
-            <button class="sp2-seg-btn"    data-o="fit"  onclick="sp2SetSort('fit')"  title="Best fit for the chosen rig first">Fit</button>
-          </div>
-          <div class="sp2-seg">
-            <button class="sp2-seg-btn" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
+
+          <div class="sp2-tools-r">
+            <button class="sp2-ico-tool" id="sp2AllBtn" onclick="sp2CardsAll()" title="Expand every order"></button>
+            <button class="sp2-ico-tool" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
             </button>
-            <button class="sp2-seg-btn on" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+            <button class="sp2-ico-tool on" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
             </button>
           </div>
-          <button class="sp2-ico-btn sm" onclick="sp2PopOut('orders')" title="Open this column in its own window"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         </div>
       </div>
 
@@ -992,33 +1092,38 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
     <!-- ══ Column 2 — the driver, and the rig mapped to them ══ -->
     <div class="sp2-col sp2-col-unit">
       <div class="sp2-col-hdr">
-        <span class="sp2-col-title">Driver &amp; truck</span>
-        <span class="sp2-count" id="sp2DrvCount">0</span>
-        <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2RenderUnit()">
+        <div class="sp2-col-top">
+          <span class="sp2-col-id">
+            <span class="sp2-col-title">Driver &amp; truck</span>
+            <span class="sp2-count" id="sp2DrvCount">0</span>
+          </span>
+          <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
+        </div>
 
-        <div class="sp2-hdr-tools">
-          <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
-            <button class="sp2-seg-btn"    data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
-            <button class="sp2-seg-btn on" data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
-            <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
-            <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
-            <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
+        <!-- the same unit, the same order -->
+        <div class="sp2-tools">
+          <div class="sp2-tools-l">
+            <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
+              <button class="sp2-seg-btn"    data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
+              <button class="sp2-seg-btn on" data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
+              <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
+              <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
+              <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
+            </div>
+            <div class="sp2-seg sp2-shift-seg">
+              <span class="sp2-seg-ico" title="Shift">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+              </span>
+              <button class="sp2-seg-btn on" data-s="all" onclick="sp2SetShift('all')">All</button>
+              <button class="sp2-seg-btn"    data-s="am"  onclick="sp2SetShift('am')">AM</button>
+              <button class="sp2-seg-btn"    data-s="pm"  onclick="sp2SetShift('pm')">PM</button>
+            </div>
+            <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2OnlyDriver=null;sp2RenderUnit()">
           </div>
-          <span class="sp2-flt-lbl">Shift</span>
-          <div class="sp2-seg">
-            <button class="sp2-seg-btn on" data-s="all" onclick="sp2SetShift('all')">All</button>
-            <button class="sp2-seg-btn"    data-s="am"  onclick="sp2SetShift('am')">AM</button>
-            <button class="sp2-seg-btn"    data-s="pm"  onclick="sp2SetShift('pm')">PM</button>
+
+          <div class="sp2-tools-r">
           </div>
-          <div class="sp2-seg" id="sp2DenseSeg">
-            <button class="sp2-seg-btn on" data-z="compact" onclick="sp2SetDense('compact')" title="Compact — more drivers on screen">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-            <button class="sp2-seg-btn" data-z="full" onclick="sp2SetDense('full')" title="Full — every compartment spelled out">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>
-            </button>
-          </div>
-          <button class="sp2-ico-btn sm" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         </div>
       </div>
 
@@ -1538,7 +1643,7 @@ var SP2_ORDERS = (function buildOrders() {
 // ══════════════════════════════════════════════════════════
 //  State
 // ══════════════════════════════════════════════════════════
-var sp2Quick = 'unplanned';    // unplanned · planned · all — the column is the
+var sp2Quick = 'unplanned';    // unplanned · planned · outside · all — the column is the
                                // still-to-plan list, so an assigned order leaves it
 var sp2Shift_ = 'all';         // all · am · pm — which drivers' shifts, not which orders
 var sp2Driver = 'd0';
@@ -1546,13 +1651,20 @@ var sp2Picked = {};            // orders ticked for a single drag — id → tru
 // The planner opens on the work that still needs doing: the orders nobody has
 // taken, against the trucks that still have room. Both columns start narrowed.
 var sp2DrvFilter = 'available';
-var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
 var sp2Drag = null;          // the order ids being dragged, or null
 var sp2MoveFrom = null;      // a compartment picked up, waiting for somewhere to go
 // The planner has no clock of its own — the day is fixed — so 'now' is a
 // stated time rather than a real one. It is what makes a shift read as
 // started, running or over.
 var sp2SelOrder = null;
+// While a PLANNED order is selected, the driver column shows that rig alone.
+// The order already has a driver and a truck, and nobody else can take it
+// without releasing it first — so the rest of the fleet is not a set of
+// choices, it is thirty rows in the way of the one answer.
+var sp2OnlyDriver = null;
+// Which cards have their products open. A card at rest states what it is
+// carrying in one line; the table is there when you want to correct it.
+var sp2CardOpen = {};
 var sp2View = 'v';            // v vertical (the default) · h horizontal
 var sp2Sort = 'time';         // time · fit — fit ranks against the chosen rig
 var sp2BlendOnly = false;     // narrow to orders carrying a blend
@@ -1562,6 +1674,7 @@ var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 400;    // the round-3 card holds a table, so it needs the width
 var SP2_CARD_BASE = 198; // everything on the card that is not a table row
 var SP2_CARD_ROW  = 44;  // one row of the lines table
+var SP2_CARD_SHUT = 156; // a card whose products are collapsed to one line
 
 function sp2Hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
 function sp2Short(m){
@@ -1590,6 +1703,20 @@ function sp2FitScore(o) {
   return f.pct * 1000 + f.fits;
 }
 
+// Orders the run does not reach inside the window the customer was given.
+// It is a property of the RUN, not of the order — the same order on another
+// rig may well be made — so it is read off the routes, once per render.
+var sp2OutsideMap = null;
+function sp2OutsideIds() {
+  if (sp2OutsideMap) return sp2OutsideMap;
+  var out = {};
+  Object.keys(SP2_DRIVERS).forEach(function (k) {
+    sp2Route(k).forEach(function (r) { if (r.kind === 'late') out[r.o.id] = true; });
+  });
+  return (sp2OutsideMap = out);
+}
+function sp2Outside(o) { return !!sp2OutsideIds()[o.id]; }
+
 function sp2Visible() {
   var w = sp2Window();
   var list = SP2_ORDERS.filter(function(o) {
@@ -1597,10 +1724,22 @@ function sp2Visible() {
     if (sp2BlendOnly && !sp2HasBlend(o)) return false;
     if (sp2Quick === 'planned')   return sp2Planned(o);
     if (sp2Quick === 'unplanned') return !sp2Planned(o);
+    if (sp2Quick === 'outside')   return sp2Outside(o);
     return true;
   });
   if (sp2Sort === 'fit')
     return list.sort(function (a, b) { return sp2FitScore(b) - sp2FitScore(a) || a.t - b.t; });
+  // By driver: every driver's orders together, in the order their day runs
+  // them. It is a planned-order reading, so orders nobody has taken fall to
+  // the bottom rather than being scattered through the list.
+  if (sp2Sort === 'driver')
+    return list.sort(function (a, b) {
+      var an = a.driver && SP2_DRIVERS[a.driver] ? SP2_DRIVERS[a.driver].name : '';
+      var bn = b.driver && SP2_DRIVERS[b.driver] ? SP2_DRIVERS[b.driver].name : '';
+      if (!an !== !bn) return an ? -1 : 1;
+      if (an !== bn)   return an < bn ? -1 : 1;
+      return a.t - b.t;
+    });
   return list.sort(function(a,b){ return a.t - b.t; });
 }
 
@@ -1991,6 +2130,7 @@ function sp2CardV3(o, style) {
   // never read as four unrelated products.
   var lines = sp2Lines(o);
   var anyBlend = lines.some(function (pr) { return pr.blend; });
+  var open = !!sp2CardOpen[o.id];
 
   var rows = lines.map(function (pr, n) {
     var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
@@ -2033,8 +2173,11 @@ function sp2CardV3(o, style) {
 
     // ── unit 1 · which order, where it goes, when ──
     '<div class="sp2-card-top">' +
-      '<button class="sp2-cbx' + picked + '" title="Pick this order, and drag them together" ' +
-        'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>' +
+      // the tick gathers orders to drag onto a rig; a planned order is already
+      // on one and cannot be taken without releasing it first
+      (planned ? '' :
+        '<button class="sp2-cbx' + picked + '" title="Pick this order, and drag them together" ' +
+          'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>') +
       '<span class="sp2-ord">' + o.id + '</span>' +
       '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
       '<span class="sp2-pill sp2-pill-r ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
@@ -2064,19 +2207,28 @@ function sp2CardV3(o, style) {
     // ── unit 2 · what was asked for, correctable in place ──
     // The DS lines table: flush to the card's edges, a tinted header band,
     // 44px rows, every cell the control itself rather than a box inside a box.
-    '<div class="sp2-lt' + (anyBlend ? ' blended' : '') + '">' +
-      '<div class="sp2-lt-head">' +
-        '<span>Product</span>' +
-        (anyBlend ? '<span>Blend ratio</span>' : '') +
-        '<span>Quantity</span><span>Type</span>' +
-      '</div>' +
-      rows +
-      '<div class="sp2-lt-tot">' +
-        '<span>Total</span>' +
-        (anyBlend ? '<span></span>' : '') +
-        '<span>' + sp2Totals(o).join(' \u00b7 ') + '</span><span></span>' +
-      '</div>' +
-    '</div>' +
+    (open
+      ? '<div class="sp2-lt' + (anyBlend ? ' blended' : '') + '">' +
+          '<div class="sp2-lt-head">' +
+            '<span>Product</span>' +
+            (anyBlend ? '<span>Blend ratio</span>' : '') +
+            '<span>Quantity</span><span>Type</span>' +
+          '</div>' +
+          rows +
+          '<div class="sp2-lt-tot">' +
+            '<span>' + sp2Caret(o, true) + 'Total</span>' +
+            (anyBlend ? '<span></span>' : '') +
+            '<span>' + sp2Totals(o).join(' \u00b7 ') + '</span><span></span>' +
+          '</div>' +
+        '</div>'
+      : '<button class="sp2-lsum" ' +
+          'onclick="sp2CardToggle(event,\'' + o.id + '\')" ' +
+          'title="Show what is on this order">' + sp2Caret(o, false) +
+          '<span class="sp2-lsum-n">' + lines.length + ' product' +
+            (lines.length === 1 ? '' : 's') + '</span>' +
+          (anyBlend ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+          '<span class="sp2-lsum-q">' + sp2Totals(o).join(' \u00b7 ') + '</span>' +
+        '</button>') +
   '</div>';
 }
 
@@ -2085,6 +2237,43 @@ function sp2Clock(m) {
   var h = Math.floor(m / 60) % 24, x = m % 60;
   var ap = h < 12 ? 'AM' : 'PM', h12 = h % 12 === 0 ? 12 : h % 12;
   return h12 + ':' + String(x).padStart(2, '0') + ' ' + ap;
+}
+
+function sp2Caret(o, open) {
+  return '<span class="sp2-caret' + (open ? ' open' : '') + '"' +
+      (open ? ' onclick="sp2CardToggle(event,\'' + o.id + '\')" title="Hide the products"' : '') + '>' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<polyline points="9 18 15 12 9 6"/></svg></span>';
+}
+function sp2CardToggle(e, id) {
+  if (e) e.stopPropagation();
+  if (sp2CardOpen[id]) delete sp2CardOpen[id]; else sp2CardOpen[id] = true;
+  sp2RenderTimeline();
+}
+// One act for the whole column: if anything is open, shut everything; if
+// nothing is, open what is on screen. The icon says which it will do.
+function sp2CardsAll() {
+  var any = Object.keys(sp2CardOpen).length > 0;
+  sp2CardOpen = {};
+  if (!any) sp2Visible().forEach(function (o) { sp2CardOpen[o.id] = true; });
+  sp2RenderTimeline();
+}
+function sp2CardsAllBtn() {
+  var b = document.getElementById('sp2AllBtn');
+  if (!b) return;
+  var any = Object.keys(sp2CardOpen).length > 0;
+  b.classList.toggle('on', any);
+  b.title = any ? 'Collapse every order' : 'Expand every order';
+  b.innerHTML = any
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>' +
+      '<line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
+      '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
 }
 
 // Every order card is the round-3 card now; the band design it replaced is
@@ -2248,7 +2437,11 @@ function sp2RenderTimeline() {
   // the tallest one in it — and a card is as tall as its lines table.
   var laneHeight = function (lane) {
     return lane.reduce(function (h, slot) {
-      return Math.max(h, SP2_CARD_BASE + slot.o.prods.length * SP2_CARD_ROW);
+      // a shut card is one summary line; an open one is a row per line the
+      // table actually draws, which for a blend is its constituents
+      return Math.max(h, sp2CardOpen[slot.o.id]
+        ? SP2_CARD_BASE + sp2Lines(slot.o).length * SP2_CARD_ROW
+        : SP2_CARD_SHUT);
     }, 0);
   };
   var lanesHtml = lanes.map(function(lane) {
@@ -2272,36 +2465,99 @@ function sp2Counts() {
   document.getElementById('sp2nUn').textContent  = inWindow.length - pl;
   document.getElementById('sp2nPl').textContent  = pl;
   document.getElementById('sp2nBl').textContent  = inWindow.filter(sp2HasBlend).length;
+  document.getElementById('sp2nOut').textContent = inWindow.filter(sp2Outside).length;
+  sp2CardsAllBtn();
   document.getElementById('sp2OrdCount').textContent = sp2Visible().length;
-  var d = SP2_DRIVERS[sp2Driver], vs = document.getElementById('sp2Vs');
-  if (vs) vs.textContent = d ? 'fit vs ' + d.truck : '';
   var n = Object.keys(sp2Picked).length, bar = document.getElementById('sp2PickBar');
   if (bar) { bar.classList.toggle('on', n > 0); document.getElementById('sp2PickN').textContent = n; }
 }
 
 function sp2SetQuick(q) {
   sp2Quick = q;
+  sp2OnlyDriver = null;
   document.querySelectorAll('#sp2Quick .sp2-seg-btn').forEach(function(b) {
     b.classList.toggle('on', b.dataset.q === q);
   });
   sp2RenderTimeline();
 }
 // A time axis cannot be re-sorted, so ranking by fit means the vertical list.
+// Fit ranks against a rig, so it is offered only while one is chosen; letting
+// go of the rig puts the list back in time order. The icon carries a dot
+// whenever the list is in anything other than its natural order.
+function sp2SortBar() {
+  var rig = SP2_DRIVERS[sp2Driver];
+  var fit = document.querySelector('[data-o="fit"]');
+  if (fit) {
+    fit.disabled = !rig;
+    fit.title = rig ? 'Best fit for ' + rig.truck + ' first'
+                    : 'Choose a rig first — fit is measured against one';
+    document.getElementById('sp2SortFitVs').textContent = rig ? rig.truck : '';
+  }
+  if (!rig && sp2Sort === 'fit') sp2SetSort('time');
+  sp2SortLbl();
+}
+// Time is the list's natural order, so the button says nothing; any other
+// order is a thing the reader has done, and the button carries it.
+function sp2SortLbl() {
+  var b = document.getElementById('sp2SortBtn');
+  if (!b) return;
+  b.classList.toggle('on', sp2Sort !== 'time');
+  document.getElementById('sp2SortN').textContent =
+    sp2Sort === 'fit' ? 'Fit' : sp2Sort === 'driver' ? 'Driver' : '';
+}
 function sp2SetSort(o) {
   sp2Sort = o;
+  sp2FltClose();              // one choice made, so the menu is done
   document.querySelectorAll('[data-o]').forEach(function (b) {
     b.classList.toggle('on', b.dataset.o === o);
   });
+  sp2SortLbl();
+  // A time axis cannot be re-ordered, so anything but Time means the list
+  var axis = o !== 'time';
   var h = document.querySelector('[data-v="h"]');
-  h.disabled = o === 'fit';
-  h.title = o === 'fit' ? 'Not available while sorting by fit — a time axis cannot be re-ordered'
-                        : 'Horizontal timeline';
-  if (o === 'fit' && sp2View === 'h') sp2SetView('v'); else sp2RenderTimeline();
+  h.disabled = axis;
+  h.title = axis ? 'Not available while sorting by ' + o + ' — a time axis cannot be re-ordered'
+                 : 'Horizontal timeline';
+  if (axis && sp2View === 'h') sp2SetView('v'); else sp2RenderTimeline();
 }
+
+// The menu hangs off the head so it always lands on the list; this only lines
+// it up under the button that opened it, wherever the row has wrapped to.
+function sp2PopUnder(popId, btnId) {
+  var pop = document.getElementById(popId), btn = document.getElementById(btnId);
+  if (!pop || !btn) return;
+  var hdr = btn.closest('.sp2-col-hdr');
+  var x = btn.getBoundingClientRect().left - hdr.getBoundingClientRect().left;
+  pop.style.left = Math.max(8, Math.min(x, hdr.clientWidth - pop.offsetWidth - 8)) + 'px';
+}
+function sp2FltToggle(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('sp2SortPop').classList.remove('on');
+  document.getElementById('sp2FltPop').classList.toggle('on');
+  sp2PopUnder('sp2FltPop', 'sp2FltBtn');
+}
+function sp2SortToggle(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('sp2FltPop').classList.remove('on');
+  document.getElementById('sp2SortPop').classList.toggle('on');
+  sp2PopUnder('sp2SortPop', 'sp2SortBtn');
+}
+function sp2FltClose() {
+  ['sp2FltPop', 'sp2SortPop'].forEach(function (id) {
+    var p = document.getElementById(id);
+    if (p) p.classList.remove('on');
+  });
+}
+document.addEventListener('click', sp2FltClose);
 
 function sp2ToggleBlend() {
   sp2BlendOnly = !sp2BlendOnly;
   document.getElementById('sp2BlendBtn').classList.toggle('on', sp2BlendOnly);
+  // Filters carries how many of them are applied, so a narrowed list never
+  // passes for the whole list
+  var n = (sp2BlendOnly ? 1 : 0);
+  document.getElementById('sp2FltBtn').classList.toggle('on', n > 0);
+  document.getElementById('sp2FltN').textContent = n;
   sp2RenderTimeline();
 }
 
@@ -2347,6 +2603,9 @@ document.addEventListener('mousedown', function (e) {
 function sp2PickOrder(id) {
   sp2SelOrder = id;
   var o = SP2_ORDERS.filter(function(x){ return x.id === id; })[0];
+  // a planned order opens its own rig and narrows the column to it; an
+  // unplanned one puts the whole fleet back, because any of them might take it
+  sp2OnlyDriver = o && o.driver ? o.driver : null;
   if (o && o.driver) sp2Driver = o.driver;
   sp2Render();
   if (o && !o.driver) sp2Toast(o.id + ' has no driver yet — it sits unplanned');
@@ -2379,6 +2638,13 @@ function sp2Avail(d) {
 }
 
 function sp2DriverKeys() {
+  // The one rig a selected planned order is on, whatever the filters say —
+  // the filters narrow a search, and this is not a search any more.
+  if (sp2OnlyDriver) {
+    var sel = SP2_ORDERS.filter(function (x) { return x.id === sp2SelOrder; })[0];
+    if (sel && sel.driver === sp2OnlyDriver && SP2_DRIVERS[sp2OnlyDriver]) return [sp2OnlyDriver];
+    sp2OnlyDriver = null;
+  }
   var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
   if (sp2DrvFilter === 'available' && !sp2AvailOrder) sp2FreezeAvail();
   var keys = Object.keys(SP2_DRIVERS).filter(function (k) {
@@ -2852,6 +3118,7 @@ function sp2DrvCounts(shown) {
 
 function sp2SetDrvFilter(f) {
   sp2DrvFilter = f;
+  sp2OnlyDriver = null;       // asking the column for a set is leaving the one rig
   // arriving at Available — including clicking it again — is the ask for a
   // fresh ordering; nothing else re-sorts it
   if (f === 'available') sp2FreezeAvail(); else sp2AvailOrder = null;
@@ -2863,13 +3130,6 @@ function sp2SetDrvFilter(f) {
 
 // Compact is only a density, not a different render: the chosen lane stays
 // full, so you can scan thirty rigs and still work the one you are on.
-function sp2SetDense(z) {
-  sp2Dense = z;
-  document.querySelectorAll('[data-z]').forEach(function (b) {
-    b.classList.toggle('on', b.dataset.z === z);
-  });
-  document.getElementById('sp2V2').setAttribute('data-dense', z);
-}
 
 // ══════════════════════════════════════════════════════════
 //  Column 2 · Section 2 — the rig, drawn
@@ -3915,7 +4175,7 @@ function sp2LaneHtml(k) {
 
   return '<div class="sp2-ln' + (k === sp2Driver ? ' on' : '') + ' ' + d.state + '" data-k="' + k + '" ' +
       'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-      'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')" onclick="sp2PickDriver(\'' + k + '\')">' +
+      'ondrop="sp2Drop(event,\'auto\',-1,\'' + k + '\')" onclick="sp2LaneClick(\'' + k + '\')">' +
 
     // Who is driving, when their shift runs, and how much of it is left.
     // That is the whole of it at rest; the hours are a hover away and the
@@ -4020,7 +4280,6 @@ function sp2RenderLanes() {
 }
 
 function sp2RenderUnit() {
-  document.getElementById('sp2V2').setAttribute('data-dense', sp2Dense);
   sp2RenderLanes();
 }
 
@@ -4031,12 +4290,22 @@ function sp2PickDriver(k) {
   sp2Driver = k;
   sp2Render();          // the cards on the left are measured against this rig
 }
+// Clicking the lane you are already in lets go of it. Nothing is being planned
+// onto anything then, so fit has nothing to measure and the sort says so.
+// Only the lane does this — everywhere else, picking a driver means picking.
+function sp2LaneClick(k) {
+  sp2Driver = sp2Driver === k ? null : k;
+  sp2Render();
+}
 function sp2ViewDriver() { sp2Toast(SP2_DRIVERS[sp2Driver].name + ' — driver details would open here'); }
 
 // ══════════════════════════════════════════════════════════
 //  Shell
 // ══════════════════════════════════════════════════════════
-function sp2Render(){ sp2RenderTimeline(); sp2RenderUnit(); sp2Sub(); }
+function sp2Render(){
+  sp2OutsideMap = null;         // the runs changed, so what is outside did too
+  sp2RenderTimeline(); sp2RenderUnit(); sp2Sub(); sp2SortBar();
+}
 
 // The header carries the version, not the date — the date picker says the day
 // and the ruler says the hours, so the subtitle was a third copy of both.
