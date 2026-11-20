@@ -334,3 +334,129 @@ V2 **55/55**, V1 **54/54**, merged file green, no console errors and no clip
 findings at 1512×950. Checks that read the drawing's product, gallons and fill
 now read the **table**, and one asserts the drawing does not repeat it; the rig
 geometry check measures "fits its column" rather than V1's fixed side padding.
+
+---
+
+## The day, down the driver card (round 7)
+
+**Asked for.** Once orders have been added, the driver card shows the order
+numbers, the expected delivery time, and whether that time falls in the
+delivery window — as a vertical timeline.
+
+**Built.** A `Route` block at the foot of the driver card, under a hairline,
+drawn only when the rig has orders. One row per stop, in the order the day runs
+them:
+
+- a node on a rail — green in window, blue early, red late
+- the expected time, tabular, and the order number
+- under it, the verdict in words plus the window itself: `In window · 8a–11a`,
+  `Waits 2h 46m · 12:55p–3:55p`, `13m late · 6:16a–8:16a`
+
+The head reads `Route · 3 stops`, and adds `· 1 outside` when a stop misses.
+A row selects its order, the same as the stop chip does. Hovering it gives the
+ship-to, the window and the gallons. A shut lane shows four stops and offers
+`+N more stops`, which opens the lane; the open lane shows them all.
+
+**How the time is worked out.** Twenty minutes to load out of the hub, then
+drive; thirty minutes on the hose at each ship-to; legs between two ship-tos
+are pseudo-distance from the same hash the hub trips already use, so the day is
+consistent with itself. A driver who arrives before the window opens **waits** —
+the wait is carried into the next leg, which is how a run drifts late. The
+verdict is the raw arrival against the window, not the waited one.
+
+**Said out loud.**
+
+- *The colour is on the node, not the words.* Thirty lanes of coloured text is
+  not a reading. The words carry the fact; the node carries the glance.
+- *The lane got taller.* A driver card with five stops is about 110px taller
+  than one with none, and the lane takes the taller of its two cards.
+- *The stop chips at the foot of the truck card now repeat the order numbers* —
+  and carry the order's own time, not the expected one, so one lane shows two
+  times per order. Left alone pending a decision.
+
+---
+
+## The row, and the day behind it (round 8)
+
+**The row.** Ship-to first and largest, the expected time at the right-hand
+edge, the order number and the verdict on the line below:
+
+```
+●  Harbor Marine — Slip 40                  07:24
+   D-5157218 · In window
+```
+
+The window itself moved into the row's tooltip, with the ship-to and the
+gallons, because the three facts plus a window do not fit 226px and the verdict
+already answers the question the window would.
+
+**The time model is no longer mine.** It is the one in
+`FP-DS-2026/docs/context/fleet-trucks-and-routes.md`:
+
+| Component | Rule |
+|---|---|
+| Dispensing | gallons ÷ the truck's own meter gpm |
+| Service | 20 min + 1.2 min × assets, per ship-to |
+| Buffer | <500 gal 5 min · <1,500 10 · <3,000 15 · else 20 |
+| Loading | gallons ÷ 600 gpm + 25 min, once, at the hub |
+| Travel | miles ÷ 25 mph wagon / 31 mph transport |
+| Return | the last stop back to the hub always counts |
+
+Assets sit at the low end of the doc's 5–100 (fuel sites with a handful of
+tanks), which is ~25–40 min on site. **That skew is load-bearing**: at the
+middle of the range the model says five stops will not fit an eight-hour shift,
+which is also why the field research reads "3–4 deliveries per shift".
+
+A wait shorter than ten minutes is not called a wait — the stop's own buffer is
+5–20 minutes wide and absorbs it.
+
+**The day rebuilt as runs.** The orders were cut to fill whole rigs one at a
+time, which is the opposite shape to a route. So the planned side is now built
+from the dispatch docs:
+
+- *"typical 3–4 deliveries per shift"* and *4.0 stops per load* on the
+  consolidated Corpus Christi day → **every planned rig runs 4 or 5 ship-tos**
+- *"drivers own regions; cross-region delivery is unusual"* → a hub serves the
+  states around it, read off the ship-to's own address. Twenty-two sites were
+  added so each of the five regions holds two whole runs
+- *"single truck per ship-to is the norm"* → sites are reserved as runs are
+  built, so two rigs out of one hub never share a stop
+- *"low product mix"* → one product down the run, a second on the last stop
+- average fill 76% on the consolidated day → runs are cut to 74–92% of the rig,
+  and the rigs that left the yard full stay full
+- a trip **out of region** is now 160–500 miles, so the planner refuses it
+  instead of quietly offering a Denver rig a Tampa drop
+
+The whole-rig cuts stay in the unplanned column, where the fit chip and the fit
+sort still need them. The day now reads: 10 rigs with runs, 45 planned orders,
+54 unplanned, 50 ship-tos, 31 stops in window, 11 waiting, 3 late.
+
+**Said out loud.**
+
+- *Capacities were not touched.* The class bands are fixed in the truck-types
+  doc, and a 2,800-gal bobtail running five 500-gal drops is a real day.
+---
+
+## Does the driver get home? (round 9)
+
+The stops answer *"does this one make its window"*. The run as a whole has its
+own question, and the return leg is the part nobody sees until it is too late.
+So the route closes with a line:
+
+```
+Back at the hub 14:12 · 1h 12m past the shift
+```
+
+Always the hub time; the overrun only when there is one, and only that clause
+is red. It counts the wait at the last stop, the time on site there, and the
+drive home — the return leg always counts, as the docs have it. Five of the ten
+runs come in clean; the other five overrun, two of them by about ten minutes.
+
+**And the truck stands on the card.** The drawing beside the compartment table
+was centred in the band; it now sits on the table card's baseline, so the
+bottom of the truck and the bottom of the card are the same line.
+- *The miles are still a hash.* In region they are 2–30 miles and the arithmetic
+  on top of them is now the documented model, but no road distance is real.
+- *Off-duty drivers no longer carry planned orders.* They have no shift to run
+  one in. Yard rigs still read "Load planning not started", which is the point
+  of the yard.

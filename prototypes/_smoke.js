@@ -597,6 +597,13 @@
         if (!col) throw new Error('the drawing is not beside the table');
         if (svg.getBoundingClientRect().width > col.getBoundingClientRect().width + 1)
           throw new Error('the rig spills past its column');
+        // and it stands on the compartment card's baseline, not floating in
+        // the middle of the band
+        const tbl = document.querySelector('.sp2-ln.on .sp2-two-l');
+        if (!tbl) throw new Error('there is no compartment card to stand on');
+        const gap = svg.getBoundingClientRect().bottom - tbl.getBoundingClientRect().bottom;
+        if (Math.abs(gap) > 4)
+          throw new Error('the truck sits ' + Math.round(-gap) + 'px above the card');
       } else {
         // when the compartments are already at their floor the rig cannot give
         // back the full padding; it just must not spill past the lane
@@ -1227,6 +1234,134 @@
       SP2_ORDERS.forEach(o => { if (kept.indexOf(o.id) >= 0) o.driver = k; });
       SP2_DRIVERS[k].load = keep;
       sp2Render();
+    });
+
+    if (V2) step('a planned rig runs four or five ship-tos, in its own region', () => {
+      // the docs: "typical 3–4 deliveries per shift", and the consolidated
+      // Corpus Christi day runs 4.0 stops per load
+      const planned = Object.keys(SP2_DRIVERS)
+        .filter(k => SP2_ORDERS.some(o => o.driver === k));
+      if (planned.length < 8) throw new Error('only ' + planned.length + ' rigs have a day planned');
+      planned.forEach(k => {
+        const d = SP2_DRIVERS[k];
+        const mine = SP2_ORDERS.filter(o => o.driver === k);
+        const stops = new Set(mine.map(o => o.ship));
+        if (stops.size < 4 || stops.size > 5)
+          throw new Error(d.name + ' runs ' + stops.size + ' ship-tos, not four or five');
+
+        // a driver owns a region; a Denver rig does not deliver in Tampa
+        mine.forEach(o => {
+          if (!sp2InRegion(d.hub, o.addr))
+            throw new Error(d.name + ' out of ' + d.hub + ' is sent to ' + o.ship);
+        });
+
+        // and the run has to fit the rig it is on
+        const gal = mine.reduce((a, o) => a + sp2Gal(o), 0);
+        if (gal > sp2RigCap(k))
+          throw new Error(d.name + ' is given ' + gal + ' gal onto ' + sp2RigCap(k));
+        if (sp2Overload(k)) throw new Error(d.name + ' starts the day overloaded');
+      });
+
+      // the day carries all three readings, or the timeline proves nothing
+      const kinds = {};
+      planned.forEach(k => sp2Route(k).forEach(r => { kinds[r.kind] = (kinds[r.kind] || 0) + 1; }));
+      ['ok', 'early', 'late'].forEach(x => {
+        if (!kinds[x]) throw new Error('no stop in the day reads "' + x + '"');
+      });
+    });
+
+    if (V2) step('a loaded driver card runs the day down a rail', () => {
+      sp2SetDrvFilter('all');
+      const k = Object.keys(SP2_DRIVERS)
+        .find(x => SP2_ORDERS.filter(o => o.driver === x).length >= 2);
+      if (!k) throw new Error('nobody has a run to show');
+      sp2Render();
+
+      // a rig with nothing on it has no route to draw
+      const bare = Object.keys(SP2_DRIVERS)
+        .find(x => !SP2_ORDERS.filter(o => o.driver === x).length);
+      if (bare && document.querySelector('.sp2-ln[data-k="' + bare + '"] .sp2-rt'))
+        throw new Error('an empty rig still draws a route');
+
+      const card = document.querySelector('.sp2-ln[data-k="' + k + '"] .sp2-ln-drv');
+      if (!card) throw new Error('no driver card');
+      const rt = card.querySelector('.sp2-rt');
+      if (!rt) throw new Error('a loaded driver card draws no route');
+
+      // the route lives with the DRIVER, not with the truck
+      if (document.querySelector('.sp2-ln[data-k="' + k + '"] .sp2-ln-day .sp2-rt'))
+        throw new Error('the route is in the truck card');
+
+      const rows = [...rt.querySelectorAll('.sp2-rt-row')];
+      const run = sp2Route(k);
+      if (!run.length) throw new Error('sp2Route says there is no run');
+      if (rows.length !== Math.min(run.length, k === sp2Driver ? run.length : 5))
+        throw new Error('the rail skips stops');
+
+      let last = -1;
+      rows.forEach((row, i) => {
+        const r = run[i];
+        // order number, expected time, and the verdict on the window
+        const ship = row.querySelector('.sp2-rt-ship');
+        const id = row.querySelector('.sp2-rt-id');
+        const eta = row.querySelector('.sp2-rt-eta');
+        const note = row.querySelector('.sp2-rt-note');
+        if (!ship || ship.textContent.trim() !== r.o.ship)
+          throw new Error('stop ' + i + ' does not name where it is going');
+        if (!id || id.textContent.trim() !== r.o.id)
+          throw new Error('stop ' + i + ' does not name its order');
+        if (!eta || eta.textContent.trim() !== sp2Hhmm(r.eta))
+          throw new Error(r.o.id + ' does not carry the time it is expected');
+        if (!note || !note.textContent.trim())
+          throw new Error(r.o.id + ' does not say whether it makes its window');
+        // the ship-to leads, the time sits at the right-hand edge
+        const sr = ship.getBoundingClientRect(), er = eta.getBoundingClientRect();
+        if (sr.left >= er.left) throw new Error('the time is not to the right of the ship-to');
+        if (sr.top > note.getBoundingClientRect().top)
+          throw new Error('the order number is above the ship-to');
+
+        // time runs DOWN the rail
+        if (r.eta < last) throw new Error('the stops are out of order');
+        last = r.eta;
+
+        // the verdict has to be the arithmetic, not a decoration
+        const want = r.eta + 10 < r.w.from ? 'early' : r.eta <= r.w.to ? 'ok' : 'late';
+        if (want !== r.kind) throw new Error(r.o.id + ': ' + r.kind + ' but the window says ' + want);
+        if (!row.classList.contains(want))
+          throw new Error(r.o.id + ' is ' + want + ' and the row does not say so');
+        if (want === 'ok' && !/In window/.test(note.textContent))
+          throw new Error(r.o.id + ' makes its window and does not say so');
+        if (want === 'late' && !/late/.test(note.textContent))
+          throw new Error(r.o.id + ' misses its window and does not say so');
+
+        // and the dot is the only colour — one fact, one form
+        if (!row.querySelector('.sp2-rt-dot')) throw new Error('stop ' + i + ' has no node');
+      });
+
+      // the run has its own question: does the driver get home inside the shift
+      const end = rt.querySelector('.sp2-rt-end');
+      const e = sp2RunEnd(k);
+      if (!end) throw new Error('the run does not say when the rig is back');
+      if (end.textContent.indexOf(sp2Hhmm(e.back)) < 0)
+        throw new Error('the hub time is not ' + sp2Hhmm(e.back));
+      if (e.over && !end.querySelector('.sp2-rt-over'))
+        throw new Error('the run ends ' + sp2Dur(e.over) + ' past the shift and does not say so');
+      if (!e.over && end.querySelector('.sp2-rt-over'))
+        throw new Error('a run inside its shift is flagged as over');
+      // the return leg always counts, so the hub time is after the last stop
+      if (e.back <= run[run.length - 1].eta)
+        throw new Error('the rig is back before it left the last stop');
+
+      // and somewhere in the day a run DOES overrun, or the line proves nothing
+      if (!Object.keys(SP2_DRIVERS).some(x => { const r = sp2RunEnd(x); return r && r.over; }))
+        throw new Error('no run in the day ends past its shift');
+
+      // a stop is a way into its order
+      const sel = SP2_ORDERS.filter(o => o.driver === k)[0];
+      rows[0].click();
+      if (sp2SelOrder !== run[0].o.id) throw new Error('a stop does not select its order');
+      sp2PickOrder(sp2SelOrder);
+      if (sel) sp2Render();
     });
 
     if (V2) step('every order card is the round-3 card', () => {

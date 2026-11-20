@@ -436,6 +436,41 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-ln-shift{font-size:12px;color:var(--fp-ink-3);margin-top:5px;font-variant-numeric:tabular-nums;}
 .sp2-ln-sync{font-size:11px;color:var(--fp-ink-3);margin-top:2px;}
 
+/* ── The day, down the driver card ─────────────────────────
+   Once a rig has orders, the driver card stops being only who-and-when and
+   becomes the run: each stop in the order it happens, when they are expected
+   there, and whether that lands inside the window the customer was given.
+   The rail is the day; the dot carries the verdict; the line under it says
+   the verdict in words, because thirty coloured dots are not a reading. */
+.sp2-rt{margin-top:10px;padding-top:9px;border-top:1px solid var(--fp-outline-1);}
+.sp2-rt-hd{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--fp-ink-3);margin-bottom:5px;}
+.sp2-rt-n{margin-left:auto;font-variant-numeric:tabular-nums;}
+.sp2-rt-row{position:relative;display:block;width:100%;text-align:left;
+  padding:5px 6px 5px 19px;border:none;background:none;font-family:inherit;
+  border-radius:var(--r-sm,6px);cursor:pointer;}
+.sp2-rt-row::before{content:'';position:absolute;left:4.5px;top:17px;bottom:-5px;width:1px;background:var(--fp-outline-1);}
+.sp2-rt-row:last-child::before{display:none;}
+.sp2-rt-row:hover{background:var(--fp-emphasis-hover);}
+.sp2-rt-row.sel{background:var(--fp-selected);box-shadow:inset 0 0 0 1px var(--fp-selected-border);}
+.sp2-rt-dot{position:absolute;left:0;top:8px;width:10px;height:10px;border-radius:50%;
+  background:var(--fp-surface-1b);border:2px solid var(--status-neutral);}
+.sp2-rt-row.ok .sp2-rt-dot{border-color:var(--status-success);}
+.sp2-rt-row.early .sp2-rt-dot{border-color:var(--status-info);}
+.sp2-rt-row.late .sp2-rt-dot{border-color:var(--status-failed);}
+.sp2-rt-top{display:flex;align-items:baseline;gap:8px;}
+.sp2-rt-ship{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--fp-ink-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-rt-eta{flex-shrink:0;font-size:12px;color:var(--fp-ink-2);font-variant-numeric:tabular-nums;}
+.sp2-rt-note{display:block;margin-top:1px;font-size:11px;color:var(--fp-ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-rt-id{color:var(--fp-ink-3);}
+.sp2-rt-row.late .sp2-rt-v{color:var(--status-failed);}
+.sp2-rt-more{display:block;width:100%;margin-left:19px;padding:3px 0;border:none;background:none;
+  font-family:inherit;font-size:11px;color:var(--fp-ink-3);text-align:left;cursor:pointer;}
+.sp2-rt-more:hover{color:var(--fp-ink-1);}
+.sp2-rt-end{margin:4px 0 0 19px;font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-rt-over{color:var(--status-failed);}
+
 .sp2-ln-day{flex:1;min-width:0;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:10px 12px;box-shadow:0 1px 2px 0 rgba(3,4,5,.06);transition:box-shadow .12s,border-color .12s;}
 .sp2-ln:hover .sp2-ln-drv,.sp2-ln:hover .sp2-ln-day{border-color:var(--fp-outline-2);box-shadow:0 4px 8px -2px rgba(3,4,5,.12),0 2px 4px -2px rgba(3,4,5,.08);}
 .sp2-ln.on .sp2-ln-drv,.sp2-ln.on .sp2-ln-day{border-color:var(--fp-selected-border);box-shadow:0 4px 8px -2px rgba(3,4,5,.14),0 2px 4px -2px rgba(3,4,5,.08);}
@@ -515,6 +550,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:7px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-stops{margin-top:6px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-stop{display:none;}
+.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-rt{margin-top:7px;padding-top:7px;}
+.sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-rt-row{padding-top:3px;padding-bottom:3px;}
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-trl-btn,
 .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-truck .sp2-link{display:none;}
 
@@ -678,9 +715,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* ── the trial middle: load left, truck right ──────────
    The table holds the numbers you change; the drawing beside it holds the
    picture. Together they take one band of the card instead of two. */
-.sp2-two{display:flex;gap:12px;align-items:flex-start;margin-top:10px;}
+/* The band is as tall as the table; the drawing sits on its baseline, so the
+   bottom of the truck lines up with the bottom of the compartment card. */
+.sp2-two{display:flex;gap:12px;align-items:stretch;margin-top:10px;}
 .sp2-two-l{flex:0 0 300px;min-width:0;}
-.sp2-two-r{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;}
+.sp2-two-r{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
 .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:40px minmax(0,1fr) 76px 66px;}
 .sp2-two-l .sp2-ct-head>span,.sp2-two-l .sp2-ct-n,.sp2-two-l .sp2-ct-p,
 .sp2-two-l .sp2-ct-f,.sp2-two-l .sp2-cell{padding-left:9px;padding-right:9px;}
@@ -1179,7 +1218,60 @@ var SP2_SHIPTOS = [
   ['Redrock Mining — Haul Road',      '1550 S Highway 191, Moab UT 84532'],
   ['Valley Co-op — Silo Row',         '600 N Main St, Greeley CO 80631'],
   ['Summit Builders — Site 7',        '3300 E 1st Ave, Denver CO 80206'],
+  // Phoenix, Portland, Tampa and San Jose each need five sites of their own:
+  // a driver owns a region, so a run has to be buildable inside one.
+  ['Saguaro Ready-Mix — Plant 2',     '3045 S 35th Ave, Phoenix AZ 85009'],
+  ['Mesa Unified — Transport Yard',   '1025 N Country Club Dr, Mesa AZ 85201'],
+  ['Copper State Logistics — Dock 4', '7401 W Buckeye Rd, Phoenix AZ 85043'],
+  ['Willamette Aggregates — Quarry 1','9200 NW St Helens Rd, Portland OR 97231'],
+  ['Rose City Linen — Plant',         '3131 NW Industrial St, Portland OR 97210'],
+  ['Cascade Haulage — Terminal 3',    '11000 NE Airport Way, Portland OR 97220'],
+  ['Bayshore Marine — Dock 9',        '2606 S Dale Mabry Hwy, Tampa FL 33629'],
+  ['Gulf Coast Paving — Yard 2',      '5010 E Adamo Dr, Tampa FL 33619'],
+  ['Citrus Grove Farms — Pump House', '1500 S Alexander St, Plant City FL 33563'],
+  ['Peninsula Transit — Depot 6',     '1570 Rollins Rd, Burlingame CA 94010'],
+  // Two rigs work out of each hub, and "single truck per ship-to is the norm",
+  // so a region needs enough sites for two whole runs that do not overlap.
+  ['Front Range Ready-Mix — Plant 4', '5801 Pecos St, Denver CO 80221'],
+  ['Arapahoe Schools — Bus Depot',    '5290 S Dayton St, Greenwood Village CO 80111'],
+  ['Wasatch Haulage — Yard 2',        '2155 S 3600 W, Salt Lake City UT 84119'],
+  ['Papago Concrete — Batch Plant',   '2330 E Jones Ave, Phoenix AZ 85040'],
+  ['Tempe Transit — Bus Barn',        '1705 W 3rd St, Tempe AZ 85281'],
+  ['Desert Sky Produce — Cold Dock',  '4747 N 51st Ave, Phoenix AZ 85031'],
+  ['Gila Earthworks — Pit 2',         '9201 S 51st Ave, Laveen AZ 85339'],
+  ['Red Mountain Crane — Yard',       '1540 N Center St, Mesa AZ 85201'],
+  ['Columbia Grain — Terminal 5',     '11040 N Lombard St, Portland OR 97203'],
+  ['Beaverton Schools — Fleet Shop',  '1270 SW Allen Blvd, Beaverton OR 97005'],
+  ['Stumptown Concrete — Plant 3',    '6400 NE Columbia Blvd, Portland OR 97218'],
+  ['Tualatin Freight — Dock 7',       '19200 SW Teton Ave, Tualatin OR 97062'],
+  ['Bay Area Aggregates — Quarry 2',  '2001 Monterey Rd, San Jose CA 95112'],
+  ['South Bay Transit — Yard 3',      '3990 Zanker Rd, San Jose CA 95134'],
+  ['Milpitas Cold Store — Dock 2',    '1600 Barber Ln, Milpitas CA 95035'],
+  ['Coyote Valley Farms — Pump 1',    '21700 Monterey Rd, San Jose CA 95119'],
+  ['Alameda Marine — Berth 8',        '2900 Main St, Alameda CA 94501'],
+  ['Hillsborough Schools — Bus Lot',  '1202 E Palm Ave, Tampa FL 33605'],
+  ['Port Tampa Stevedores — Berth 4', '1101 Channelside Dr, Tampa FL 33602'],
+  ['Brandon Ready-Mix — Plant 1',     '802 W Lumsden Rd, Brandon FL 33511'],
+  ['Suncoast Haulage — Terminal',     '6302 Benjamin Rd, Tampa FL 33634'],
+  ['Lakeland Groves — Pump Station',  '3400 Lakeland Hills Blvd, Lakeland FL 33805'],
 ];
+
+// ── Regions ───────────────────────────────────────────────
+// "Drivers own regions and customers; cross-region delivery is unusual."
+// A hub serves the states around it, and the state is already in the address —
+// no second list to keep in step with the first.
+var SP2_HUB_STATES = {
+  'Denver Hub':['CO','UT'], 'Phoenix Hub':['AZ'], 'Portland Hub':['OR'],
+  'Tampa Hub':['FL'], 'San Jose Hub':['CA'],
+};
+function sp2State(addr) { var m = String(addr).match(/\b([A-Z]{2})\s+\d{5}\b/); return m ? m[1] : ''; }
+function sp2AddrOf(ship) {
+  for (var i = 0; i < SP2_SHIPTOS.length; i++) if (SP2_SHIPTOS[i][0] === ship) return SP2_SHIPTOS[i][1];
+  return '';
+}
+function sp2InRegion(hub, addr) {
+  return (SP2_HUB_STATES[hub] || []).indexOf(sp2State(addr)) >= 0;
+}
 var SP2_TYPES = ['Delivery','Delivery','Delivery','Transfer','Delivery','Extraction'];
 
 // Rigs still in the yard have nothing planned on them yet — that is the point
@@ -1291,6 +1383,106 @@ var SP2_ORDERS = (function buildOrders() {
   return out;
 })();
 
+// ── The day, built as runs rather than as single drops ──
+// The dispatch docs are explicit about the shape of a driver's day:
+//   · field research — "typical 3–4 deliveries per shift, fewer when spread out"
+//   · the consolidated Corpus Christi day — 4.0 stops per load, average fill 76%
+//   · "drivers own regions and customers; cross-region delivery is unusual"
+//   · "single truck per ship-to is the norm; low product mix"
+// So a planned rig carries a ROUTE: four or five ship-tos near its hub, mostly
+// one product, windows stepping through the shift. The day's orders were cut
+// to fill whole rigs one at a time, which is the opposite shape, so the
+// planned side of the day is rebuilt here and the whole-rig cuts are left in
+// the unplanned column, where the fit chip and the fit sort still need them.
+//
+// Capacities are NOT touched. The class bands are fixed in the truck-types doc
+// (tank wagon 3,500–7,999, transport 8,000–11,500) and a 2,800-gal bobtail
+// running five 500-gal drops is a real day, not a broken one.
+(function buildTheDayIntoRuns() {
+  var road = Object.keys(SP2_DRIVERS).filter(function (k) {
+    var d = SP2_DRIVERS[k];
+    return d.state !== 'off-duty' && SP2_YARD.indexOf(k) < 0;
+  });
+  // every rig that is out gets a run; the yard stays unplanned, which is the
+  // whole point of the yard, and an off-duty driver has no day to plan
+  SP2_ORDERS.forEach(function (o) { o.driver = ''; });
+
+  var seq = 0, taken = {};
+  road.forEach(function (k, n) {
+    var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
+    var trl = d.trailer ? SP2_TRAILERS[d.trailer] : null;
+    var caps = t.comps.map(function (c) { return c.cap; });
+    var tcaps = trl ? trl.caps.slice() : [];
+    var cap = caps.concat(tcaps).reduce(function (a, b) { return a + b; }, 0);
+    var stops = [4, 5, 4, 5, 5, 4, 5, 4, 4, 5][n % 10];
+
+    // a rig that left the yard full stays full; the rest run the docs' 76%
+    var full = (n % 7 === 3);
+    var total = Math.round(cap * (full ? 0.99 : [0.74, 0.86, 0.80, 0.92, 0.78][n % 5]) / 50) * 50;
+
+    // the ship-tos this driver's region holds: the nearest to their hub
+    var near = SP2_SHIPTOS.filter(function (st) { return sp2InRegion(d.hub, st[1]) && !taken[st[0]]; })
+      .map(function (st) {
+        return { st:st, mi: 2 + (sp2Hash(d.hub + '|' + st[0]) % 280) / 10 };
+      }).sort(function (a, b) { return a.mi - b.mi; }).slice(0, stops);
+    stops = near.length;
+    if (!stops) return;
+    near.forEach(function (x) { taken[x.st[0]] = true; });
+
+    // low product mix: one product down the run, a second on the last stop
+    var pa = SP2_PRODS[n % SP2_PRODS.length];
+    var pb = SP2_PRODS[(n + 2) % SP2_PRODS.length];
+
+    var sh = SP2_SHIFTS[d.shift];
+    var begin = Math.max(sh.from, SP2_NOW - 45);
+    // windows open and close at different times across the fleet, so the day
+    // carries all three readings: made, waited for, and missed
+    // Windows open at different hours and run for different spans across the
+    // fleet, so the day carries all three readings: made, waited for, missed.
+    // A run whose windows are packed into the front of the shift finishes late;
+    // one whose windows are spread wide leaves the driver waiting.
+    var first = begin + [10, 70, 25, 90, 40][n % 5];
+    var last  = Math.min(sh.to - 60, first + [170, 330, 290, 350, 200][n % 5]);
+    last = Math.max(last, first + 40);
+
+    var left = total;
+    near.forEach(function (x, i) {
+      var share = i === stops - 1 ? left
+        : Math.max(250, Math.round(total / stops * [1.1, 0.9, 1.05, 0.95, 1][i % 5] / 50) * 50);
+      share = Math.min(share, left);
+      left -= share;
+      if (share < 150) return;
+      SP2_ORDERS.push({
+        id: 'D-' + (5157200 + seq++),
+        ship: x.st[0], addr: x.st[1],
+        t: Math.round((first + (last - first) * (stops > 1 ? i / (stops - 1) : 0)) / 5) * 5,
+        type: SP2_TYPES[(n + i) % SP2_TYPES.length],
+        driver: k,
+        prods: [{ p: i === stops - 1 && n % 2 === 0 ? pb : pa, q: share }],
+      });
+    });
+
+    // and the rig is loaded with what the run is carrying, so the fill the
+    // lane reads out is the run, not a number left over from somewhere else
+    var want = {};
+    SP2_ORDERS.forEach(function (o) {
+      if (o.driver !== k) return;
+      o.prods.forEach(function (pr) { want[pr.p] = (want[pr.p] || 0) + pr.q; });
+    });
+    var lay = function (list) {
+      return list.map(function (c) {
+        var pick = Object.keys(want).filter(function (p) { return want[p] > 0; })[0];
+        if (!pick) return { p:'', q:0 };
+        var q = Math.min(c, want[pick]);
+        want[pick] -= q;
+        return { p:pick, q:q };
+      });
+    };
+    d.load = lay(caps);
+    d.tload = trl ? lay(tcaps) : [];
+  });
+})();
+
 // ── Orders sized to the fleet that is actually standing there ──
 // The day's orders are cut to fill WHOLE rigs, so on a part-loaded truck
 // nothing fits and "Fill the rest" has nothing to say. That is true of the
@@ -1322,8 +1514,9 @@ var SP2_ORDERS = (function buildOrders() {
     // the nearest ship-to to this driver's hub that the run can reach
     var near = null;
     SP2_SHIPTOS.forEach(function (st) {
-      var mi = 3 + (sp2Hash(d.hub + '|' + st[0]) % 1170) / 10;
-      var min = Math.round(mi * 1.7 + 8);
+      if (!sp2InRegion(d.hub, st[1])) return;
+      var mi = 2 + (sp2Hash(d.hub + '|' + st[0]) % 280) / 10;
+      var min = sp2Drive(mi, k);
       if (min <= maxTrip && (!near || min < near.min)) near = { st:st, min:min };
     });
     if (!near) return;
@@ -1645,8 +1838,13 @@ function sp2Trip(o, k) {
   var d = SP2_DRIVERS[k || sp2Driver];
   if (!d) return null;
   var h = sp2Hash(d.hub + '|' + o.ship);
-  var mi = 3 + (h % 1170) / 10;                    // 3.0 – 120.0 miles
-  return { hub:d.hub, mi:mi, min: Math.round(mi * 1.7 + 8) };
+  // In region, a stop is 2–30 miles out — drivers own regions and work them.
+  // Out of region it is a haul no shift absorbs, which is what makes the
+  // planner refuse it rather than quietly offering Denver a Tampa drop.
+  var mi = sp2InRegion(d.hub, o.addr || sp2AddrOf(o.ship))
+    ? 2 + (h % 280) / 10
+    : 160 + (h % 3400) / 10;
+  return { hub:d.hub, mi:mi, min: sp2Drive(mi, k || sp2Driver) };
 }
 
 // An order is delivered inside a window, not at an instant. The window starts
@@ -3549,6 +3747,132 @@ function sp2SimpleBars(k) {
   return '<div class="sp2-bars">' + out + '</div>';
 }
 
+// ── The run, stop by stop ──────────────────────────────────
+// The route-time model is the one the dispatch docs carry, not one of mine:
+//
+//   route = dispensing + service + buffer + loading + travel + return
+//   dispensing   gallons / the truck's own meter gpm
+//   service      20 min + 1.2 min per asset, per ship-to
+//   buffer       by volume: <500 gal 5 min · <1,500 10 · <3,000 15 · else 20
+//   loading      gallons / 600 gpm + 25 min, once, at the hub
+//   travel       road miles / city-and-class speed (25 mph wagon, 31 transport)
+//   return       the last stop back to the hub always counts
+//
+// The miles are still pseudo-distance from a hash — that part is ours — but
+// everything done with them now matches the model the planner is built to.
+var SP2_GPM_LOAD = 600;
+
+function sp2Assets(ship) {
+  // The doc's range is 5–100 assets per ship-to, "skewed low". These are fuel
+  // ship-tos with a handful of tanks, so they sit at the low end: 4–33, mostly
+  // under 14, which is ~25–40 min on site. The skew matters — at the middle of
+  // the range the model says five stops will not fit an eight-hour shift, and
+  // that is also why the field research reads "3–4 deliveries per shift".
+  var h = sp2Hash('assets|' + ship);
+  return 4 + (h % 10 < 8 ? h % 10 : h % 30);
+}
+function sp2Buffer(gal) { return gal < 500 ? 5 : gal < 1500 ? 10 : gal < 3000 ? 15 : 20; }
+function sp2Mph(k) {
+  var d = SP2_DRIVERS[k], t = d && SP2_TRUCKS[d.truck];
+  return t && t.type === 'Transport' ? 31 : 25;
+}
+function sp2Drive(mi, k) { return Math.round(mi / sp2Mph(k) * 60); }
+
+// Miles between two ship-tos on one run. A consolidated route is local — the
+// Corpus Christi day runs 176 miles over ten loads — so legs are short.
+function sp2Leg(a, b) {
+  var mi = 1.5 + (sp2Hash(a + '|' + b) % 145) / 10;   // 1.5 – 16.0 miles
+  return mi;
+}
+// Everything that happens at one ship-to: the hose, the paperwork, the buffer.
+function sp2OnSite(o, k) {
+  var d = SP2_DRIVERS[k], t = d && SP2_TRUCKS[d.truck], gal = sp2Gal(o);
+  return Math.round(20 + 1.2 * sp2Assets(o.ship) + gal / ((t && t.meter) || 300) + sp2Buffer(gal));
+}
+// Loading out of the hub, once, before the first delivery.
+function sp2LoadOut(k) {
+  var gal = SP2_ORDERS.reduce(function (a, o) { return a + (o.driver === k ? sp2Gal(o) : 0); }, 0);
+  return Math.round(gal / SP2_GPM_LOAD + 25);
+}
+
+// When this driver is expected at each of their stops, and what that does to
+// the window. An early arrival WAITS for the window to open — so the wait is
+// carried into the next leg, which is how a run drifts late.
+function sp2Route(k) {
+  var d = SP2_DRIVERS[k];
+  if (!d) return [];
+  var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; })
+                       .sort(function (x, y) { return x.t - y.t; });
+  if (!mine.length) return [];
+  var sh = SP2_SHIFTS[d.shift];
+  var at = Math.max(SP2_NOW, sh ? sh.from : SP2_NOW) + sp2LoadOut(k);
+  var prev = null;
+  return mine.map(function (o) {
+    var trip = sp2Trip(o, k);
+    var leg = prev ? sp2Drive(sp2Leg(prev, o.ship), k) : (trip ? trip.min : 30);
+    var eta = at + leg, w = sp2Win(o);
+    // Arriving a few minutes before the window opens is not waiting — the
+    // stop's own volume buffer is 5–20 minutes wide and absorbs it. Ten
+    // minutes is the line; past that the driver is sitting there.
+    var kind = eta + 10 < w.from ? 'early' : eta <= w.to ? 'ok' : 'late';
+    at = Math.max(eta, w.from) + sp2OnSite(o, k);
+    prev = o.ship;
+    return { o:o, eta:eta, w:w, kind:kind, leg:leg,
+      note: kind === 'ok'    ? 'In window'
+          : kind === 'early' ? 'Waits ' + sp2Dur(w.from - eta)
+          :                    sp2Dur(eta - w.to) + ' late' };
+  });
+}
+
+// When the rig is back at the hub, and whether that is inside the shift.
+// The return leg always counts, and so does any waiting at the last stop.
+function sp2RunEnd(k) {
+  var rs = sp2Route(k);
+  if (!rs.length) return null;
+  var L = rs[rs.length - 1], trip = sp2Trip(L.o, k);
+  var back = Math.max(L.eta, L.w.from) + sp2OnSite(L.o, k) + (trip ? trip.min : 30);
+  var sh = SP2_SHIFTS[SP2_DRIVERS[k].shift];
+  return { back:back, to: sh ? sh.to : 0, over: sh && back > sh.to ? back - sh.to : 0 };
+}
+
+function sp2RouteHtml(k) {
+  var rs = sp2Route(k);
+  if (!rs.length) return '';
+  var open = k === sp2Driver, cap = open ? rs.length : 5;   // a day is four or five stops
+  var miss = rs.filter(function (r) { return r.kind === 'late'; }).length;
+  var rows = rs.slice(0, cap).map(function (r) {
+    return '<button class="sp2-rt-row ' + r.kind + (sp2SelOrder === r.o.id ? ' sel' : '') + '" ' +
+        'title="' + r.o.ship + ' \u00b7 window ' + sp2Short(r.w.from) + '\u2013' + sp2Short(r.w.to) +
+          ' \u00b7 ' + sp2Gal(r.o).toLocaleString() + ' gal" ' +
+        'onclick="event.stopPropagation();sp2PickOrder(\'' + r.o.id + '\')">' +
+        '<span class="sp2-rt-dot"></span>' +
+        '<span class="sp2-rt-top">' +
+          '<span class="sp2-rt-ship">' + r.o.ship + '</span>' +
+          '<span class="sp2-rt-eta">' + sp2Hhmm(r.eta) + '</span>' +
+        '</span>' +
+        '<span class="sp2-rt-note"><span class="sp2-rt-id">' + r.o.id + '</span> \u00b7 ' +
+          '<span class="sp2-rt-v">' + r.note + '</span></span>' +
+      '</button>';
+  }).join('');
+  if (rs.length > cap)
+    rows += '<button class="sp2-rt-more" onclick="sp2PickDriver(\'' + k + '\')">+' +
+      (rs.length - cap) + ' more stop' + (rs.length - cap === 1 ? '' : 's') + '</button>';
+  // The stops answer "does this one make its window". The run as a whole has
+  // its own question — does the driver get home inside the shift — and the
+  // return leg is the part nobody sees until it is too late.
+  var e = sp2RunEnd(k);
+  var foot = !e ? '' :
+    '<div class="sp2-rt-end">Back at the hub ' + sp2Hhmm(e.back) +
+      (e.over ? ' <span class="sp2-rt-over">\u00b7 ' + sp2Dur(e.over) +
+                ' past the shift</span>' : '') + '</div>';
+  return '<div class="sp2-rt">' +
+      '<div class="sp2-rt-hd"><span>Route</span>' +
+        '<span class="sp2-rt-n">' + rs.length + ' stop' + (rs.length === 1 ? '' : 's') +
+          (miss ? ' \u00b7 ' + miss + ' outside' : '') + '</span></div>' +
+      rows + foot +
+    '</div>';
+}
+
 function sp2LaneHtml(k) {
   var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
   var caps = t.comps.map(function (c) { return c.cap; });
@@ -3621,6 +3945,7 @@ function sp2LaneHtml(k) {
       '</div>' +
 
       sp2ShiftBlock(k) +
+      sp2RouteHtml(k) +
     '</div>' +
 
     '<div class="sp2-ln-day">' +
