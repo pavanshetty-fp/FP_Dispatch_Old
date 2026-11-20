@@ -151,3 +151,87 @@ holds the load band to two rows. Uncapped it ran to 248.
 **Checks** V1 54/54, V2 54/54, no console errors, no clip findings at 1512×950.
 `_smoke.js` gained a V2 branch for the band stack, the capped load band and its
 "+N", and the blend label moving to the foot.
+
+---
+
+## The order card, round 3 (2026-11-20) — Pavan driving
+
+Pavan: *"it's not working, so let me guide you on how to design this."* What
+follows is his spec, not mine. It replaced the band card on **every** card.
+
+**Two units, a rule between them.**
+
+| Unit | Holds |
+|---|---|
+| **Which order, where, when** | checkbox · order number · order type · **status and a forward chevron on the right edge** · a pin and the ship-to, with the address one hover away · the delivery window as a clock time with AM/PM, behind a clock icon |
+| **What was asked for** | the FPDS **lines table**, in a card of its own 6px off the order card's left, right and bottom edges |
+
+**Off the card:** the fit ("13% fits"), the run from the hub, the external-link
+icon, the address as a printed line.
+
+### The lines table
+The FPDS `unit.lines-table`: a tinted header band, 44px rows, cells that *are*
+the control rather than a bordered box inside a cell, everything left-aligned,
+a total closing it with a top rule only.
+
+**Product · Blend ratio · Quantity · Type.** The quantity and the type are
+editable in place; the product is not. Type defaults to `gal` and offers
+`L · each · case · drum · pail`.
+
+**A blend is its constituents, one row each** (Pavan, second pass): CLR DSL at
+B5 · 95% and Biodiesel at B5 · 5%, each with its own quantity, **joined by a
+bracket** so two blends on one order read as 2 + 2 rather than four unrelated
+products. Typing into a constituent moves the whole blend and its partner
+follows in ratio — a blend trimmed on one side is off-spec fuel, not a smaller
+order.
+
+### The lane, and the card itself
+- **No status rail.** Plain white cards, a soft resting shadow lifting on hover.
+- **The orders lane is white**, and its sticky hour ruler with it.
+- The horizontal view's cards are auto-height and each lane takes its tallest;
+  the card widened from 290 to 400 to hold the table.
+
+---
+
+## Fill the rest (2026-11-20)
+
+Under the drawn truck in the open lane: the orders that would fill the room
+left. Each is a **whole order** — no splitting — and has to clear four things
+at once:
+
+1. the fuel fits the compartments still open,
+2. the delivery window can be met inside this driver's shift,
+3. the run there, the drop and the run back fit what is left of the shift,
+4. and that time also fits the hours Samsara says the driver has.
+
+Picked greedily, so the list builds on itself. Each suggestion is a **row with
+its own filled Add button** — an order goes on without being dragged — plus
+"Add all N" when there are several. Drag and drop is untouched.
+
+**Room is not placeable room.** One product can spread across the empty
+compartments and top up compartments already holding that product, but it
+cannot share a compartment with something else. So the head states both —
+"3,055 gal of room · at most 2,500 in one order" — and when nothing fits, the
+strip says why rather than going blank.
+
+### The data had to change for it to be testable
+The day's orders are cut to fill **whole rigs**, so on a part-loaded truck
+nothing fits and the strip only ever fired on an empty one. A handful of the
+unplanned orders are therefore **re-cut at load** to the room the fleet
+actually has left — one per driver who would otherwise be offered nothing —
+with a ship-to near that driver's hub and a window that closes with their
+shift. No orders were added: the pool is still 26, and the smallest went from
+2,100 gal to 1,300.
+
+**18 of the 20 on-duty drivers** can now be offered something, part-loaded rigs
+among them. Two cannot, correctly: their rigs are full, or their hours will not
+cover the run. The figure is a *starting* one — plan orders yourself and the
+fleet drifts away from what those orders were cut for.
+
+### Checks
+`_smoke.js` V2 **55/55**, V1 **54/54**, merged file green, no console errors and
+no clip findings at 1512×950. Two V1-only checks (the left/right split, the
+constituent chips) are skipped for V2, which has its own: the card's bands, the
+inner card's 6px inset, the blend brackets, the ratio-preserving edit, the
+suggestion rules, and a guard that at least 15 drivers — 4 of them part-loaded —
+can be offered a real order from the day's own pool.

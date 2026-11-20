@@ -82,7 +82,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-col{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 /* plain percentages, not clamp(): flex-basis cannot interpolate between a
    clamp() and a percentage, so the transition stalls where it started. */
-.sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-card-1);}
+.sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-surface-1b);}
 .sp2-body[data-view="v"] .sp2-col-orders{flex-basis:36%;}
 .sp2-body[data-view="v"] .sp2-tl-wrap{overflow-x:hidden;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1a);}
@@ -106,20 +106,18 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-tl-wrap{flex:1;overflow:auto;min-height:0;position:relative;}
 .sp2-tl{position:relative;padding:0 16px 18px;min-width:min-content;}
 
-.sp2-ruler{position:sticky;top:0;z-index:3;height:32px;background:var(--fp-card-1);border-bottom:1px solid var(--fp-stroke-hairline);display:flex;margin:0 -16px;padding:0 16px;}
+.sp2-ruler{position:sticky;top:0;z-index:3;height:32px;background:var(--fp-surface-1b);border-bottom:1px solid var(--fp-stroke-hairline);display:flex;margin:0 -16px;padding:0 16px;}
 .sp2-hour{flex-shrink:0;position:relative;font-size:12px;color:var(--fp-ink-3);padding-top:9px;border-left:1px solid var(--fp-outline-1);padding-left:6px;font-variant-numeric:tabular-nums;}
 
 .sp2-lanes{position:relative;padding-top:12px;}
-.sp2-lane{position:relative;height:146px;margin-bottom:8px;}
+.sp2-lane{position:relative;margin-bottom:8px;}
 .sp2-grid{position:absolute;inset:0;display:flex;pointer-events:none;}
 .sp2-grid-col{flex-shrink:0;border-left:1px solid color-mix(in oklab,var(--fp-outline-1) 55%,transparent);}
 
 /* the order card — board card's shape and stack levels */
-.sp2-card{position:absolute;top:0;height:142px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:0;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
-.sp2-card:hover{border-color:var(--fp-outline-2);box-shadow:0 1px 3px rgba(3,4,5,.10),0 1px 2px rgba(3,4,5,.06);}
+.sp2-card{position:absolute;top:0;height:auto;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:0;cursor:pointer;overflow:hidden;box-shadow:0 1px 2px 0 rgba(3,4,5,.06);transition:border-color .12s,box-shadow .12s,background .12s;}
+.sp2-card:hover{border-color:var(--fp-outline-2);box-shadow:0 4px 8px -2px rgba(3,4,5,.12),0 2px 4px -2px rgba(3,4,5,.08);}
 .sp2-card.sel{border-color:var(--fp-selected-border);background:var(--fp-selected);}
-.sp2-card.planned{border-left-color:var(--status-success);}
-.sp2-card.unplanned{border-left-color:var(--status-caution);}
 .sp2-card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:6px;}
 .sp2-ord{font-size:14px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;font-variant-numeric:tabular-nums;}
 .sp2-time-lbl{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
@@ -623,6 +621,124 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-prow-q{font-size:12px;font-weight:500;color:var(--fp-ink-1);white-space:nowrap;
   text-align:right;font-variant-numeric:tabular-nums;}
 
+/* ── what would fill the rest of the rig ───────────────
+   Sits directly under the drawing, because it is about the room the drawing
+   just showed. Every pick is a whole order: there is no splitting here. */
+.sp2-sg{margin-top:10px;padding:10px 12px;border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-md);background:var(--fp-surface-1a);}
+.sp2-sg-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}
+.sp2-sg-ttl{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fp-ink-3);}
+.sp2-sg-room{margin-left:auto;font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-sg-list{display:flex;flex-direction:column;gap:6px;}
+.sp2-sg-item{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-md);}
+.sp2-sg-item:hover{border-color:var(--fp-outline-2);}
+.sp2-sg-main{flex:1;min-width:0;}
+.sp2-sg-l1{display:flex;align-items:center;gap:7px;min-width:0;}
+.sp2-sg-l2{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:12px;
+  color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-sg-id{font-size:13px;font-weight:600;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;
+  flex-shrink:0;}
+.sp2-sg-ship{font-size:13px;color:var(--fp-ink-3);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;}
+.sp2-sg-gal{color:var(--fp-ink-1);font-weight:500;}
+.sp2-sg-to{flex-shrink:0;font-size:12px;font-weight:600;color:var(--status-success);
+  font-variant-numeric:tabular-nums;}
+/* the act is filled: an outline reads as one more thing to look at, not the
+   thing to press */
+.sp2-sg-add{flex-shrink:0;height:28px;padding:0 14px;border:none;border-radius:var(--r-md);
+  background:var(--primary);color:var(--primary-foreground);font-family:inherit;font-size:13px;
+  font-weight:500;cursor:pointer;}
+.sp2-sg-add:hover{background:color-mix(in oklab,var(--primary) 88%,#fff);}
+.sp2-sg-addall{margin-top:8px;height:28px;padding:0 12px;border:1px solid var(--fp-stroke-field);
+  border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);
+  font-family:inherit;font-size:13px;cursor:pointer;}
+.sp2-sg-addall:hover{background:var(--fp-emphasis);}
+.sp2-sg-none{font-size:12px;color:var(--fp-ink-3);line-height:1.5;}
+
+/* ── the order card, round 3 ──────────────────────────
+   Two units with a rule between them; the rule is flush to the card's edges
+   because it divides the card, not the content inside it. */
+.sp2-card.sp2-v3{padding:12px 14px;}
+.sp2-ship-row{position:relative;display:flex;align-items:center;gap:7px;margin-top:11px;min-width:0;}
+.sp2-pin{flex-shrink:0;color:var(--fp-ink-3);}
+.sp2-ship-row .sp2-ship{font-size:14px;font-weight:500;color:var(--fp-ink-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* the address is one hover away rather than a second line on every card */
+.sp2-tip{position:absolute;left:18px;top:calc(100% + 6px);z-index:40;display:none;
+  max-width:300px;padding:7px 10px;border:1px solid var(--fp-outline-1);border-radius:var(--r-md);
+  background:var(--fp-surface-1b);color:var(--fp-ink-1);font-size:12px;line-height:1.45;
+  box-shadow:0 4px 6px -1px rgba(3,4,5,.1),0 2px 4px -2px rgba(3,4,5,.1);}
+.sp2-ship-row:hover .sp2-tip{display:block;}
+.sp2-win{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12px;
+  color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-win svg{flex-shrink:0;}
+.sp2-rule{height:1px;background:var(--fp-stroke-hairline);margin:12px -14px;}
+
+/* The FP DS lines table (unit.lines-table), as the sheets draw it: flush to
+   the card's edges, a tinted header band, 44px rows ruled by a hairline, every
+   cell the control itself rather than a bordered box inside a box, and
+   everything left-aligned — the figures included. */
+/* The table sits in a card of its own inside the order card, 5px off its
+   left, right and bottom edges — the order card's padding is 12px 14px, so the
+   negative margins take it back out to that inset. The inner card's rim is
+   what divides the two units; a rule above it as well would be two strokes
+   saying one thing. */
+.sp2-lt{display:grid;grid-template-columns:minmax(0,1fr) 110px 64px;
+  margin:12px -9px -7px;background:var(--fp-surface-1b);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-md);overflow:hidden;}
+.sp2-lt.blended{grid-template-columns:minmax(0,1fr) 104px 110px 64px;}
+.sp2-lt-head{display:contents;}
+.sp2-lt-head>span{min-height:40px;display:flex;align-items:center;padding:9px 12px;
+  background:var(--fp-table-header);border-bottom:1px solid var(--fp-stroke-hairline);
+  font-size:14px;font-weight:500;color:var(--fp-ink-1);text-align:left;line-height:1.2;}
+.sp2-lt-row{display:contents;}
+.sp2-lt-c{height:44px;display:flex;align-items:center;min-width:0;
+  border-bottom:1px solid var(--fp-stroke-hairline);}
+.sp2-lt-row:last-of-type .sp2-lt-c{border-bottom:none;}
+.sp2-lt-p{gap:8px;padding:0 12px;font-size:14px;color:var(--fp-ink-1);}
+.sp2-lt-p>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-lt-ratio{padding:0 12px;font-size:14px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-lt-ratio b{font-weight:500;color:var(--fp-ink-1);}
+/* the rows of one blend are joined by a bracket, so two blends on an order
+   never read as four unrelated products */
+.sp2-lt-ratio.g{position:relative;padding-left:26px;}
+.sp2-lt-ratio.g::before{content:'';position:absolute;left:12px;width:1.5px;
+  background:var(--fp-outline-2);}
+.sp2-lt-ratio.g-first::before{top:50%;bottom:-1px;border-top-left-radius:2px;}
+.sp2-lt-ratio.g-mid::before{top:-1px;bottom:-1px;}
+.sp2-lt-ratio.g-last::before{top:-1px;bottom:50%;}
+.sp2-lt-ratio.g::after{content:'';position:absolute;left:12px;top:50%;width:7px;height:1.5px;
+  background:var(--fp-outline-2);}
+.sp2-lt-none{color:var(--fp-ink-3);}
+/* an editable cell IS the control — no border, washes on hover, rings on focus */
+.sp2-lt-edit{position:relative;padding:0;}
+.sp2-cell{position:absolute;inset:0;width:100%;height:100%;padding:0 12px;border:none;
+  border-radius:0;background:transparent;color:var(--fp-ink-1);font-family:inherit;
+  font-size:14px;outline:none;font-variant-numeric:tabular-nums;}
+.sp2-cell:hover{background:var(--fp-emphasis);}
+.sp2-cell:focus{background:var(--fp-surface-1a);box-shadow:inset 0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+.sp2-cell-u{cursor:pointer;appearance:none;padding-right:20px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--fp-ink-3) 50%),
+    linear-gradient(135deg,var(--fp-ink-3) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 20px,calc(100% - 8px) 20px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+.sp2-cell-u:hover{background-color:var(--fp-emphasis);}
+/* the total is a foot row with a top rule only — a full box would stack on the card's rim */
+.sp2-lt-tot{display:contents;}
+.sp2-lt-tot>span{height:44px;display:flex;align-items:center;padding:0 12px;
+  border-top:1px solid var(--fp-stroke-hairline);font-size:14px;color:var(--fp-ink-3);}
+.sp2-lt-tot>span:nth-last-child(2){font-weight:500;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
+
+/* the head's right edge: the status, then the way in */
+.sp2-pill-r{margin-left:auto;}
+.sp2-chev{width:24px;height:24px;flex-shrink:0;border:none;border-radius:var(--r-md);
+  background:transparent;color:var(--fp-ink-3);display:inline-flex;align-items:center;
+  justify-content:center;cursor:pointer;}
+.sp2-chev:hover{background:var(--fp-emphasis);color:var(--fp-ink-1);}
+
 /* the window, the clash, and the run from the hub */
 .sp2-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px;
   font-size:12px;color:var(--fp-ink-3);}
@@ -1065,6 +1181,57 @@ var SP2_ORDERS = (function buildOrders() {
   return out;
 })();
 
+// ── Orders sized to the fleet that is actually standing there ──
+// The day's orders are cut to fill WHOLE rigs, so on a part-loaded truck
+// nothing fits and "Fill the rest" has nothing to say. That is true of the
+// data, not of the work: a real day has small orders in it. So a handful of
+// the unplanned orders are re-cut to the room the fleet actually has left —
+// one per driver who would otherwise be offered nothing — and given a window
+// and a ship-to that driver can genuinely reach inside their shift.
+(function sizeSomeOrdersToTheFleet() {
+  var TARGET = 18;                       // drivers we want to be able to try
+  var pool = SP2_ORDERS.filter(function (o) { return !o.driver && !sp2HasBlend(o); });
+  var next = 0, fitted = 0;
+
+  Object.keys(SP2_DRIVERS).forEach(function (k) {
+    if (fitted >= TARGET || next >= pool.length) return;
+    var d = SP2_DRIVERS[k];
+    if (d.state === 'off-duty') return;
+    if (sp2Suggest(k, 1).picks.length) return;        // already has something to take
+
+    var cells = sp2Cells(k).map(function (c) { return { cap:c.cap, p:c.l.p, q:c.l.q }; });
+    var best = sp2BestRoom(cells);
+    if (best.gal < 400) return;                        // nothing worth a run
+
+    var sh = SP2_SHIFTS[d.shift];
+    var t = sp2TimeLeft(k);
+    // there, the drop, and back again has to fit whatever runs out first
+    var maxTrip = Math.floor((t.left - 30) / 2);
+    if (maxTrip < 10) return;
+
+    // the nearest ship-to to this driver's hub that the run can reach
+    var near = null;
+    SP2_SHIPTOS.forEach(function (st) {
+      var mi = 3 + (sp2Hash(d.hub + '|' + st[0]) % 1170) / 10;
+      var min = Math.round(mi * 1.7 + 8);
+      if (min <= maxTrip && (!near || min < near.min)) near = { st:st, min:min };
+    });
+    if (!near) return;
+
+    var o = pool[next];
+    o.ship = near.st[0]; o.addr = near.st[1];
+    // the window closes with the shift, so there is as long as possible to run it
+    var len = [120, 180, 240, 180][sp2Hash(o.id) % 4];
+    o.t = Math.max(sh.from, sh.to - len);
+    // one product, cut to the room this rig actually has for it
+    o.prods = [{ p: best.p || SP2_PRODS[next % SP2_PRODS.length],
+                 q: Math.max(200, Math.floor(best.gal / 50) * 50) }];
+
+    if (sp2CanRun(k, o)) return;                       // the run still does not work
+    next++; fitted++;
+  });
+})();
+
 // ══════════════════════════════════════════════════════════
 //  State
 // ══════════════════════════════════════════════════════════
@@ -1089,7 +1256,9 @@ var sp2BlendOnly = false;     // narrow to orders carrying a blend
 var sp2AvailOrder = null;     // the Available order, held still while you work in it
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
-var SP2_CARD_W = 290;
+var SP2_CARD_W = 400;    // the round-3 card holds a table, so it needs the width
+var SP2_CARD_BASE = 198; // everything on the card that is not a table row
+var SP2_CARD_ROW  = 44;  // one row of the lines table
 
 function sp2Hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
 function sp2Short(m){
@@ -1138,6 +1307,193 @@ function sp2Visible() {
 // What the chosen rig could take of an order, without loading anything. Packed
 // the same way a real drop would be — top up a compartment already holding the
 // product, then take an empty one — so the number is the one you would get.
+// ── Filling the rest of the rig ─────────────────────────
+// What would fill the room that is left, without splitting anything. An order
+// is a whole order: it goes on or it does not. A suggestion has to clear four
+// things at once — the fuel fits the compartments that are still open, the
+// delivery window can be met inside this driver's shift, the run there and
+// back fits what is left of the shift, and it fits inside the hours Samsara
+// says the driver has.
+function sp2PackSim(cells, o) {
+  var fits = 0;
+  o.prods.forEach(function (pr) {
+    var left = pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.p === pr.p, empty = !c.p || c.q === 0;
+        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
+        if (pass === 2) c.p = pr.p;
+        var take = Math.min(c.cap - c.q, left);
+        c.q += take; left -= take; fits += take;
+      });
+    });
+  });
+  return fits;
+}
+
+// How long this driver can still be out: whichever runs out first, the shift
+// or the clock Samsara is holding them to.
+function sp2TimeLeft(k) {
+  var d = SP2_DRIVERS[k], sh = SP2_SHIFTS[d.shift];
+  var shiftLeft = Math.max(0, sh.to - Math.max(SP2_NOW, sh.from));
+  var hos = d.hos[sp2HosBind(d.hos)];
+  return { shift:shiftLeft, hos:hos, left:Math.min(shiftLeft, hos) };
+}
+
+function sp2CanRun(k, o) {
+  var d = SP2_DRIVERS[k], sh = SP2_SHIFTS[d.shift], w = sp2Win(o);
+  if (sp2WinClash(o, k)) return 'window';
+  var trip = sp2Trip(o, k);
+  if (!trip) return 'hub';
+  // leaving as early as the shift allows, can they still be there in time?
+  if (Math.max(SP2_NOW, sh.from) + trip.min > w.to) return 'too far to make the window';
+  // there, the drop, and back again, inside whatever runs out first
+  var t = sp2TimeLeft(k);
+  if (trip.min * 2 + 30 > t.left)
+    return t.hos < t.shift ? 'past the hours left' : 'past the end of the shift';
+  return null;
+}
+
+// Room is not the same as placeable room. One product can spread across every
+// EMPTY compartment, and can top up compartments already holding that same
+// product — but it cannot share a compartment with something else. So the most
+// a single order can take is the empties plus the best same-product top-up.
+function sp2BestRoom(cells) {
+  var empties = 0, byProd = {};
+  cells.forEach(function (c) {
+    var free = c.cap - c.q;
+    if (free <= 0) return;
+    if (!c.p || c.q === 0) empties += free;
+    else byProd[c.p] = (byProd[c.p] || 0) + free;
+  });
+  var best = { gal:empties, p:null };
+  Object.keys(byProd).forEach(function (p) {
+    if (byProd[p] + empties > best.gal) best = { gal:byProd[p] + empties, p:p };
+  });
+  return best;
+}
+
+function sp2Suggest(k, max) {
+  var d = SP2_DRIVERS[k];
+  if (!d || d.state === 'off-duty') return { picks:[], why:'This driver is off duty.' };
+  var cells = sp2Cells(k).map(function (c) { return { cap:c.cap, p:c.l.p, q:c.l.q }; });
+  var cap = cells.reduce(function (a, c) { return a + c.cap; }, 0);
+  var room = cap - cells.reduce(function (a, c) { return a + c.q; }, 0);
+  if (room <= 0) return { picks:[], room:0, why:'The rig is full.' };
+
+  var best0 = sp2BestRoom(cells);
+  var pool = SP2_ORDERS.filter(function (o) { return !o.driver; });
+  var smallest = pool.reduce(function (m, o) {
+    var g = sp2Gal(o); return g && (!m || g < m) ? g : m;
+  }, 0);
+  var blockedByTime = 0, tooBig = 0;
+  var picks = [];
+  for (var round = 0; round < (max || 3); round++) {
+    var best = null;
+    pool.forEach(function (o) {
+      if (picks.indexOf(o) >= 0) return;
+      var total = sp2Gal(o);
+      if (!total) return;
+      var trial = cells.map(function (c) { return { cap:c.cap, p:c.p, q:c.q }; });
+      // no splitting: the whole order goes on, or it is not a suggestion
+      if (sp2PackSim(trial, o) < total) { if (!round) tooBig++; return; }
+      if (sp2CanRun(k, o)) { if (!round) blockedByTime++; return; }
+      var after = trial.reduce(function (a, c) { return a + c.q; }, 0);
+      if (!best || after > best.after) best = { o:o, after:after, cells:trial };
+    });
+    if (!best) break;
+    cells = best.cells;
+    picks.push(best.o);
+    best.o.__after = Math.round(best.after / cap * 100);
+  }
+
+  var why = null;
+  if (!picks.length) {
+    if (blockedByTime && !tooBig)
+      why = 'What fits cannot be run inside this driver\u2019s shift and hours.';
+    else
+      why = 'At most <b>' + best0.gal.toLocaleString() + ' gal</b> can go on in one order here' +
+            (best0.p ? ', and only as ' + best0.p : ', since one product cannot share a compartment') +
+            '. The smallest unplanned order is ' + smallest.toLocaleString() + ' gal.' +
+            (blockedByTime ? ' ' + blockedByTime + ' that would fit cannot be run today.' : '');
+  }
+  return { picks:picks, room:room, cap:cap, best:best0, why:why };
+}
+
+function sp2TakeSuggestion(e, k, id) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var d = SP2_DRIVERS[k];
+  if (!o || !d || o.driver) return;
+  var r = sp2PackInto(k, o.prods, 'auto', -1);
+  o.driver = k;
+  sp2Driver = k;
+  sp2SelOrder = o.id;
+  sp2Render();
+  sp2Toast(o.id + ' loaded onto ' + d.truck + ' \u00b7 ' + r.put.toLocaleString() + ' gal');
+}
+
+function sp2SuggestHtml(k) {
+  var sg = sp2Suggest(k, 3);
+  var head = '<div class="sp2-sg-head"><span class="sp2-sg-ttl">Fill the rest</span>' +
+    (sg.room > 0
+      ? '<span class="sp2-sg-room">' + sg.room.toLocaleString() + ' gal of room' +
+        (sg.best && sg.best.gal < sg.room
+          ? ' \u00b7 at most ' + sg.best.gal.toLocaleString() + ' in one order' : '') +
+        '</span>'
+      : '') +
+    '</div>';
+  if (!sg.picks.length)
+    return '<div class="sp2-sg">' + head + '<div class="sp2-sg-none">' + sg.why + '</div></div>';
+
+  // A suggestion is an act, not a label: each one is a row with its own Add,
+  // so an order goes onto the rig without being dragged there.
+  var rows = sg.picks.map(function (o) {
+    var trip = sp2Trip(o, k), w = sp2Win(o);
+    return '<div class="sp2-sg-item">' +
+        '<div class="sp2-sg-main">' +
+          '<div class="sp2-sg-l1">' +
+            '<span class="sp2-sg-id">' + o.id + '</span>' +
+            '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+            '<span class="sp2-sg-ship">' + o.ship + '</span>' +
+          '</div>' +
+          '<div class="sp2-sg-l2">' +
+            '<span class="sp2-sg-gal">' + sp2Gal(o).toLocaleString() + ' gal</span>' +
+            '<span class="sp2-sep"></span>' +
+            '<span>' + sp2Clock(w.from) + '\u2013' + sp2Clock(w.to) + '</span>' +
+            (trip ? '<span class="sp2-sep"></span><span>' + trip.mi.toFixed(1) + ' mi \u00b7 ' +
+                    trip.min + ' min</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<span class="sp2-sg-to" title="Where the rig lands once this is on">\u2192 ' +
+          o.__after + '%</span>' +
+        '<button class="sp2-sg-add" onclick="sp2TakeSuggestion(event,\'' + k + '\',\'' + o.id + '\')" ' +
+          'title="Put ' + o.id + ' on ' + SP2_DRIVERS[k].truck + '">Add</button>' +
+      '</div>';
+  }).join('');
+  var all = sg.picks.length > 1
+    ? '<button class="sp2-sg-addall" onclick="sp2TakeAll(event,\'' + k + '\')">Add all ' +
+        sg.picks.length + '</button>'
+    : '';
+  return '<div class="sp2-sg">' + head + '<div class="sp2-sg-list">' + rows + '</div>' + all + '</div>';
+}
+
+function sp2TakeAll(e, k) {
+  e.stopPropagation();
+  var sg = sp2Suggest(k, 3), d = SP2_DRIVERS[k];
+  if (!sg.picks.length) return;
+  var gal = 0;
+  sg.picks.forEach(function (o) {
+    if (o.driver) return;
+    gal += sp2PackInto(k, o.prods, 'auto', -1).put;
+    o.driver = k;
+  });
+  sp2Driver = k;
+  sp2Render();
+  sp2Toast(sg.picks.length + ' orders loaded onto ' + d.truck + ' \u00b7 ' + gal.toLocaleString() + ' gal');
+}
+
 function sp2FitFor(k, o) {
   var d = SP2_DRIVERS[k];
   if (!d || !SP2_TRUCKS[d.truck]) return null;
@@ -1236,9 +1592,9 @@ function sp2FitChip(o) {
 // would hide the quantity the terminal actually has to rack.
 function sp2Lines(o) {
   var out = [];
-  o.prods.forEach(function (pr) {
+  o.prods.forEach(function (pr, src) {
     var b = SP2_BLENDS[pr.p];
-    if (!b) return out.push({ p:pr.p, q:pr.q });
+    if (!b) return out.push({ p:pr.p, q:pr.q, src:src });
     // the shares are racked in round gallons, so every part but the last is
     // taken to the nearest ten and the last one carries the remainder — the
     // line still totals what was ordered, and no chip reads 8,503 gal
@@ -1247,7 +1603,7 @@ function sp2Lines(o) {
       var q = n === b.parts.length - 1 ? left
             : Math.round(pr.q * x.pct / 1000) * 10;
       left -= q;
-      out.push({ p:x.p, q:q, blend:pr.p, pct:x.pct });
+      out.push({ p:x.p, q:q, blend:pr.p, pct:x.pct, src:src, n:n, of:b.parts.length });
     });
   });
   return out;
@@ -1265,7 +1621,169 @@ function sp2TogglePlist(e, id) {
   sp2Render();
 }
 
+// ── The order card, round 3 ─────────────────────────────
+// Two units with a rule between them. Above it: which order this is, where it
+// goes and when it has to be there. Below it: what was asked for, as a table
+// you can correct in place. Nothing else — the fit and the run from the hub
+// have both come off while their places are decided.
+var SP2_UNITS = ['gal', 'L', 'each', 'case', 'drum', 'pail'];
+
+// What the customer asked for, line by line. A splash blend stays ONE line
+// here — B5 is what was ordered; the constituents are what the terminal racks,
+// and those live in the sheet.
+function sp2LineUnit(pr) { return pr.unit || 'gal'; }
+
+// A row is a racked line; the number that is stored is the ORDERED line it
+// came from. Typing into a constituent therefore moves the whole blend, and
+// its partner follows in ratio — a blend trimmed on one side is off-spec fuel,
+// not a smaller order.
+function sp2RowSrc(o, n) {
+  var pr = sp2Lines(o)[n];
+  return pr ? pr : null;
+}
+function sp2SetQty(e, id, n) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var pr = o && sp2RowSrc(o, n);
+  if (!pr || !o.prods[pr.src]) return;
+  var v = Math.max(0, Math.round(parseFloat(String(e.target.value).replace(/[^0-9.]/g, '')) || 0));
+  o.prods[pr.src].q = pr.blend ? Math.round(v * 100 / pr.pct) : v;
+  sp2Render();
+}
+function sp2SetUnit(e, id, n) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var pr = o && sp2RowSrc(o, n);
+  if (!pr || !o.prods[pr.src]) return;
+  o.prods[pr.src].unit = e.target.value;
+  sp2Render();
+}
+
+// Gallons add up to gallons. A line switched to cases cannot join them, so it
+// is counted on its own rather than quietly folded in.
+function sp2Totals(o) {
+  var by = {};
+  o.prods.forEach(function (pr) {
+    var u = sp2LineUnit(pr);
+    by[u] = (by[u] || 0) + pr.q;
+  });
+  return Object.keys(by).sort(function (a, b) {
+    return a === 'gal' ? -1 : b === 'gal' ? 1 : a.localeCompare(b);
+  }).map(function (u) { return by[u].toLocaleString() + ' ' + u; });
+}
+
+function sp2CardV3(o, style) {
+  var planned = sp2Planned(o);
+  var picked  = sp2Picked[o.id] ? ' picked' : '';
+  var w = sp2Win(o);
+
+  // The table lists what the terminal actually racks: a splash blend is its
+  // constituents, one row each, every row carrying its own blend and share.
+  // The rows of one blend are joined by a bracket so two blends on an order
+  // never read as four unrelated products.
+  var lines = sp2Lines(o);
+  var anyBlend = lines.some(function (pr) { return pr.blend; });
+
+  var rows = lines.map(function (pr, n) {
+    var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
+    var grp = '';
+    if (pr.blend) {
+      var first = pr.n === 0, last = pr.n === pr.of - 1;
+      grp = ' g' + (first ? ' g-first' : last ? ' g-last' : ' g-mid');
+    }
+    var ratio = pr.blend
+      ? '<b>' + pr.blend + '</b> \u00b7 ' + pr.pct + '%'
+      : '<span class="sp2-lt-none">\u2014</span>';
+    return '<div class="sp2-lt-row">' +
+        '<span class="sp2-lt-c sp2-lt-p"><i class="sp2-dot" style="background:' + col + ';"></i>' +
+          '<span>' + pr.p + '</span></span>' +
+        (anyBlend ? '<span class="sp2-lt-c sp2-lt-ratio' + grp + '"' +
+          (pr.blend ? ' title="' + pr.pct + '% of a ' + pr.blend + ' splash blend"' : '') +
+          '>' + ratio + '</span>' : '') +
+        '<span class="sp2-lt-c sp2-lt-edit">' +
+          '<input class="sp2-cell" type="text" inputmode="numeric" value="' + pr.q.toLocaleString() + '" ' +
+            'aria-label="Quantity for ' + pr.p + '" ' +
+            'onclick="event.stopPropagation()" onchange="sp2SetQty(event,\'' + o.id + '\',' + n + ')">' +
+        '</span>' +
+        '<span class="sp2-lt-c sp2-lt-edit">' +
+          '<select class="sp2-cell sp2-cell-u" aria-label="Type for ' + pr.p + '" ' +
+            'onclick="event.stopPropagation()" onchange="sp2SetUnit(event,\'' + o.id + '\',' + n + ')">' +
+            SP2_UNITS.map(function (u) {
+              return '<option value="' + u + '"' + (u === sp2LineUnit(o.prods[pr.src]) ? ' selected' : '') +
+                     '>' + u + '</option>';
+            }).join('') +
+          '</select>' +
+        '</span>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="sp2-card sp2-v3 ' + (planned ? 'planned' : 'unplanned') +
+      (sp2SelOrder === o.id ? ' sel' : '') + picked + '" ' + (style ? 'style="' + style + '" ' : '') +
+      'data-id="' + o.id + '" ' +
+      'draggable="true" ondragstart="sp2DragStart(event,\'' + o.id + '\')" ondragend="sp2DragEnd()" ' +
+      'onclick="sp2PickOrder(\'' + o.id + '\')" title="Drag onto the truck to load it">' +
+
+    // ── unit 1 · which order, where it goes, when ──
+    '<div class="sp2-card-top">' +
+      '<button class="sp2-cbx' + picked + '" title="Pick this order, and drag them together" ' +
+        'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>' +
+      '<span class="sp2-ord">' + o.id + '</span>' +
+      '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+      '<span class="sp2-pill sp2-pill-r ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
+        (planned ? 'Planned' : 'Unplanned') + '</span>' +
+      '<button class="sp2-chev" title="Open this order" ' +
+        'onclick="sp2OrderOpen(event,\'' + o.id + '\')">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<polyline points="9 18 15 12 9 6"/></svg></button>' +
+    '</div>' +
+
+    '<div class="sp2-ship-row">' +
+      '<svg class="sp2-pin" width="14" height="14" viewBox="0 0 24 24" fill="none" ' +
+        'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" fill="currentColor" fill-opacity=".22"/>' +
+        '<circle cx="12" cy="10" r="3"/></svg>' +
+      '<span class="sp2-ship">' + o.ship + '</span>' +
+      '<span class="sp2-tip" role="tooltip">' + o.addr + '</span>' +
+    '</div>' +
+    '<div class="sp2-win">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>' +
+      '<span>' + sp2Clock(w.from) + ' \u2013 ' + sp2Clock(w.to) + '</span>' +
+    '</div>' +
+
+    // ── unit 2 · what was asked for, correctable in place ──
+    // The DS lines table: flush to the card's edges, a tinted header band,
+    // 44px rows, every cell the control itself rather than a box inside a box.
+    '<div class="sp2-lt' + (anyBlend ? ' blended' : '') + '">' +
+      '<div class="sp2-lt-head">' +
+        '<span>Product</span>' +
+        (anyBlend ? '<span>Blend ratio</span>' : '') +
+        '<span>Quantity</span><span>Type</span>' +
+      '</div>' +
+      rows +
+      '<div class="sp2-lt-tot">' +
+        '<span>Total</span>' +
+        (anyBlend ? '<span></span>' : '') +
+        '<span>' + sp2Totals(o).join(' \u00b7 ') + '</span><span></span>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// The window is a time of day a person reads, not a duty clock.
+function sp2Clock(m) {
+  var h = Math.floor(m / 60) % 24, x = m % 60;
+  var ap = h < 12 ? 'AM' : 'PM', h12 = h % 12 === 0 ? 12 : h % 12;
+  return h12 + ':' + String(x).padStart(2, '0') + ' ' + ap;
+}
+
+// Every order card is the round-3 card now; the band design it replaced is
+// in V1 and in the commit before this one.
 function sp2CardHtml(o, style) {
+  return sp2CardV3(o, style);
+
   var planned = sp2Planned(o);
   var picked  = sp2Picked[o.id] ? ' picked' : '';
   var lines   = sp2Lines(o);
@@ -1418,11 +1936,18 @@ function sp2RenderTimeline() {
   var grid = '';
   for (var g = 0; g <= hours; g++) grid += '<div class="sp2-grid-col" style="width:' + SP2_HOUR_W + 'px;"></div>';
 
+  // The cards in a lane are placed by time, so the lane has to be as tall as
+  // the tallest one in it — and a card is as tall as its lines table.
+  var laneHeight = function (lane) {
+    return lane.reduce(function (h, slot) {
+      return Math.max(h, SP2_CARD_BASE + slot.o.prods.length * SP2_CARD_ROW);
+    }, 0);
+  };
   var lanesHtml = lanes.map(function(lane) {
     var cards = lane.map(function(slot) {
       return sp2CardHtml(slot.o, 'left:' + slot.x + 'px;width:' + SP2_CARD_W + 'px;');
     }).join('');
-    return '<div class="sp2-lane" style="width:' + trackW + 'px;">' +
+    return '<div class="sp2-lane" style="width:' + trackW + 'px;height:' + laneHeight(lane) + 'px;">' +
       '<div class="sp2-grid">' + grid + '</div>' + cards + '</div>';
   }).join('');
 
@@ -2834,7 +3359,7 @@ function sp2LaneHtml(k) {
           : '') +
       '</div>' +
 
-      (k === sp2Driver ? sp2RigArt(k) : sp2SimpleBars(k)) +
+      (k === sp2Driver ? sp2RigArt(k) + sp2SuggestHtml(k) : sp2SimpleBars(k)) +
 
       warn +
       '<div class="sp2-ln-stops">' +

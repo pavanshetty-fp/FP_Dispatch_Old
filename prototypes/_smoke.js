@@ -614,6 +614,12 @@
       const cards = [...document.querySelectorAll('.sp2-card')];
       if (!cards.length) throw new Error('no cards to measure');
       cards.forEach(c => {
+        // V2 took the fit off the card; where it goes instead is still open
+        if (V2) {
+          if (c.querySelector('.sp2-fit,.sp2-who'))
+            throw new Error('an order card still carries a fit');
+          return;
+        }
         if (!c.querySelector('.sp2-fit')) throw new Error('an unplanned card has no fit on it');
       });
       // a planned order is already on a truck; fit means nothing for it
@@ -663,6 +669,16 @@
     step('the fit follows the rig it is measured against', () => {
       sp2SetQuick('unplanned');
       sp2PickDriver('d0');
+      // V2 reads the fit from the model, not the card — the card no longer
+      // carries it, and the figure still has to answer to the chosen rig
+      if (V2) {
+        const o = SP2_ORDERS.filter(x => !x.driver)[0];
+        const a2 = sp2FitFor('d0', o), b2 = sp2FitFor('d2', o);
+        if (!a2 || !b2) throw new Error('the fit cannot be measured');
+        if (a2.rigPct === b2.rigPct && a2.pct === b2.pct)
+          throw new Error('the fit did not change with the driver');
+        return;
+      }
       const first = () => document.querySelector('.sp2-card .sp2-fit').textContent;
       const a = first();
       sp2PickDriver('d2');                       // a bigger truck
@@ -867,10 +883,11 @@
         const id = c.querySelector('.sp2-ord').textContent;
         const o = SP2_ORDERS.filter(x => x.id === id)[0];
         // V2 says it in the load band's foot ("3 products · 2 in a blend")
-        // rather than as a sixth pill in the head
-        const badged = V2
-          ? /in a blend/.test(c.querySelector('.sp2-load-n').textContent)
-          : !!c.querySelector('.sp2-pill-blend');
+        // rather than as a sixth pill in the head; the round-3 card says it
+        // on the line itself, because its table lists what was ordered
+        const badged = !V2 ? !!c.querySelector('.sp2-pill-blend')
+          : c.classList.contains('sp2-v3') ? !!c.querySelector('.sp2-lt.blended')
+          : /in a blend/.test(c.querySelector('.sp2-load-n').textContent);
         if (sp2HasBlend(o) !== badged)
           throw new Error(id + (badged ? ' is labelled a blend and is not' : ' carries a blend and is not labelled'));
       });
@@ -1029,11 +1046,260 @@
       if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
         throw new Error('the tabs still carry the margin from when they were in a panel');
     });
-    step(V2 ? 'the card reads down in bands: which order, where, what'
-            : 'the card splits: who and where left, what right', () => {
+    if (V2) step('the day has work small enough to try on most of the fleet', () => {
+      // The orders are cut to fill whole rigs, so without re-cutting a few of
+      // them "Fill the rest" would only ever fire on an empty truck. The pool
+      // has to carry work that fits a part-loaded one, on most of the fleet.
+      const on = Object.keys(SP2_DRIVERS).filter(k => SP2_DRIVERS[k].state !== 'off-duty');
+      const able = on.filter(k => sp2Suggest(k, 1).picks.length);
+      if (able.length < 15)
+        throw new Error('only ' + able.length + ' drivers can be offered anything, not 15');
+      // and it is not all empty rigs — a part-loaded one has to be offered something
+      const part = able.filter(k => {
+        const f = sp2RigFill(k);
+        return f.pct > 10 && f.pct < 95;
+      });
+      if (part.length < 4)
+        throw new Error('only ' + part.length + ' part-loaded rigs are offered anything');
+      // nothing was invented to make this true: every suggestion is a real
+      // unplanned order out of the day's own pool
+      able.forEach(k => {
+        sp2Suggest(k, 3).picks.forEach(o => {
+          if (SP2_ORDERS.indexOf(o) < 0) throw new Error(o.id + ' is not one of the day\u2019s orders');
+          if (o.driver) throw new Error(o.id + ' is offered and already planned');
+        });
+      });
+    });
+
+    if (V2) step('the open lane offers what would fill the rest of the rig', () => {
+      sp2SetDrvFilter('all');
+      const k = Object.keys(SP2_DRIVERS).find(x => SP2_DRIVERS[x].truck === 'HV-13');
+      if (!k) throw new Error('no transport to plan onto');
+      const keep = JSON.parse(JSON.stringify(SP2_DRIVERS[k].load));
+      const kept = SP2_ORDERS.filter(o => o.driver === k).map(o => o.id);
+      sp2Unload(k);
+      sp2PickDriver(k);
+
+      // the strip belongs to the lane you are working in, and sits under the rig
+      const lanes = [...document.querySelectorAll('.sp2-ln')];
+      const open = lanes.find(l => l.classList.contains('on'));
+      if (!open) throw new Error('no lane is open');
+      lanes.forEach(l => {
+        if (l !== open && l.querySelector('.sp2-sg'))
+          throw new Error('a shut lane carries suggestions');
+      });
+      const sg = open.querySelector('.sp2-sg');
+      if (!sg) throw new Error('the open lane offers nothing');
+      const art = open.querySelector('.sp2-sv');
+      if (art && sg.getBoundingClientRect().top < art.getBoundingClientRect().bottom - 2)
+        throw new Error('the suggestions are not under the drawing');
+
+      const picks = [...sg.querySelectorAll('.sp2-sg-item')];
+      if (!picks.length) throw new Error('an emptied transport is offered nothing');
+      // a suggestion is an act, not a label — each one carries its own Add
+      picks.forEach(it => {
+        const add = it.querySelector('.sp2-sg-add');
+        if (!add) throw new Error('a suggestion has no way to add it');
+        if (add.tagName !== 'BUTTON') throw new Error('Add is not a button');
+        if (add.textContent.trim() !== 'Add') throw new Error('the act is not named "Add"');
+      });
+
+      // every suggestion has to be a WHOLE order that this driver can run
+      const cells = sp2Cells(k).map(c => ({ cap: c.cap, p: c.l.p, q: c.l.q }));
+      picks.forEach(btn => {
+        const id = btn.querySelector('.sp2-sg-id').textContent;
+        const o = SP2_ORDERS.filter(x => x.id === id)[0];
+        if (!o) throw new Error(id + ' is not an order');
+        if (o.driver) throw new Error(id + ' is already planned on somebody');
+        const trial = cells.map(c => ({ cap: c.cap, p: c.p, q: c.q }));
+        if (sp2PackSim(trial, o) < sp2Gal(o))
+          throw new Error(id + ' would have to be split to go on');
+        const why = sp2CanRun(k, o);
+        if (why) throw new Error(id + ' cannot be run: ' + why);
+        if (sp2WinClash(o, k))
+          throw new Error(id + ' clashes with the shift and is still offered');
+      });
+
+      // and taking one actually loads it
+      const firstId = picks[0].querySelector('.sp2-sg-id').textContent;
+      const before = sp2RigFill(k).pct;
+      picks[0].querySelector('.sp2-sg-add').click();
+      const o1 = SP2_ORDERS.filter(x => x.id === firstId)[0];
+      if (o1.driver !== k) throw new Error(firstId + ' was offered but not planned');
+      if (sp2RigFill(k).pct <= before) throw new Error('taking a suggestion did not load the rig');
+
+      // a full rig is offered nothing, and says so rather than going blank
+      sp2Render();
+      const sg2 = document.querySelector('.sp2-ln.on .sp2-sg');
+      if (!sg2) throw new Error('the strip disappeared once the rig filled');
+      if (!sg2.querySelectorAll('.sp2-sg-item').length && !sg2.querySelector('.sp2-sg-none'))
+        throw new Error('nothing is offered and nothing says why');
+
+      // put the lane back as it was
+      SP2_ORDERS.forEach(o => { if (o.driver === k && kept.indexOf(o.id) < 0) o.driver = ''; });
+      SP2_ORDERS.forEach(o => { if (kept.indexOf(o.id) >= 0) o.driver = k; });
+      SP2_DRIVERS[k].load = keep;
+      sp2Render();
+    });
+
+    if (V2) step('every order card is the round-3 card', () => {
+      // the new shape is given to whatever is FIRST, so the list has to be in
+      // a settled order before anything is typed into it — sorted by fit, a
+      // changed quantity reorders the column and the first card is somebody else
+      sp2SetQuick('all');
+      sp2SetSort('time');
+      if (sp2BlendOnly) sp2ToggleBlend();
+      const all = [...document.querySelectorAll('.sp2-card')];
+      if (!all.length) throw new Error('no cards on screen');
+      const other = all.filter(c2 => !c2.classList.contains('sp2-v3'));
+      if (other.length)
+        throw new Error(other.length + ' cards are still on the old shape');
+      const c = all[0];
+
+      // the head says which order it is, and nothing about fit
+      ['.sp2-cbx', '.sp2-ord', '.sp2-kind', '.sp2-pill', '.sp2-chev'].forEach(sel => {
+        if (!c.querySelector('.sp2-card-top ' + sel)) throw new Error(sel + ' is not in the head');
+      });
+      if (c.querySelector('.sp2-card-top .sp2-open'))
+        throw new Error('the head still uses the old open icon');
+      // the status and the way in share the right edge
+      const head = c.querySelector('.sp2-card-top');
+      const pill = head.querySelector('.sp2-pill').getBoundingClientRect();
+      const chev = head.querySelector('.sp2-chev').getBoundingClientRect();
+      const kind = head.querySelector('.sp2-kind').getBoundingClientRect();
+      if (pill.left <= kind.right) throw new Error('the status is not at the right edge');
+      if (chev.left <= pill.right) throw new Error('the chevron is not last');
+      if (head.getBoundingClientRect().right - chev.right > 4)
+        throw new Error('the chevron is not against the card edge');
+      if (c.querySelector('.sp2-fit,.sp2-who')) throw new Error('the fit is still on the card');
+      if (c.querySelector('.sp2-trip')) throw new Error('the run from the hub is still on the card');
+
+      // where it goes: a pin, the name, and the address one hover away
+      if (!c.querySelector('.sp2-ship-row .sp2-pin')) throw new Error('the ship-to has no pin');
+      const o = SP2_ORDERS.filter(x => x.id === c.querySelector('.sp2-ord').textContent)[0];
+      const tip = c.querySelector('.sp2-tip');
+      if (!tip || tip.textContent !== o.addr) throw new Error('the address is not in the tooltip');
+      if (getComputedStyle(tip).display !== 'none') throw new Error('the tooltip shows before it is hovered');
+      if (c.innerText.indexOf(o.addr) >= 0) throw new Error('the address is still printed on the card');
+
+      // the window reads as a time of day
+      const w = c.querySelector('.sp2-win').textContent;
+      if (!/^\d{1,2}:\d{2} (AM|PM) – \d{1,2}:\d{2} (AM|PM)$/.test(w))
+        throw new Error('the window does not read as a clock time: ' + w);
+
+      // the table sits in a card of its own, 4–6px off the order card's left,
+      // right and bottom edges; that inner rim is what divides the two units,
+      // so no second rule is drawn above it
+      const lt0 = c.querySelector('.sp2-lt');
+      if (!lt0) throw new Error('the two units are not divided');
+      const cs = getComputedStyle(lt0);
+      if (parseFloat(cs.borderTopWidth) < 1) throw new Error('the inner card has no rim');
+      if (parseFloat(cs.borderRadius) < 6) throw new Error('the inner card is not a card');
+      if (c.querySelector('.sp2-rule')) throw new Error('a second rule stacks on the inner card');
+      const cb = c.getBoundingClientRect(), tb = lt0.getBoundingClientRect();
+      const inset = { left: tb.left - cb.left, right: cb.right - tb.right, bottom: cb.bottom - tb.bottom };
+      Object.keys(inset).forEach(side => {
+        if (inset[side] < 4 || inset[side] > 6)
+          throw new Error('the inner card sits ' + Math.round(inset[side]) + 'px off the ' +
+                          side + ' edge, not 4–6');
+      });
+
+      // the blend ratio is a column only when a line carries a blend
+      const lt = c.querySelector('.sp2-lt');
+      if (!lt) throw new Error('the lines table is missing');
+      const heads = [...lt.querySelectorAll('.sp2-lt-head>span')].map(e => e.textContent);
+      const racked = sp2Lines(o);
+      const wantsRatio = racked.some(pr => pr.blend);
+      if (wantsRatio !== (heads.indexOf('Blend ratio') >= 0))
+        throw new Error(wantsRatio ? 'a blended order has no ratio column'
+                                   : 'an order with no blend still has a ratio column');
+
+      // the table lists what the terminal racks — a blend is its constituents,
+      // one row each, every row naming its own blend and share
+      const names = [...c.querySelectorAll('.sp2-lt-p')].map(e => e.innerText.trim());
+      if (names.length !== racked.length)
+        throw new Error('the table lists ' + names.length + ' of ' + racked.length + ' racked lines');
+      racked.forEach((pr, i) => {
+        if (names[i].indexOf(pr.p) < 0) throw new Error('line ' + (i + 1) + ' is not ' + pr.p);
+      });
+      if (wantsRatio) {
+        if (!lt.classList.contains('blended')) throw new Error('the table is not in its blended shape');
+        const cells = [...lt.querySelectorAll('.sp2-lt-ratio')];
+        racked.forEach((pr, i) => {
+          const want = pr.blend ? pr.blend + ' · ' + pr.pct + '%' : '—';
+          if (cells[i].textContent.trim() !== want)
+            throw new Error(pr.p + ' reads ' + cells[i].textContent.trim() + ', not ' + want);
+          // the rows of one blend are bracketed together; a straight product is not
+          const bracketed = cells[i].classList.contains('g');
+          if (!!pr.blend !== bracketed)
+            throw new Error(pr.p + (bracketed ? ' is bracketed and is not a blend'
+                                              : ' is in a blend and is not bracketed'));
+          if (pr.blend) {
+            const want2 = pr.n === 0 ? 'g-first' : pr.n === pr.of - 1 ? 'g-last' : 'g-mid';
+            if (!cells[i].classList.contains(want2))
+              throw new Error(pr.p + ' is not the ' + want2 + ' of its blend');
+          }
+        });
+        // two blends on one order are two brackets, not one
+        const firsts = cells.filter(x => x.classList.contains('g-first')).length;
+        const blends = new Set(racked.filter(pr => pr.blend).map(pr => pr.src)).size;
+        if (firsts !== blends) throw new Error(blends + ' blends drew ' + firsts + ' brackets');
+      }
+
+      // every racked line's quantity and type are correctable in place; the
+      // product itself is not
+      const cellsQ = [...c.querySelectorAll('input.sp2-cell')];
+      const units = [...c.querySelectorAll('select.sp2-cell-u')];
+      if (cellsQ.length !== racked.length) throw new Error('not every quantity is editable');
+      if (units.length !== racked.length) throw new Error('not every line names its type');
+      if (units[0].options.length < 3) throw new Error('the type picker has too few choices');
+      if (units[0].value !== 'gal') throw new Error('the type does not default to gallons');
+      if (c.querySelector('.sp2-lt-p input,.sp2-lt-p select'))
+        throw new Error('the product name is editable and should not be');
+
+      // the total follows what is typed, and a blend keeps its ratio
+      const tot = () => document.querySelector('.sp2-card.sp2-v3 .sp2-lt-tot').innerText.replace(/\s+/g, ' ');
+      if (tot().indexOf(sp2Gal(o).toLocaleString() + ' gal') < 0)
+        throw new Error('the total does not state the order: ' + tot());
+      const keep = o.prods.map(pr => pr.q);
+      const row0 = racked[0];
+      const cell = document.querySelector('.sp2-card.sp2-v3 input.sp2-cell');
+      cell.value = '1,000'; cell.dispatchEvent(new Event('change', { bubbles: true }));
+      const now = SP2_ORDERS.filter(x => x.id === o.id)[0];
+      if (row0.blend) {
+        // typing into a constituent moves the whole blend; its partner follows
+        const after = sp2Lines(now);
+        if (after[0].q !== 1000)
+          throw new Error('the constituent reads ' + after[0].q + ' after 1,000 was typed');
+        const grp = after.filter(l => l.src === row0.src);
+        const sum = grp.reduce((a, l) => a + l.q, 0);
+        grp.forEach(l => {
+          if (Math.abs(Math.round(l.q / sum * 100) - l.pct) > 1)
+            throw new Error(l.p + ' left the ratio: ' + Math.round(l.q / sum * 100) + '% for ' + l.pct + '%');
+        });
+      } else if (now.prods[row0.src].q !== 1000) {
+        throw new Error('typing a quantity did not reach the order');
+      }
+      const want = now.prods.reduce((a, pr) => a + pr.q, 0).toLocaleString() + ' gal';
+      if (tot().indexOf(want) < 0) throw new Error('the total reads ' + tot() + ', not ' + want);
+      keep.forEach((q, i) => { now.prods[i].q = q; });
+      sp2Render();
+
+      // a unit that is not gallons is counted on its own, never folded in
+      const u = document.querySelector('.sp2-card.sp2-v3 select.sp2-cell-u');
+      u.value = 'case'; u.dispatchEvent(new Event('change', { bubbles: true }));
+      if (tot().indexOf('case') < 0) throw new Error('the total ignores the unit it was given');
+      const u2 = document.querySelector('.sp2-card.sp2-v3 select.sp2-cell-u');
+      u2.value = 'gal'; u2.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    // The bands were V2's second round and are V1's design now; V2's own card
+    // is checked by its own step above.
+    if (!V2) step('the card splits: who and where left, what right', () => {
       sp2SetQuick('all');
       if (sp2BlendOnly) sp2ToggleBlend();
-      const card = document.querySelector('.sp2-card');
+      // the first card is the round-3 trial; the bands still govern the rest
+      const card = document.querySelector(V2 ? '.sp2-card:not(.sp2-v3)' : '.sp2-card');
       const L = card.querySelector('.sp2-card-l'), R = card.querySelector('.sp2-card-r');
       if (!L || !R) throw new Error('the card is missing a band');
       if (!V2 && L.getBoundingClientRect().left >= R.getBoundingClientRect().left)
@@ -1106,13 +1372,15 @@
         if (!/[\d,]+ gal/.test(q.textContent)) throw new Error('a product has no quantity');
       });
     });
-    step('a blend is one chip per constituent, not one for the pair', () => {
+    // V2 lists what was ORDERED — a blend is one line with a ratio column, and
+    // the constituents the terminal racks live in the order sheet.
+    if (!V2) step('a blend is one chip per constituent, not one for the pair', () => {
       sp2SetQuick('all');
       if (!sp2BlendOnly) sp2ToggleBlend();
       // V2 draws each constituent as a chip with its share beside it, so a row
       // is the chip + the share + the quantity rather than one boxed line.
       const rows = V2
-        ? [...document.querySelectorAll('.sp2-prow-b')]
+        ? [...document.querySelectorAll('.sp2-card:not(.sp2-v3) .sp2-prow-b')]
             .filter(b => b.textContent.trim())
             .map(b => ({ name: b.previousElementSibling.textContent.trim(), share: b.textContent.trim() }))
         : [...document.querySelectorAll('.sp2-prow.blend')];
@@ -1150,7 +1418,7 @@
       const o = SP2_ORDERS.filter(x => sp2HasBlend(x))[0];
       const on = [...document.querySelectorAll('.sp2-card')]
         .filter(c => c.querySelector('.sp2-ord').textContent === o.id)[0];
-      if (on) {
+      if (on && !on.classList.contains('sp2-v3')) {
         const bl = o.prods.filter(pr => sp2IsBlend(pr.p))[0], parts = SP2_BLENDS[bl.p].parts;
         const texts = V2
           ? [...on.querySelectorAll('.sp2-card-r')].map(r => r.innerText)
