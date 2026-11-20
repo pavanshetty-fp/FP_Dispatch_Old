@@ -565,6 +565,68 @@
       sp2PickDriverFor('d2', 'd0');
       if (SP2_DRIVERS.d0.truck !== was) throw new Error('handing back did not restore the rig');
     });
+    step('an order card says how much of it would fit', () => {
+      sp2SetQuick('unplanned');
+      sp2PickDriver('d0');
+      const cards = [...document.querySelectorAll('.sp2-card')];
+      if (!cards.length) throw new Error('no cards to measure');
+      cards.forEach(c => {
+        if (!c.querySelector('.sp2-fit')) throw new Error('an unplanned card has no fit on it');
+      });
+      // a planned order is already on a truck; fit means nothing for it
+      sp2SetQuick('planned');
+      if (document.querySelector('.sp2-card .sp2-fit'))
+        throw new Error('a planned order still carries a fit');
+      sp2SetQuick('unplanned');
+      if (!/fit vs /.test(document.getElementById('sp2Vs').textContent))
+        throw new Error('the column does not say which rig the fit is against');
+    });
+    step('the fit is the number a drop would really give', () => {
+      const k = 'd0';
+      sp2PickDriver(k);
+      const o = SP2_ORDERS.filter(x => !x.driver)[0];
+      const said = sp2FitFor(k, o);
+      const before = sp2Cells(k).reduce((s, c) => s + c.l.q, 0);
+      sp2Drag = o.id;
+      sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
+      const loaded = sp2Cells(k).reduce((s, c) => s + c.l.q, 0) - before;
+      if (loaded !== said.fits)
+        throw new Error('said ' + said.fits + ' gal would fit, ' + loaded + ' actually went on');
+      sp2UnplanOrder({ stopPropagation(){} }, k, o.id);
+    });
+    step('every grade of fit is reachable', () => {
+      const seen = {};
+      Object.keys(SP2_DRIVERS).forEach(k => {
+        SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+          const f = sp2FitFor(k, o);
+          const kind = f.pct >= 100 && f.rigPct >= 100 ? 'perfect'
+                     : f.pct >= 100 ? 'full' : f.pct > 0 ? 'part' : 'none';
+          seen[kind] = (seen[kind] || 0) + 1;
+        });
+      });
+      ['perfect', 'full', 'part', 'none'].forEach(kind => {
+        if (!seen[kind]) throw new Error('no order anywhere reads "' + kind + '"');
+      });
+      // a full tank can take nothing
+      const k = 'd0';
+      sp2Unload(k);
+      SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.forEach((c, i) => {
+        SP2_DRIVERS[k].load[i].p = 'UNL87'; SP2_DRIVERS[k].load[i].q = c.cap;
+      });
+      const o = SP2_ORDERS.filter(x => !x.driver)[0];
+      if (sp2FitFor(k, o).fits !== 0) throw new Error('a full rig still claims room');
+      sp2Unload(k);
+    });
+    step('the fit follows the rig it is measured against', () => {
+      sp2SetQuick('unplanned');
+      sp2PickDriver('d0');
+      const first = () => document.querySelector('.sp2-card .sp2-fit').textContent;
+      const a = first();
+      sp2PickDriver('d2');                       // a bigger truck
+      if (first() === a) throw new Error('the fit did not change with the driver');
+      sp2PickDriver('d0');
+      if (first() !== a) throw new Error('coming back gave a different answer');
+    });
     step('an assigned order leaves the orders column', () => {
       sp2SetQuick('unplanned');
       const un = SP2_ORDERS.filter(o => !o.driver)[0];

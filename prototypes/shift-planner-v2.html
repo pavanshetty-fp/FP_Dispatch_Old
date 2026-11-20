@@ -110,12 +110,12 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-hour{flex-shrink:0;position:relative;font-size:12px;color:var(--fp-ink-3);padding-top:9px;border-left:1px solid var(--fp-outline-1);padding-left:6px;font-variant-numeric:tabular-nums;}
 
 .sp2-lanes{position:relative;padding-top:12px;}
-.sp2-lane{position:relative;height:124px;margin-bottom:8px;}
+.sp2-lane{position:relative;height:146px;margin-bottom:8px;}
 .sp2-grid{position:absolute;inset:0;display:flex;pointer-events:none;}
 .sp2-grid-col{flex-shrink:0;border-left:1px solid color-mix(in oklab,var(--fp-outline-1) 55%,transparent);}
 
 /* the order card — board card's shape and stack levels */
-.sp2-card{position:absolute;top:0;height:120px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
+.sp2-card{position:absolute;top:0;height:142px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
 .sp2-card:hover{border-color:var(--fp-outline-2);box-shadow:0 1px 3px rgba(3,4,5,.10),0 1px 2px rgba(3,4,5,.06);}
 .sp2-card.sel{border-color:var(--fp-selected-border);background:var(--fp-selected);}
 .sp2-card.planned{border-left-color:var(--status-success);}
@@ -440,6 +440,13 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-move-row .sp2-time{width:88px;text-align:right;}
 .sp2-move-of{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 .sp2-move-quick{display:flex;align-items:center;gap:6px;margin-top:11px;}
+/* ── how much of this order the chosen rig could take ── */
+.sp2-vs{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sp2-fit{display:block;margin-top:6px;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+.sp2-fit.perfect{background:var(--status-success);color:var(--primary-foreground);font-weight:600;}
+.sp2-fit.full{background:color-mix(in oklab,var(--status-success) 12%,transparent);color:var(--status-success);}
+.sp2-fit.part{background:color-mix(in oklab,var(--status-caution) 12%,transparent);color:var(--status-caution);}
+.sp2-fit.none{background:var(--muted);color:var(--status-neutral);}
 </style>
 </head>
 <body>
@@ -472,6 +479,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
       <div class="sp2-col-hdr">
         <span class="sp2-col-title">Orders</span>
         <span class="sp2-count" id="sp2OrdCount">0</span>
+        <span class="sp2-vs" id="sp2Vs"></span>
 
         <div class="sp2-hdr-tools">
           <div class="sp2-seg" id="sp2Quick">
@@ -726,6 +734,51 @@ function sp2Visible() {
 // ══════════════════════════════════════════════════════════
 //  Column 1 — the timeline
 // ══════════════════════════════════════════════════════════
+// What the chosen rig could take of an order, without loading anything. Packed
+// the same way a real drop would be — top up a compartment already holding the
+// product, then take an empty one — so the number is the one you would get.
+function sp2FitFor(k, o) {
+  var d = SP2_DRIVERS[k];
+  if (!d || !SP2_TRUCKS[d.truck]) return null;
+  var cells = sp2Cells(k).map(function (c) { return { cap:c.cap, p:c.l.p, q:c.l.q }; });
+  var cap = cells.reduce(function (s, c) { return s + c.cap; }, 0);
+  var fits = 0, total = sp2Gal(o);
+  o.prods.forEach(function (pr) {
+    var left = pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.p === pr.p, empty = !c.p || c.q === 0;
+        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
+        if (pass === 2) c.p = pr.p;
+        var take = Math.min(c.cap - c.q, left);
+        c.q += take; left -= take; fits += take;
+      });
+    });
+  });
+  var after = cells.reduce(function (s, c) { return s + c.q; }, 0);
+  return { fits:fits, total:total, over:total - fits,
+           pct: total ? Math.round(fits / total * 100) : 0,
+           rigPct: cap ? Math.round(after / cap * 100) : 0 };
+}
+
+// The chip that says it. "Fills the truck" is the one worth looking for: the
+// whole order goes on AND the rig leaves full.
+function sp2FitChip(o) {
+  if (o.driver) return '';
+  var f = sp2FitFor(sp2Driver, o);
+  if (!f) return '';
+  var d = SP2_DRIVERS[sp2Driver];
+  var why = 'Against ' + d.name + ' · ' + d.truck + ' — ' + f.fits.toLocaleString() +
+            ' of ' + f.total.toLocaleString() + ' gal would load, leaving the rig ' + f.rigPct + '% full';
+  var cls, text;
+  if (f.pct >= 100 && f.rigPct >= 100) { cls = 'perfect'; text = 'Fills the truck'; }
+  else if (f.pct >= 100)               { cls = 'full';    text = 'Fits · rig ' + f.rigPct + '%'; }
+  else if (f.pct > 0)                  { cls = 'part';    text = f.pct + '% fits · ' + f.over.toLocaleString() + ' gal over'; }
+  else                                 { cls = 'none';    text = 'No room'; }
+  return '<span class="sp2-fit ' + cls + '" title="' + why + '">' + text + '</span>';
+}
+
 // The card is the same in every view; only where it sits changes.
 function sp2CardHtml(o, style) {
   var planned = sp2Planned(o);
@@ -748,6 +801,7 @@ function sp2CardHtml(o, style) {
         (planned ? 'Planned' : 'Unplanned') + '</span>' +
       '<span class="sp2-type">' + o.type + '</span>' +
     '</div>' +
+    sp2FitChip(o) +
   '</div>';
 }
 
@@ -843,6 +897,8 @@ function sp2Counts() {
   document.getElementById('sp2nUn').textContent  = inWindow.length - pl;
   document.getElementById('sp2nPl').textContent  = pl;
   document.getElementById('sp2OrdCount').textContent = sp2Visible().length;
+  var d = SP2_DRIVERS[sp2Driver], vs = document.getElementById('sp2Vs');
+  if (vs) vs.textContent = d ? 'fit vs ' + d.truck : '';
 }
 
 function sp2SetQuick(q) {
@@ -1102,7 +1158,7 @@ function sp2MoveCancel() {
   sp2MoveFrom = null; sp2MoveTo = null;
   var pop = document.getElementById('sp2TrlPop');
   if (pop) pop.classList.remove('on');
-  sp2RenderUnit();
+  sp2Render();          // moving fuel changes what else would fit
 }
 
 function sp2DoMove(k) {
@@ -1206,7 +1262,7 @@ function sp2AddTrailer(trl, k) {
   d.trailer = trl;
   d.tload = SP2_TRAILERS[trl].caps.map(function () { return { p:'', q:0 }; });
   document.getElementById('sp2TrlPop').classList.remove('on');
-  sp2RenderUnit();
+  sp2Render();
   sp2Toast(trl + ' hitched to ' + d.truck);
 }
 function sp2DropTrailer(k) {
@@ -1214,14 +1270,14 @@ function sp2DropTrailer(k) {
   var left = d.tload.reduce(function (a, l) { return a + l.q; }, 0);
   if (left) return sp2Toast(had + ' still holds ' + left.toLocaleString() + ' gal — unload it first');
   d.trailer = null; d.tload = [];
-  sp2RenderUnit();
+  sp2Render();
   sp2Toast(had + ' unhitched');
 }
 function sp2Unload(k) {
   var d = SP2_DRIVERS[k || sp2Driver];
   d.load.forEach(function (l) { l.p = ''; l.q = 0; });
   d.tload.forEach(function (l) { l.p = ''; l.q = 0; });
-  sp2RenderUnit();
+  sp2Render();
   sp2Toast(d.truck + ' emptied — the orders stay planned');
 }
 
@@ -1759,9 +1815,12 @@ function sp2RenderUnit() {
   sp2RenderLanes();
 }
 
+// loading, unloading and hitching all change what would fit
+function sp2AfterRig() { sp2Render(); }
+
 function sp2PickDriver(k) {
   sp2Driver = k;
-  sp2RenderUnit();
+  sp2Render();          // the cards on the left are measured against this rig
 }
 function sp2ViewDriver() { sp2Toast(SP2_DRIVERS[sp2Driver].name + ' — driver details would open here'); }
 

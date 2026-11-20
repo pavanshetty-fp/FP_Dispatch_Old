@@ -80,6 +80,10 @@ Written down there, absent here.
 - **Ranked truck recommendation** (TF-2.5) — product fit → whole batch in one
   load → least leftover fuel → driver's own region and on shift. Would turn the
   **Available** tab from a filter into an ordering.
+  *Half of this arrived from the other end on 2026-11-20:* each order card now
+  says how much of it the chosen rig would take. That ranks orders against one
+  truck; TF-2.5 ranks trucks against one order. The same arithmetic, pointed the
+  other way.
 - **Fulfilment preference** (TF-2.6) — one truck finishing a ship-to in one
   visit beats splitting across trucks, even if it needs a reload. Customers do
   not want two trucks at their tanks.
