@@ -224,45 +224,13 @@
       sp2SetView('v');
       if (w.scrollWidth > w.clientWidth + 2) throw new Error('the vertical view scrolls sideways too');
     });
-    step('both filters sit behind the icon', () => {
-      const hdr = document.querySelector('.sp2-col-orders .sp2-col-hdr');
-      if (hdr.querySelector('[data-q]') || hdr.querySelector('[data-s]'))
-        throw new Error('a filter is still loose in the header');
-      if (!hdr.querySelector('[data-v]')) throw new Error('view switch left the header');
-      const pop = document.getElementById('sp2Flt');
-      if (pop.classList.contains('on')) throw new Error('filters start open');
-      sp2ToggleFlt(document.getElementById('sp2FltBtn'));
-      if (!pop.classList.contains('on')) throw new Error('filters did not open');
-      if (!pop.querySelector('[data-q]') || !pop.querySelector('[data-s]'))
-        throw new Error('status or shift missing from the popover');
-      const r = pop.getBoundingClientRect();
-      if (r.right > innerWidth + 1 || r.bottom > innerHeight + 1 || r.left < 0)
-        throw new Error('popover lands off screen');
-      pop.classList.remove('on');
-    });
-    step('the filter icon says when it is filtering', () => {
-      const dot = document.getElementById('sp2FltDot');
-      sp2SetQuick('all'); sp2SetShift('am');
-      if (getComputedStyle(dot).display !== 'none') throw new Error('dot shows with no filter on');
-      sp2SetQuick('unplanned');
-      if (getComputedStyle(dot).display === 'none') throw new Error('dot missing while filtering');
-      sp2ResetFlt();
-      if (getComputedStyle(dot).display !== 'none') throw new Error('reset left the dot on');
-    });
-    step('V1 — the roster beside one rig', () => {
-      sp2SetLayout('v1');
-      if (getComputedStyle(document.getElementById('sp2V1')).display === 'none')
-        throw new Error('V1 did not come back');
-      if (getComputedStyle(document.getElementById('sp2V2')).display !== 'none')
-        throw new Error('both layouts on at once');
-    });
     step('an order follows to its driver', () => {
       const card = [...document.querySelectorAll('.sp2-card.planned')][0];
       if (!card) throw new Error('no planned order to click');
       card.click();
       if (!document.querySelector('.sp2-card.sel')) throw new Error('selection not shown');
-      const row = document.querySelector('.sp2-drow.on .sp2-drow-name');
-      if (!row || !row.textContent.trim()) throw new Error('driver not opened in the roster');
+      const lane = document.querySelector('.sp2-ln.on .sp2-ln-name');
+      if (!lane || !lane.textContent.trim()) throw new Error('the order did not select its driver');
     });
     step('ten drivers in each state', () => {
       const keys = Object.keys(SP2_DRIVERS);
@@ -296,78 +264,23 @@
       sp2SetDrvFilter('available');
       if (document.getElementById('sp2dAv').textContent !== String(avail.length))
         throw new Error('the Available count does not match');
-      // the hidden layout keeps its last render, so count only the one on screen
-      const rows = sp2Layout === 'v2' ? '.sp2-ln' : '.sp2-drow';
-      if (document.querySelectorAll(rows).length !== avail.length)
-        throw new Error('the Available tab shows ' + document.querySelectorAll(rows).length +
+      if (document.querySelectorAll('.sp2-ln').length !== avail.length)
+        throw new Error('the Available tab shows ' + document.querySelectorAll('.sp2-ln').length +
                         ' drivers, not ' + avail.length);
       sp2SetDrvFilter('all');
     });
     step('the roster filters and searches', () => {
       sp2SetDrvFilter('all');
-      const all = document.querySelectorAll('.sp2-drow').length;
+      const all = document.querySelectorAll('.sp2-ln').length;
       sp2SetDrvFilter('off-duty');
-      const off = document.querySelectorAll('.sp2-drow').length;
+      const off = document.querySelectorAll('.sp2-ln').length;
       if (off >= all || off < 10) throw new Error('state filter did nothing: ' + off + '/' + all);
       sp2SetDrvFilter('all');
       const box = document.getElementById('sp2DrvSearch');
       box.value = SP2_DRIVERS.d0.name.split(' ')[0];
       sp2RenderUnit();
-      if (document.querySelectorAll('.sp2-drow').length !== 1) throw new Error('search did not narrow to one');
+      if (document.querySelectorAll('.sp2-ln').length !== 1) throw new Error('search did not narrow to one');
       box.value = ''; sp2RenderUnit();
-    });
-    step('the rig is drawn, not listed', () => {
-      sp2PickDriver('d0');
-      if (!document.querySelector('.sp2-cab')) throw new Error('no cab');
-      if (!document.querySelector('.sp2-tank')) throw new Error('no tank');
-      if (document.querySelectorAll('.sp2-wheel').length < 3) throw new Error('fewer than three wheels');
-      const caps = SP2_TRUCKS[SP2_DRIVERS.d0.truck].comps.length;
-      if (document.querySelectorAll('.sp2-cmp').length !== caps)
-        throw new Error('compartments drawn do not match the truck');
-      // wide compartments and narrow ones are drawn to scale
-      const cmps = [...document.querySelectorAll('.sp2-cmp')];
-      const widest = Math.max(...cmps.map(c => c.getBoundingClientRect().width));
-      const narrow = Math.min(...cmps.map(c => c.getBoundingClientRect().width));
-      if (widest <= narrow) throw new Error('every compartment drawn the same width');
-    });
-    step('compartments report fill and state', () => {
-      const cmps = [...document.querySelectorAll('.sp2-cmp')];
-      if (!cmps.length) throw new Error('no compartments');
-      cmps.forEach(c => {
-        const s = c.querySelector('.sp2-cmp-s').textContent;
-        if (!/^\d+% · (Full|Partially full|Empty)$/.test(s))
-          throw new Error('unexpected compartment state: ' + s);
-        ['.sp2-cmp-p', '.sp2-cmp-q'].forEach(sel => {
-          const el = c.querySelector(sel);
-          if (el.scrollWidth > el.clientWidth) throw new Error('compartment label cut off: ' + el.textContent);
-        });
-        const liq = c.querySelector('.sp2-cmp-liq');
-        const pct = parseInt(s, 10);
-        if (Math.abs(parseFloat(liq.style.height) - pct) > 1)
-          throw new Error('the drawn level does not match the number');
-      });
-    });
-    step('compartment labels survive any product colour', () => {
-      // only the C-number sits straight on the liquid, so it has to be near-black;
-      // everything else rides a near-opaque plate
-      const c = document.querySelector('.sp2-cmp-c');
-      const m = getComputedStyle(c).color.match(/\d+/g).map(Number);
-      if (Math.max(...m.slice(0, 3)) > 60) throw new Error('C-number is too light to sit on a fill');
-      const plate = getComputedStyle(document.querySelector('.sp2-cmp-plate')).backgroundColor;
-      const a = plate.match(/rgba?\([^)]*?([\d.]+)\)/);
-      if (a && parseFloat(a[1]) < 0.85) throw new Error('plate too sheer to carry text');
-    });
-    step('a trailer hitches and unhitches', () => {
-      sp2PickDriver('d20'); sp2Unload();
-      const before = document.querySelectorAll('.sp2-tank').length;
-      sp2AddTrailer('TR-410');
-      if (document.querySelectorAll('.sp2-tank').length !== before + 1) throw new Error('trailer not drawn');
-      if (!document.querySelector('.sp2-hitch')) throw new Error('no hitch between them');
-      const caps = SP2_TRUCKS[SP2_DRIVERS.d20.truck].comps.length + SP2_TRAILERS['TR-410'].caps.length;
-      if (document.querySelectorAll('.sp2-cmp').length !== caps)
-        throw new Error('trailer compartments missing');
-      sp2DropTrailer();
-      if (SP2_DRIVERS.d20.trailer) throw new Error('trailer would not come off an empty rig');
     });
     step('dragging an order loads the truck', () => {
       sp2SetQuick('all'); sp2PickDriver('d20'); sp2Unload();
@@ -382,7 +295,7 @@
       fire(card, 'dragstart');
       if (!document.getElementById('sp2Body').classList.contains('dragging'))
         throw new Error('drag never started');
-      const wrap = document.getElementById('sp2Veh');
+      const wrap = document.querySelector('.sp2-ln.on .sp2-rig') || document.querySelector('.sp2-rig');
       if (!fire(wrap, 'dragover').defaultPrevented) throw new Error('the rig refuses the drop');
       fire(wrap, 'drop');
       if (un.driver !== 'd20') throw new Error('drop did not plan the order onto the driver');
@@ -407,24 +320,12 @@
     step('every driver maps to a truck', () => {
       Object.keys(SP2_DRIVERS).forEach(k => {
         sp2PickDriver(k);
-        if (!document.querySelector('.sp2-truck-id')) throw new Error(k + ' has no truck');
-        if (!document.querySelector('.sp2-tank')) throw new Error(k + ' has no tank drawn');
+        const lane = document.querySelector('.sp2-ln.on');
+        if (!lane || !lane.querySelector('.sp2-ln-truck-id').textContent.trim())
+          throw new Error(k + ' has no truck');
+        if (!lane.querySelector('.sp2-sv')) throw new Error(k + ' has no rig drawn');
       });
       sp2PickDriver('d0');
-    });
-    step('V1 reads cleanly before we leave it', () => { contrastSweep(); });
-
-    // ── V2 ──────────────────────────────────────────────────
-    step('V2 — a lane per driver', () => {
-      sp2SetLayout('v2');
-      if (getComputedStyle(document.getElementById('sp2V2')).display === 'none')
-        throw new Error('V2 did not show');
-      if (getComputedStyle(document.getElementById('sp2V1')).display !== 'none')
-        throw new Error('V1 still showing under V2');
-      const lanes = document.querySelectorAll('.sp2-ln');
-      if (lanes.length !== sp2DriverKeys().length)
-        throw new Error('lanes do not match the drivers on screen');
-      if (!document.querySelector('.sp2-ln-hdr')) throw new Error('no lane header');
     });
     step('the selected lane is drawn, the rest are bars', () => {
       const lanes = [...document.querySelectorAll('.sp2-ln')];
@@ -540,14 +441,6 @@
           throw new Error('compact still writes the product on every bar');
       });
     });
-    step('the density switch is V2 only', () => {
-      sp2SetLayout('v1');
-      if (getComputedStyle(document.getElementById('sp2DenseSeg')).display !== 'none')
-        throw new Error('density switch shows on V1, where it means nothing');
-      sp2SetLayout('v2');
-      if (getComputedStyle(document.getElementById('sp2DenseSeg')).display === 'none')
-        throw new Error('density switch did not come back');
-    });
     step('a lane takes the drop, whoever is selected', () => {
       sp2SetDrvFilter('all');
       const lanes = [...document.querySelectorAll('.sp2-ln')];
@@ -579,6 +472,144 @@
         throw new Error('the lane does not name its trailer');
       sp2DropTrailer(k);
       if (SP2_DRIVERS[k].trailer) throw new Error('trailer would not come off');
+    });
+    step('the filters sit in the headers, not behind an icon', () => {
+      if (document.getElementById('sp2Flt')) throw new Error('the filter popover is still here');
+      const c1 = document.querySelector('.sp2-col-orders .sp2-col-hdr');
+      if (!c1.querySelector('[data-q]')) throw new Error('planned/unplanned is not in the orders header');
+      if (!c1.querySelector('[data-v]')) throw new Error('the view switch left the orders header');
+      if (c1.querySelector('[data-s]')) throw new Error('the shift filter is still on the orders column');
+      const c2 = document.querySelector('.sp2-col-unit .sp2-col-hdr');
+      if (!c2.querySelector('[data-s]')) throw new Error('the shift filter did not move to driver & truck');
+      if (!c2.querySelector('[data-d]')) throw new Error('the driver tabs left their header');
+      // search first on the left, every filter to its right
+      const search = c2.querySelector('#sp2DrvSearch').getBoundingClientRect();
+      const tools = c2.querySelector('.sp2-hdr-tools').getBoundingClientRect();
+      if (search.left >= tools.left) throw new Error('search is not ahead of the filters');
+      if (document.getElementById('sp2LayoutSeg')) throw new Error('the V1/V2 switch is still here');
+      if (typeof sp2Layout !== 'undefined') throw new Error('V1 left its state behind');
+    });
+    step('the rig faces left and leaves air either side', () => {
+      sp2PickDriver('d0');
+      const box = document.querySelector('.sp2-rig'), svg = box.querySelector('.sp2-sv');
+      const slack = box.clientWidth - svg.getBoundingClientRect().width;
+      if (Math.abs(slack - 2 * TK_SIDE_PAD) > 6)
+        throw new Error('leaves ' + Math.round(slack / 2) + 'px a side, not ' + TK_SIDE_PAD);
+      // the tractor is flipped about its own middle, and drawn first
+      const flipped = [...svg.querySelectorAll('g')].some(g => /scale\(-1,1\)/.test(g.getAttribute('transform') || ''));
+      if (!flipped) throw new Error('the tractor is not mirrored');
+      const cab = svg.querySelector('image[href^="data:"]').getBoundingClientRect();
+      const tank = svg.querySelector('.sp2-sv-liq, .sp2-sv-p').getBoundingClientRect();
+      if (cab.left > tank.left) throw new Error('the cab is still behind the tank');
+    });
+    step('an unselected lane is one box, divided', () => {
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
+      const boxes = lane.querySelectorAll('.sp2-barbox');
+      if (!boxes.length) throw new Error('no box');
+      const k = lane.dataset.k, d = SP2_DRIVERS[k];
+      if (boxes.length !== (d.trailer ? 2 : 1)) throw new Error('one box per vehicle, got ' + boxes.length);
+      const cells = [...boxes[0].querySelectorAll('.sp2-bar2')];
+      if (cells.length < 2) throw new Error('the box is not divided');
+      // divided, not a row of separate tiles: no gaps between the compartments
+      const gap = cells[1].getBoundingClientRect().left - cells[0].getBoundingClientRect().right;
+      if (gap > 2) throw new Error('the compartments are still separate boxes (' + Math.round(gap) + 'px apart)');
+    });
+    step('the chosen lane lifts instead of tinting', () => {
+      const on = document.querySelector('.sp2-ln.on');
+      const cs = getComputedStyle(on);
+      if (cs.boxShadow === 'none') throw new Error('no shadow on the chosen lane');
+      const bg = cs.backgroundColor.match(/\d+/g).map(Number);
+      if (Math.min(bg[0], bg[1], bg[2]) < 250) throw new Error('the chosen lane is still tinted: ' + cs.backgroundColor);
+    });
+    step('the shift says where the driver has got to', () => {
+      sp2PickDriver('d0');
+      const strip = document.querySelector('.sp2-ln.on .sp2-shift');
+      if (!strip) throw new Error('no shift standing on the chosen lane');
+      const st = sp2ShiftState(SP2_DRIVERS.d0);
+      if (!/left|starts in|ended/.test(strip.textContent)) throw new Error('it does not say how long is left');
+      if (!strip.querySelector('.sp2-shift-bar')) throw new Error('no progress through the shift');
+      // the three standings all have to be reachable
+      const kinds = new Set(Object.keys(SP2_DRIVERS).map(k => sp2ShiftState(SP2_DRIVERS[k]).kind));
+      if (kinds.size < 2)
+        throw new Error('every driver reads the same at ' + sp2Hhmm(SP2_NOW) + ': ' + [...kinds]);
+      if (st.kind === 'running' && !strip.querySelector('.sp2-shift-now'))
+        throw new Error('mid-shift but no now marker');
+    });
+    step('the truck and the driver can both be changed', () => {
+      sp2PickDriver('d0');
+      const lane = document.querySelector('.sp2-ln.on');
+      const tbtn = lane.querySelector('.sp2-ln-truck-id');
+      if (tbtn.tagName !== 'BUTTON') throw new Error('the truck is not changeable');
+      const was = SP2_DRIVERS.d0.truck, other = SP2_DRIVERS.d1.truck, otherDrv = SP2_DRIVERS.d1.name;
+      sp2PickTruck('d0', other);
+      if (SP2_DRIVERS.d0.truck !== other) throw new Error('the truck did not change');
+      if (SP2_DRIVERS.d1.truck !== was) throw new Error('the other driver did not take the old one');
+      sp2PickTruck('d0', was);
+      // handing it over takes the orders with it
+      const mine = SP2_ORDERS.filter(o => o.driver === 'd0').length;
+      sp2PickDriverFor('d0', 'd2');
+      if (SP2_ORDERS.filter(o => o.driver === 'd2').length !== mine)
+        throw new Error('the orders did not go with the driver');
+      sp2PickDriverFor('d2', 'd0');
+      if (SP2_DRIVERS.d0.truck !== was) throw new Error('handing back did not restore the rig');
+    });
+    step('fuel moves between compartments', () => {
+      sp2PickDriver('d0');
+      const d = SP2_DRIVERS.d0;
+      const from = d.load.findIndex(l => l.q > 0);
+      const to = d.load.findIndex((l, i) => i !== from && !l.q && SP2_TRUCKS[d.truck].comps[i].cap >= d.load[from].q);
+      if (from < 0 || to < 0) throw new Error('nothing to move, or nowhere to put it');
+      const moved = { p: d.load[from].p, q: d.load[from].q };
+      const stop = { stopPropagation() {} };
+      sp2CompClick(stop, 'd0', 'truck', from);
+      if (!sp2MoveFrom) throw new Error('the compartment was not picked up');
+      if (!document.querySelector('.sp2-sv-held')) throw new Error('nothing shows it is held');
+      sp2CompClick(stop, 'd0', 'truck', to);
+      if (sp2MoveFrom) throw new Error('it was never put down');
+      if (d.load[to].p !== moved.p || d.load[to].q !== moved.q) throw new Error('it did not arrive');
+      if (d.load[from].q) throw new Error('it is still in the old compartment');
+      // capacity still decides
+      const big = d.load.findIndex(l => l.q > 0);
+      const small = SP2_TRUCKS[d.truck].comps.findIndex((c, i) => i !== big && c.cap < d.load[big].q);
+      if (small >= 0) {
+        sp2CompClick(stop, 'd0', 'truck', big);
+        sp2CompClick(stop, 'd0', 'truck', small);
+        if (d.load[small].q === d.load[big].q && d.load[small].q > SP2_TRUCKS[d.truck].comps[small].cap)
+          throw new Error('it went into a compartment too small for it');
+        sp2MoveFrom = null; sp2RenderUnit();
+      }
+      sp2CompClick(stop, 'd0', 'truck', to);
+      sp2CompClick(stop, 'd0', 'truck', from);
+    });
+    step('the columns resize, and either can go its own way', () => {
+      const grip = document.getElementById('sp2Split');
+      if (!grip) throw new Error('no grip between the columns');
+      if (getComputedStyle(grip).cursor !== 'col-resize') throw new Error('the grip does not say it resizes');
+      const col = document.querySelector('.sp2-col-orders');
+      const body = document.getElementById('sp2Body');
+      // flex-basis is animated, and an animating property measures as the value
+      // it is coming FROM — so take the transition off while we check
+      const keep = col.style.transition;
+      col.style.transition = 'none';
+      const before = col.getBoundingClientRect().width;
+      const r = body.getBoundingClientRect();
+      grip.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + before }));
+      document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width * 0.55 }));
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      void col.offsetWidth;
+      const after = col.getBoundingClientRect().width;
+      col.style.transition = keep;
+      if (Math.abs(after - before) < 40) throw new Error('the column did not move: ' + Math.round(before) + ' → ' + Math.round(after));
+      col.style.flexBasis = '';
+      if (typeof sp2PopOut !== 'function') throw new Error('a column cannot be popped out');
+      if (document.querySelectorAll('.sp2-col-hdr .sp2-ico-btn').length < 2)
+        throw new Error('only one column offers to pop out');
+      // and the popped-out page shows one column
+      body.setAttribute('data-only', 'drivers');
+      if (getComputedStyle(document.querySelector('.sp2-col-orders')).display !== 'none')
+        throw new Error('popping out drivers leaves the orders column up');
+      body.removeAttribute('data-only');
+      sp2FitRig();
     });
     step('every lane states its load', () => {
       document.querySelectorAll('.sp2-ln').forEach(l => {

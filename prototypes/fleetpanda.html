@@ -1156,7 +1156,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 
 #scr-plan .sp2-ln{display:flex;gap:14px;padding:12px 16px;border-bottom:1px solid var(--fp-stroke-hairline);cursor:pointer;transition:background .12s;}
 #scr-plan .sp2-ln:hover{background:var(--fp-emphasis);}
-#scr-plan .sp2-ln.on{background:var(--fp-selected);}
+/* the chosen lane lifts off the list rather than tinting */
+#scr-plan .sp2-ln.on{background:var(--fp-surface-1b);box-shadow:0 1px 2px rgba(3,4,5,.06),0 6px 20px rgba(3,4,5,.12);position:relative;z-index:1;}
 #scr-plan .sp2-ln.sp2-over{background:var(--fp-selected);outline:2px dashed var(--fp-selected-border);outline-offset:-4px;}
 /* off duty is dimmer ground, never dimmer ink — the words still have to read */
 #scr-plan .sp2-ln.off-duty .sp2-ln-day{background:var(--fp-card-2);}
@@ -1207,14 +1208,15 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-sv-s{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75;}
 #scr-plan .sp2-sv-tag{font-size:13px;font-weight:600;letter-spacing:.09em;fill:var(--fp-ink-3);text-transform:uppercase;}
 
-/* ── every other lane: plain rectangles ── */
-#scr-plan .sp2-bars{display:flex;gap:5px;margin-top:9px;height:52px;}
-#scr-plan .sp2-bar2{position:relative;flex-basis:0;min-width:34px;border:1.5px solid var(--fp-outline-2);border-radius:var(--r-md);overflow:hidden;background:var(--fp-surface-1b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
-#scr-plan .sp2-bar2.sp2-over{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);}
-#scr-plan .sp2-bar2-fill{position:absolute;left:0;right:0;bottom:0;opacity:.85;transition:height .3s ease;}
+/* one box per vehicle, divided into compartments — not a row of loose tiles */
+#scr-plan .sp2-bars{display:flex;gap:10px;margin-top:9px;height:52px;}
+#scr-plan .sp2-barbox{flex:1;min-width:0;display:flex;border:1.5px solid var(--fp-outline-2);border-radius:var(--r-md);overflow:hidden;background:var(--fp-surface-1b);}
+#scr-plan .sp2-bar2{position:relative;flex-basis:0;min-width:28px;border-right:1.5px solid var(--fp-outline-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;overflow:hidden;}
+#scr-plan .sp2-bar2:last-child{border-right:none;}
+#scr-plan .sp2-bar2.sp2-over{box-shadow:inset 0 0 0 2px var(--brand);}
+#scr-plan .sp2-bar2-fill{position:absolute;left:0;right:0;bottom:0;transition:height .3s ease;}
 #scr-plan .sp2-bar2-c{position:relative;z-index:1;font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--fp-ink-1);opacity:.62;}
 #scr-plan .sp2-bar2-p{position:relative;z-index:1;font-size:10px;font-weight:600;color:var(--fp-ink-1);max-width:100%;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#scr-plan .sp2-bar2-gap{flex:0 0 9px;}
 #scr-plan .sp2-r2-chassis{height:5px;margin:0 12px 0 0;background:var(--fp-ink-1);border-radius:0 0 3px 3px;}
 #scr-plan .sp2-r2-cabframe{height:5px;margin-left:5px;background:var(--fp-ink-1);}
 #scr-plan .sp2-r2-axles{position:relative;height:20px;}
@@ -1239,6 +1241,39 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-stop{display:none;}
 #scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-trl-btn,#scr-plan .sp2-lanes-wrap[data-dense="compact"] .sp2-ln:not(.on) .sp2-ln-truck .sp2-link{display:none;}
 
+/* ── where the driver is in their shift ─────────────────── */
+#scr-plan .sp2-shift{margin-top:9px;padding-top:9px;border-top:1px solid var(--fp-stroke-hairline);}
+#scr-plan .sp2-shift-top{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
+#scr-plan .sp2-shift-win{font-size:12px;color:var(--fp-ink-1);font-weight:500;font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-shift-word{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fp-ink-3);}
+#scr-plan .sp2-shift.running .sp2-shift-word{color:var(--status-success);}
+#scr-plan .sp2-shift.over .sp2-shift-word{color:var(--status-failed);}
+#scr-plan .sp2-shift-left{margin-left:auto;font-size:12px;font-weight:600;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;}
+#scr-plan .sp2-shift-bar{position:relative;height:6px;border-radius:3px;background:var(--fp-card-1);margin-top:6px;overflow:visible;}
+#scr-plan .sp2-shift-done{height:100%;border-radius:3px;background:var(--status-neutral);opacity:.45;}
+#scr-plan .sp2-shift.running .sp2-shift-done{background:var(--status-success);opacity:.55;}
+#scr-plan .sp2-shift.over .sp2-shift-done{background:var(--status-failed);opacity:.45;}
+#scr-plan .sp2-shift-now{position:absolute;top:-3px;width:3px;height:12px;border-radius:2px;background:var(--fp-ink-1);transform:translateX(-1.5px);}
+#scr-plan .sp2-shift-sub{font-size:11px;color:var(--fp-ink-3);margin-top:5px;font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-ln-drv .sp2-link{margin-top:8px;display:inline-block;}
+
+/* the truck name is the way to change it */
+#scr-plan .sp2-ln-truck-id{display:inline-flex;align-items:center;gap:4px;border:none;background:none;padding:2px 4px;margin-left:-4px;border-radius:4px;font-family:inherit;font-size:14px;font-weight:600;color:var(--fp-ink-1);cursor:pointer;}
+#scr-plan .sp2-ln-truck-id:hover{background:var(--fp-emphasis-hover);}
+#scr-plan .sp2-ln-truck-id svg{opacity:.5;}
+
+/* a compartment that has been picked up and is waiting to be put down */
+#scr-plan .sp2-sv-held{fill:none;stroke:var(--brand);stroke-width:3;stroke-dasharray:7 5;}
+#scr-plan .sp2-pop-scroll{max-height:300px;overflow-y:auto;margin:0 -4px;padding:0 4px;}
+#scr-plan .sp2-pop-item.on{border-color:var(--fp-selected-border);background:var(--fp-selected);}
+/* ── the grip between the columns, and a column on its own ── */
+#scr-plan .sp2-split{flex:0 0 7px;cursor:col-resize;background:var(--fp-card-1);border-right:1px solid var(--fp-stroke-hairline);position:relative;}
+#scr-plan .sp2-split::after{content:'';position:absolute;top:50%;left:2px;width:3px;height:34px;margin-top:-17px;border-radius:2px;background:var(--fp-outline-2);}
+#scr-plan .sp2-split:hover,#scr-plan .sp2-split.on{background:var(--fp-emphasis);}
+#scr-plan .sp2-split:hover::after,#scr-plan .sp2-split.on::after{background:var(--brand);}
+#scr-plan .sp2-ico-btn.sm{width:30px;height:30px;}
+#scr-plan .sp2-body[data-only="orders"] .sp2-col-unit,#scr-plan .sp2-body[data-only="orders"] .sp2-split,#scr-plan .sp2-body[data-only="drivers"] .sp2-col-orders,#scr-plan .sp2-body[data-only="drivers"] .sp2-split{display:none;}
+#scr-plan .sp2-body[data-only="orders"] .sp2-col-orders,#scr-plan .sp2-body[data-only="drivers"] .sp2-col-unit{flex:1 1 100% !important;}
 
 </style>
 </head>
@@ -2314,6 +2349,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
         <span class="sp2-count" id="sp2OrdCount">0</span>
 
         <div class="sp2-hdr-tools">
+          <div class="sp2-seg" id="sp2Quick">
+            <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+            <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
+            <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
+          </div>
           <div class="sp2-seg">
             <button class="sp2-seg-btn" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
@@ -2322,59 +2362,43 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
             </button>
           </div>
-
-          <button class="sp2-ico-btn" id="sp2FltBtn" onclick="sp2ToggleFlt(this)" title="Filter orders">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            <span class="sp2-ico-dot" id="sp2FltDot"></span>
-          </button>
+          <button class="sp2-ico-btn sm" onclick="sp2PopOut('orders')" title="Open this column in its own window"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         </div>
       </div>
 
-      <!-- Both filters live behind the icon; the view switch stays out. -->
-      <div class="sp2-pop" id="sp2Flt">
-        <div class="sp2-pop-row">
-          <span class="sp2-flt-lbl">Status</span>
-          <div class="sp2-seg" id="sp2Quick">
-            <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
-            <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
-            <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
-          </div>
-        </div>
-        <div class="sp2-pop-row">
-          <span class="sp2-flt-lbl">Shift</span>
-          <div class="sp2-seg">
-            <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
-            <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
-            <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
-          </div>
-        </div>
-        <div class="sp2-custom" id="sp2Custom">
-          <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
-          <span style="color:var(--fp-ink-3);font-size:13px;">–</span>
-          <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
-        </div>
-        <div class="sp2-pop-foot">
-          <button class="sp2-link" onclick="sp2ResetFlt()">Reset filters</button>
-        </div>
-      </div>
       <div class="sp2-tl-wrap" id="sp2TlWrap">
         <div class="sp2-tl" id="sp2Tl"></div>
       </div>
     </div>
+
+    <div class="sp2-split" id="sp2Split" title="Drag to resize"></div>
 
     <!-- ══ Column 2 — the driver, and the rig mapped to them ══ -->
     <div class="sp2-col sp2-col-unit">
       <div class="sp2-col-hdr">
         <span class="sp2-col-title">Driver &amp; truck</span>
         <span class="sp2-count" id="sp2DrvCount">0</span>
-        <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
-          <button class="sp2-seg-btn on" data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
-          <button class="sp2-seg-btn"    data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
-          <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
-          <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
-          <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
-        </div>
+        <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2RenderUnit()">
+
         <div class="sp2-hdr-tools">
+          <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
+            <button class="sp2-seg-btn on" data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
+            <button class="sp2-seg-btn"    data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
+            <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
+            <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
+            <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
+          </div>
+          <span class="sp2-flt-lbl">Shift</span>
+          <div class="sp2-seg">
+            <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
+            <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
+            <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
+          </div>
+          <div class="sp2-custom" id="sp2Custom">
+            <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
+            <span style="color:var(--fp-ink-3);font-size:13px;">–</span>
+            <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
+          </div>
           <div class="sp2-seg" id="sp2DenseSeg">
             <button class="sp2-seg-btn on" data-z="compact" onclick="sp2SetDense('compact')" title="Compact — more drivers on screen">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -2383,23 +2407,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>
             </button>
           </div>
-          <div class="sp2-seg" id="sp2LayoutSeg">
-            <button class="sp2-seg-btn"    data-l="v1" onclick="sp2SetLayout('v1')" title="Roster beside one rig">V1</button>
-            <button class="sp2-seg-btn on" data-l="v2" onclick="sp2SetLayout('v2')" title="A lane per driver">V2</button>
-          </div>
-          <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2RenderUnit()">
+          <button class="sp2-ico-btn sm" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         </div>
       </div>
 
-      <!-- V1 — the roster, and the one rig it has chosen -->
-      <div class="sp2-unit-row" id="sp2V1">
-        <div class="sp2-sec sp2-sec-drv">
-          <div class="sp2-drv-list" id="sp2DrvList"></div>
-        </div>
-        <div class="sp2-sec sp2-sec-trk" id="sp2Rig"></div>
-      </div>
-
-      <!-- V2 — one lane per driver, every rig on screen at once -->
       <div class="sp2-lanes-wrap" id="sp2V2"></div>
     </div>
 
@@ -4510,9 +4521,15 @@ var sp2Quick = 'all';          // all · unplanned · planned
 var sp2Shift_ = 'am';          // am · pm · custom
 var sp2Driver = 'd0';
 var sp2DrvFilter = 'all';
-var sp2Layout = 'v2';
 var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
 var sp2Drag = null;          // the order id being dragged
+var sp2MoveFrom = null;      // a compartment picked up, waiting for somewhere to go
+// The planner has no clock of its own — the day is fixed — so 'now' is a
+// stated time rather than a real one. It is what makes a shift read as
+// started, running or over.
+var SP2_NOW = 13 * 60 + 30;  // 13:30 — late enough that the early shift has ended
+                             // and the later ones are still running, so the three
+                             // standings are not all the same
 var sp2SelOrder = null;
 var sp2View = 'v';            // v vertical (the default) · h horizontal
 
@@ -4679,7 +4696,7 @@ function sp2SetQuick(q) {
   document.querySelectorAll('#sp2Quick .sp2-seg-btn').forEach(function(b) {
     b.classList.toggle('on', b.dataset.q === q);
   });
-  sp2RenderTimeline(); sp2FltDot();
+  sp2RenderTimeline();
 }
 function sp2SetView(v) {
   sp2View = v;
@@ -4698,16 +4715,11 @@ function sp2SetShift(s) {
     b.classList.toggle('on', b.dataset.s === s);
   });
   document.getElementById('sp2Custom').classList.toggle('on', s === 'custom');
-  sp2RenderTimeline(); sp2FltDot();
+  sp2RenderTimeline();
 }
 
 // Only two controls sit in the header: the view switch, and this. Everything
 // that narrows the list lives behind it, with a dot when it is narrowing.
-function sp2FltDot() {
-  var on = sp2Quick !== 'all' || sp2Shift_ !== 'am';
-  document.getElementById('sp2FltDot').style.display = on ? 'block' : 'none';
-  document.getElementById('sp2FltBtn').classList.toggle('on', on);
-}
 function sp2PopAt(id, btn) {
   var p = document.getElementById(id), open = !p.classList.contains('on');
   document.querySelectorAll('.sp2-pop').forEach(function (x) { x.classList.remove('on'); });
@@ -4719,8 +4731,6 @@ function sp2PopAt(id, btn) {
                                       r.right - p.offsetWidth)) + 'px';
   return true;
 }
-function sp2ToggleFlt(btn) { sp2PopAt('sp2Flt', btn); }
-function sp2ResetFlt() { sp2SetQuick('all'); sp2SetShift('am'); }
 document.addEventListener('mousedown', function (e) {
   if (e.target.closest('.sp2-pop') || e.target.closest('.sp2-ico-btn') ||
       e.target.closest('.sp2-trl-btn')) return;
@@ -4775,32 +4785,6 @@ function sp2DriverKeys() {
 
 // One row per driver. The chosen one opens in place — its orders, its gallons
 // and the way into the full record — so the roster never leaves the screen.
-function sp2DrvRow(k) {
-  var d = SP2_DRIVERS[k], on = k === sp2Driver;
-  var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; });
-  var gal  = mine.reduce(function (a, o) { return a + sp2Gal(o); }, 0);
-  var open = on
-    ? '<div class="sp2-drow-open">' +
-        '<div class="sp2-drow-meta">' + d.hub + ' · ' + mine.length + ' order' +
-          (mine.length === 1 ? '' : 's') + ' · ' + gal.toLocaleString() + ' gal planned</div>' +
-        '<button class="sp2-view" onclick="event.stopPropagation();sp2ViewDriver()">View details' +
-          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
-        '</button>' +
-      '</div>'
-    : '';
-  return '<div class="sp2-drow' + (on ? ' on' : '') + '" onclick="sp2PickDriver(\'' + k + '\')">' +
-      '<div class="sp2-drow-top">' +
-        '<span class="sp2-drow-chev"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>' +
-        '<span class="sp2-drow-name">' + d.name + '</span>' +
-        '<span class="sp2-state ' + d.state + '">' + sp2StateWord(d.state) + '</span>' +
-      '</div>' +
-      '<div class="sp2-drow-sub">' + sp2ShiftLabel(d.shift) + ' · ' + d.truck +
-        (d.trailer ? ' + ' + d.trailer : '') + '</div>' +
-      '<div class="sp2-drow-sync">Last synced ' + sp2Synced(d.synced) + '</div>' +
-      open +
-    '</div>';
-}
-
 function sp2DrvCounts(shown) {
   var all = Object.keys(SP2_DRIVERS);
   var n = function (s) { return all.filter(function (k) { return SP2_DRIVERS[k].state === s; }).length; };
@@ -4811,22 +4795,6 @@ function sp2DrvCounts(shown) {
   document.getElementById('sp2dOn').textContent  = n('on-duty');
   document.getElementById('sp2dOff').textContent = n('off-duty');
   document.getElementById('sp2DrvCount').textContent = shown;
-}
-
-function sp2RenderDrivers() {
-  var keys = sp2DriverKeys(), host = document.getElementById('sp2DrvList');
-  sp2DrvCounts(keys.length);
-
-  if (!keys.length) { host.innerHTML = '<div class="sp2-empty">No driver matches that.</div>'; return; }
-
-  // grouped by state while the tabs are on All, flat once one state is chosen
-  if (sp2DrvFilter !== 'all') { host.innerHTML = keys.map(sp2DrvRow).join(''); return; }
-  host.innerHTML = SP2_STATES.map(function (st) {
-    var ks = keys.filter(function (k) { return SP2_DRIVERS[k].state === st[0]; });
-    if (!ks.length) return '';
-    return '<div class="sp2-grp">' + st[1] + '<span class="sp2-count">' + ks.length + '</span></div>' +
-           ks.map(sp2DrvRow).join('');
-  }).join('');
 }
 
 function sp2SetDrvFilter(f) {
@@ -4847,129 +4815,172 @@ function sp2SetDense(z) {
   document.getElementById('sp2V2').setAttribute('data-dense', z);
 }
 
-function sp2SetLayout(v) {
-  sp2Layout = v;
-  document.getElementById('sp2DenseSeg').style.display = v === 'v2' ? '' : 'none';
-  document.querySelectorAll('[data-l]').forEach(function (b) {
-    b.classList.toggle('on', b.dataset.l === v);
-  });
-  sp2RenderUnit();
-}
-
 // ══════════════════════════════════════════════════════════
 //  Column 2 · Section 2 — the rig, drawn
 // ══════════════════════════════════════════════════════════
 // Truck and trailer are the same thing twice, so one function draws both. The
 // compartments divide the tank by capacity, and the load rises inside them.
-function sp2Tank(caps, load, unit) {
-  var cells = caps.map(function (cap, i) {
-    var l = load[i] || { p:'', q:0 };
-    var pct = cap ? Math.min(100, Math.round(l.q / cap * 100)) : 0;
-    var cls = pct >= 99 ? 'full' : pct > 0 ? 'partial' : 'empty-c';
-    var word = pct + '% · ' + (pct >= 99 ? 'Full' : pct > 0 ? 'Partially full' : 'Empty');
-    var col = SP2_PROD_COLORS[l.p] || 'transparent';
-    return '<div class="sp2-cmp ' + cls + '" style="flex-grow:' + cap + ';" ' +
-        'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-        'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ')" ' +
-        'title="C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity">' +
-      '<div class="sp2-cmp-liq" style="height:' + pct + '%;background:' + col + ';"></div>' +
-      '<div class="sp2-cmp-txt">' +
-        '<div class="sp2-cmp-c">C' + (i + 1) + '</div>' +
-        '<div class="sp2-cmp-plate">' +
-          '<div class="sp2-cmp-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</div>' +
-          '<div class="sp2-cmp-q">' + l.q.toLocaleString() + '<span>/' + cap.toLocaleString() + '</span></div>' +
-          '<div class="sp2-cmp-s ' + cls + '">' + word + '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-  return '<div class="sp2-tank" data-unit="' + unit + '">' + cells + '</div>';
-}
-
 function sp2Sum(caps, load) {
   var cap = caps.reduce(function (a, c) { return a + c; }, 0);
   var q = caps.reduce(function (a, c, i) { return a + ((load[i] && load[i].q) || 0); }, 0);
   return { cap:cap, q:q, pct:cap ? Math.round(q / cap * 100) : 0 };
 }
 
-function sp2RenderRig() {
-  var d = SP2_DRIVERS[sp2Driver], host = document.getElementById('sp2Rig');
-  if (!d) { host.innerHTML = '<div class="sp2-none">Pick a driver to see their truck.</div>'; return; }
-  var t = SP2_TRUCKS[d.truck];
-  if (!t) { host.innerHTML = '<div class="sp2-none">No truck mapped to ' + d.name + '.</div>'; return; }
-
-  var caps = t.comps.map(function (c) { return c.cap; });
-  var trl  = d.trailer ? SP2_TRAILERS[d.trailer] : null;
-  var tcaps = trl ? trl.caps : [];
-  var a = sp2Sum(caps, d.load), b = sp2Sum(tcaps, d.tload);
-  var cap = a.cap + b.cap, q = a.q + b.q, pct = cap ? Math.round(q / cap * 100) : 0;
-
-  var trailerArt = trl
-    ? '<div class="sp2-hitch"></div>' +
-      '<div class="sp2-tankwrap" style="flex-grow:' + b.cap + ';">' +
-        sp2Tank(tcaps, d.tload, 'trailer') +
-        '<span class="sp2-wheel" style="left:14px;"></span>' +
-        '<span class="sp2-wheel" style="right:16px;"></span>' +
-        '<span class="sp2-wheel" style="right:44px;"></span>' +
-        '<div class="sp2-veh-tag">' + d.trailer + ' · ' + trl.type + '</div>' +
-      '</div>'
-    : '';
-
-  host.innerHTML =
-    '<div class="sp2-sec-lbl">Truck &amp; compartments</div>' +
-    '<div class="sp2-truck">' +
-      '<div class="sp2-truck-top">' +
-        '<div class="sp2-truck-ico">' +
-          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' +
-        '</div>' +
-        '<div><div class="sp2-truck-id">' + d.truck + (trl ? ' + ' + d.trailer : '') + '</div>' +
-          '<div class="sp2-truck-sub">' + t.type + ' · ' + (caps.length + tcaps.length) +
-            ' compartments · ' + t.meter + ' gpm</div></div>' +
-        '<div class="sp2-truck-cap"><div class="sp2-truck-pct">' + pct + '%</div>' +
-          '<div class="sp2-truck-pct-lbl">' + q.toLocaleString() + ' of ' +
-            cap.toLocaleString() + ' gal aboard</div></div>' +
-      '</div>' +
-
-      '<div class="sp2-veh-scroll">' +
-      '<div class="sp2-veh-wrap" id="sp2Veh" ondragover="sp2DragOver(event)" ' +
-           'ondragleave="sp2DragLeave(event)" ondrop="sp2Drop(event,\'auto\',-1)">' +
-        '<div class="sp2-veh">' +
-          '<div class="sp2-cabwrap">' +
-            '<div class="sp2-cab"><div class="sp2-cab-win"></div></div>' +
-            '<span class="sp2-wheel" style="left:8px;"></span>' +
-          '</div>' +
-          '<div class="sp2-tankwrap" style="flex-grow:' + a.cap + ';">' +
-            sp2Tank(caps, d.load, 'truck') +
-            '<span class="sp2-wheel" style="right:16px;"></span>' +
-            '<span class="sp2-wheel" style="right:44px;"></span>' +
-            '<div class="sp2-veh-tag">' + d.truck + ' · ' + a.q.toLocaleString() + ' / ' +
-              a.cap.toLocaleString() + ' gal</div>' +
-          '</div>' +
-          trailerArt +
-        '</div>' +
-        '<div class="sp2-drop-hint">Drop the order here to load it</div>' +
-      '</div>' +
-      '<span class="sp2-veh-fade"></span></div>' +
-
-      '<div class="sp2-rig-foot">' +
-        (trl
-          ? '<span class="sp2-rig-trl">' + d.trailer + ' · ' + trl.type + ' · ' +
-              b.cap.toLocaleString() + ' gal</span>' +
-            '<button class="sp2-link" onclick="sp2DropTrailer()">Remove trailer</button>'
-          : '<button class="sp2-trl-btn" onclick="sp2TrailerPop(this)">' +
-              '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
-              'Add trailer</button>') +
-        '<button class="sp2-link" style="margin-left:auto;" onclick="sp2Unload()">Unload</button>' +
-      '</div>' +
-    '</div>';
-
-  // a long rig runs off the panel; say so rather than let the trailer hide
-  var w = document.getElementById('sp2Veh');
-  w.parentNode.classList.toggle('more', w.scrollWidth > w.clientWidth + 2);
-}
-
 // ── the trailer yard ──────────────────────────────────────
 var sp2TrlFor = null;       // the driver the trailer popover is hitching to
+
+
+// ══════════════════════════════════════════════════════════
+//  Shift standing, and moving fuel between compartments
+// ══════════════════════════════════════════════════════════
+function sp2Dur(m) {
+  m = Math.max(0, Math.round(m));
+  var h = Math.floor(m / 60);
+  return (h ? h + 'h ' : '') + (m % 60) + 'm';
+}
+
+// Where the driver is in their shift right now — the thing a dispatcher wants
+// before handing them another drop.
+function sp2ShiftState(d) {
+  var s = SP2_SHIFTS[d.shift];
+  if (!s) return null;
+  var span = s.to - s.from, done = SP2_NOW - s.from;
+  if (done < 0)      return { kind:'before',  pct:0,   note:'starts in ' + sp2Dur(-done), s:s, span:span };
+  if (done >= span)  return { kind:'over',    pct:100, note:'ended ' + sp2Dur(done - span) + ' ago', s:s, span:span };
+  return { kind:'running', pct:Math.round(done / span * 100),
+           note:sp2Dur(span - done) + ' left', s:s, span:span };
+}
+
+function sp2ShiftStrip(d) {
+  var st = sp2ShiftState(d);
+  if (!st) return '';
+  var word = st.kind === 'before' ? 'Not started' : st.kind === 'over' ? 'Shift over' : 'Mid-shift';
+  return '<div class="sp2-shift ' + st.kind + '">' +
+      '<div class="sp2-shift-top">' +
+        '<span class="sp2-shift-win">' + sp2ShiftLabel(d.shift) + '</span>' +
+        '<span class="sp2-shift-word">' + word + '</span>' +
+        '<span class="sp2-shift-left">' + st.note + '</span>' +
+      '</div>' +
+      '<div class="sp2-shift-bar">' +
+        '<div class="sp2-shift-done" style="width:' + st.pct + '%;"></div>' +
+        (st.kind === 'running' ? '<span class="sp2-shift-now" style="left:' + st.pct + '%;"></span>' : '') +
+      '</div>' +
+      '<div class="sp2-shift-sub">' + sp2Dur(st.span) + ' shift · 30 min buffer · now ' + sp2Hhmm(SP2_NOW) + '</div>' +
+    '</div>';
+}
+
+// One compartment, wherever it sits on the rig.
+function sp2Cell(k, unit, i) {
+  var d = SP2_DRIVERS[k];
+  if (unit === 'trailer') {
+    var tr = d.trailer && SP2_TRAILERS[d.trailer];
+    return tr ? { cap:tr.caps[i], l:d.tload[i] } : null;
+  }
+  return { cap:SP2_TRUCKS[d.truck].comps[i].cap, l:d.load[i] };
+}
+
+// Pick a compartment up, then put it down somewhere else. Click rather than
+// drag: an SVG rect is not a draggable element, and the order drag already
+// owns the dragging gesture.
+function sp2CompClick(e, k, unit, i) {
+  e.stopPropagation();
+  var here = sp2Cell(k, unit, i);
+  if (!here) return;
+
+  if (!sp2MoveFrom) {
+    if (!here.l.q) return;                       // nothing to pick up
+    sp2MoveFrom = { k:k, unit:unit, i:i };
+    sp2RenderUnit();
+    sp2Toast('Moving ' + here.l.p + ' — pick the compartment to put it in');
+    return;
+  }
+  if (sp2MoveFrom.k === k && sp2MoveFrom.unit === unit && sp2MoveFrom.i === i) {
+    sp2MoveFrom = null; sp2RenderUnit(); return;  // put it back
+  }
+  if (sp2MoveFrom.k !== k) {
+    sp2Toast('Fuel moves between compartments of one rig, not between trucks');
+    sp2MoveFrom = null; sp2RenderUnit(); return;
+  }
+
+  var from = sp2Cell(k, sp2MoveFrom.unit, sp2MoveFrom.i);
+  // capacity is the whole point of a compartment, so it still decides
+  if (from.l.q > here.cap)
+    return sp2Toast(from.l.p + ' is ' + from.l.q.toLocaleString() + ' gal; that compartment holds ' +
+                    here.cap.toLocaleString());
+  if (here.l.q > from.cap)
+    return sp2Toast('Swapping would put ' + here.l.q.toLocaleString() + ' gal into a ' +
+                    from.cap.toLocaleString() + ' gal compartment');
+
+  var a = { p:from.l.p, q:from.l.q }, b = { p:here.l.p, q:here.l.q };
+  from.l.p = b.p; from.l.q = b.q;
+  here.l.p = a.p; here.l.q = a.q;
+  sp2MoveFrom = null;
+  sp2RenderUnit();
+  sp2Toast(b.q ? a.p + ' and ' + b.p + ' swapped compartments' : a.p + ' moved');
+}
+
+// ── changing who drives what ─────────────────────────────
+// Both pickers are the same move underneath: two drivers trade rigs. Changing
+// the driver takes the planned orders along, because the work is going with
+// the truck; changing the truck leaves them where they are.
+function sp2TradeRigs(a, b, withOrders) {
+  var A = SP2_DRIVERS[a], B = SP2_DRIVERS[b], tmp;
+  ['truck', 'load', 'trailer', 'tload'].forEach(function (f) {
+    tmp = A[f]; A[f] = B[f]; B[f] = tmp;
+  });
+  if (withOrders) SP2_ORDERS.forEach(function (o) {
+    if (o.driver === a) o.driver = b; else if (o.driver === b) o.driver = a;
+  });
+}
+
+function sp2TruckPop(btn, k) {
+  var mine = SP2_DRIVERS[k].truck;
+  var rows = Object.keys(SP2_TRUCKS).map(function (id) {
+    var sp = SP2_TRUCKS[id];
+    var holder = Object.keys(SP2_DRIVERS).filter(function (x) { return SP2_DRIVERS[x].truck === id; })[0];
+    var cap = sp.comps.reduce(function (s, c) { return s + c.cap; }, 0);
+    return '<button class="sp2-pop-item' + (id === mine ? ' on' : '') +
+        '" onclick="sp2PickTruck(\'' + k + '\',\'' + id + '\')">' +
+        '<span class="sp2-pop-item-id">' + id + (id === mine ? ' · current' : '') + '</span>' +
+        '<span class="sp2-pop-item-sub">' + sp.type + ' · ' + sp.comps.length + ' comps · ' +
+          cap.toLocaleString() + ' gal' + (holder && holder !== k ? ' · ' + SP2_DRIVERS[holder].name : '') +
+        '</span></button>';
+  }).join('');
+  document.getElementById('sp2TrlPop').innerHTML =
+    '<div class="sp2-pop-ttl">Give ' + SP2_DRIVERS[k].name + ' a different truck</div>' +
+    '<div class="sp2-pop-scroll">' + rows + '</div>';
+  sp2PopAt('sp2TrlPop', btn);
+}
+function sp2PickTruck(k, id) {
+  document.getElementById('sp2TrlPop').classList.remove('on');
+  if (SP2_DRIVERS[k].truck === id) return;
+  var holder = Object.keys(SP2_DRIVERS).filter(function (x) { return SP2_DRIVERS[x].truck === id; })[0];
+  if (holder) sp2TradeRigs(k, holder, false);
+  else SP2_DRIVERS[k].truck = id;
+  sp2Render();
+  sp2Toast(SP2_DRIVERS[k].name + ' is on ' + id + (holder ? ' — ' + SP2_DRIVERS[holder].name + ' takes ' + SP2_DRIVERS[holder].truck : ''));
+}
+
+function sp2DriverPop(btn, k) {
+  var rows = sp2DriverKeys().filter(function (x) { return x !== k; }).map(function (x) {
+    var d = SP2_DRIVERS[x], st = sp2ShiftState(d);
+    return '<button class="sp2-pop-item" onclick="sp2PickDriverFor(\'' + k + '\',\'' + x + '\')">' +
+        '<span class="sp2-pop-item-id">' + d.name + '</span>' +
+        '<span class="sp2-pop-item-sub">' + sp2StateWord(d.state) + ' · ' + sp2ShiftLabel(d.shift) +
+          (st ? ' · ' + st.note : '') + ' · ' + d.truck + '</span></button>';
+  }).join('');
+  document.getElementById('sp2TrlPop').innerHTML =
+    '<div class="sp2-pop-ttl">Hand ' + SP2_DRIVERS[k].truck + ' and its orders to</div>' +
+    '<div class="sp2-pop-scroll">' + rows + '</div>';
+  sp2PopAt('sp2TrlPop', btn);
+}
+function sp2PickDriverFor(k, other) {
+  document.getElementById('sp2TrlPop').classList.remove('on');
+  sp2TradeRigs(k, other, true);
+  sp2Driver = other;
+  sp2Render();
+  sp2Toast(SP2_DRIVERS[other].name + ' takes it over from ' + SP2_DRIVERS[k].name);
+}
 
 function sp2TrailerPop(btn, k) {
   sp2TrlFor = k || sp2Driver;
@@ -5149,7 +5160,8 @@ function sp2Wheel(cx) {
 // The ceiling is twice the compartment the design draws. Past that a tank
 // stops reading as a tank and becomes a stretched bar, so a wide lane keeps
 // the slack and the rig sits centred in it instead.
-var TK_MIN_W = 100, TK_MAX_W = 214, TK_GAP = 18, TK_TRACTOR = 185, TK_OVERHANG = 24;
+var TK_MIN_W = 100, TK_MAX_W = 440, TK_GAP = 18, TK_TRACTOR = 185, TK_OVERHANG = 24;
+var TK_SIDE_PAD = 50;   // air either side of the rig, in screen pixels
 
 function sp2RigWidths(caps, availUnits, nUnits) {
   var total = caps.reduce(function (a, c) { return a + c; }, 0);
@@ -5185,14 +5197,18 @@ function sp2TankSvg(x, caps, widths, load, k, unit, uid) {
               '" stroke="' + TK.divider + '" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.85"/>';
     }
     if (i) dividers += '<rect x="' + (cx - 1) + '" y="0" width="2" height="' + h + '" fill="' + TK.divider + '"/>';
+    if (sp2MoveFrom && sp2MoveFrom.k === k && sp2MoveFrom.unit === unit && sp2MoveFrom.i === i)
+      labels += '<rect class="sp2-sv-held" x="' + (cx + 2) + '" y="2" width="' + (w - 4) +
+                '" height="' + (h - 4) + '" rx="6"/>';
     labels +=
       '<text x="' + mid + '" y="22" class="sp2-sv-c">C' + (i + 1) + ' · ' + cap.toLocaleString() + '</text>' +
       '<text x="' + mid + '" y="45" class="sp2-sv-p' + (l.p ? '' : ' empty') + '">' + (l.p || 'Empty') + '</text>' +
       '<text x="' + mid + '" y="65" class="sp2-sv-q">' + l.q.toLocaleString() + ' gal</text>' +
       '<text x="' + mid + '" y="82" class="sp2-sv-s ' + cls + '">' + pct + '% · ' + word + '</text>';
     hits += '<rect x="' + cx + '" y="0" width="' + w + '" height="' + h + '" fill="transparent" ' +
-            'style="cursor:copy;" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
-            'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')">' +
+            'style="cursor:pointer;" ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
+            'ondrop="sp2Drop(event,\'' + unit + '\',' + i + ',\'' + k + '\')" ' +
+            'onclick="sp2CompClick(event,\'' + k + '\',\'' + unit + '\',' + i + ')">' +
             '<title>C' + (i + 1) + ' · ' + cap.toLocaleString() + ' gal capacity</title></rect>';
     cx += w;
   });
@@ -5236,7 +5252,9 @@ function sp2Tractor(x) {
     return '<image href="' + TRUCK_ART[a] + '" x="' + (x + dx) + '" y="' + dy +
            '" width="' + w + '" height="' + h + '"/>';
   };
-  return '<g>' +
+  // The artwork is drawn nose-right, so the whole tractor is flipped about its
+  // own middle — it keeps the same box, it just faces the other way.
+  return '<g transform="translate(' + (2 * x + TK_TRACTOR) + ',0) scale(-1,1)">' +
     im('stack', 0, 12, 30.884, 104.03) +
     im('cab', 6.5, 28.25, 174.746, 123.491) +
     '<rect x="' + (x + 6.5) + '" y="119.28" width="102.404" height="24.382" rx="2" fill="' + TK.frame + '"/>' +
@@ -5266,21 +5284,23 @@ function sp2RigSvg(k, availPx) {
   var w = sp2RigWidths(all, availPx / TK.scale, nUnits);
   var trlW = w.slice(0, trlCaps.length), truckW = w.slice(trlCaps.length);
 
-  var x = 0, body = '';
-  if (trl) {
-    body += sp2Unit(x, trlCaps, trlW, d.tload, k, 'trailer', uid + 'b',
-                    d.trailer + ' · ' + trl.type);
-    x += trlW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG + TK_GAP;
-  }
+  // nose first, then the truck it pulls, then anything hitched behind that
+  var x = TK_TRACTOR, body = '';
   body += sp2Unit(x, truckCaps, truckW, d.load, k, 'truck', uid + 'a',
                   d.truck + ' · ' + t.type);
-  var unitEnd = x + truckW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG;
-  var W = unitEnd + TK_TRACTOR;
+  x += truckW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG;
+  if (trl) {
+    x += TK_GAP;
+    body += sp2Unit(x, trlCaps, trlW, d.tload, k, 'trailer', uid + 'b',
+                    d.trailer + ' · ' + trl.type);
+    x += trlW.reduce(function (a, b) { return a + b; }, 0) + TK_OVERHANG;
+  }
+  var W = x;
 
   return '<svg class="sp2-sv" width="' + Math.round(W * TK.scale) + '" height="' + Math.round(TK.H * TK.scale) +
       '" viewBox="0 0 ' + W + ' ' + TK.H + '">' +
-      '<image href="' + TRUCK_ART['kingpin'] + '" x="' + (unitEnd - 30) + '" y="119" width="54" height="15.3"/>' +
-      body + sp2Tractor(unitEnd) +
+      '<image href="' + TRUCK_ART['kingpin'] + '" x="' + (TK_TRACTOR - 24) + '" y="119" width="54" height="15.3"/>' +
+      sp2Tractor(0) + body +
     '</svg>';
 }
 
@@ -5297,8 +5317,8 @@ function sp2RigArt(k) {
 function sp2FitRig() {
   var box = document.querySelector('.sp2-rig');
   if (!box) return;
-  var avail = box.clientWidth;
-  if (!avail || !SP2_DRIVERS[box.dataset.k]) return;
+  var avail = box.clientWidth - 2 * TK_SIDE_PAD;
+  if (avail < 240 || !SP2_DRIVERS[box.dataset.k]) return;
   var svg = box.querySelector('.sp2-sv');
   if (svg && Math.abs(+svg.getAttribute('width') - avail) < 2) return;
   box.insertAdjacentHTML('afterbegin', sp2RigSvg(box.dataset.k, avail));
@@ -5330,9 +5350,9 @@ function sp2SimpleBars(k) {
       '</div>';
     }).join('');
   };
-  var out = row(t.comps.map(function (c) { return c.cap; }), d.load, 'truck');
-  if (d.trailer) out += '<div class="sp2-bar2-gap"></div>' +
-                        row(SP2_TRAILERS[d.trailer].caps, d.tload, 'trailer');
+  var box = function (inner) { return '<div class="sp2-barbox">' + inner + '</div>'; };
+  var out = box(row(t.comps.map(function (c) { return c.cap; }), d.load, 'truck'));
+  if (d.trailer) out += box(row(SP2_TRAILERS[d.trailer].caps, d.tload, 'trailer'));
   return '<div class="sp2-bars">' + out + '</div>';
 }
 
@@ -5367,12 +5387,19 @@ function sp2LaneHtml(k) {
       '<span class="sp2-state ' + d.state + '">' + sp2StateWord(d.state) + '</span>' +
       '<div class="sp2-ln-shift">' + sp2ShiftLabel(d.shift) + '</div>' +
       '<div class="sp2-ln-sync">' + d.hub + ' · synced ' + sp2Synced(d.synced) + '</div>' +
+      (k === sp2Driver
+        ? sp2ShiftStrip(d) +
+          '<button class="sp2-link" onclick="event.stopPropagation();sp2DriverPop(this,\'' + k + '\')">Change driver</button>'
+        : '') +
     '</div>' +
 
     '<div class="sp2-ln-day">' +
       '<div class="sp2-ln-truck">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' +
-        '<span class="sp2-ln-truck-id">' + d.truck + (trl ? ' + ' + d.trailer : '') + '</span>' +
+        '<button class="sp2-ln-truck-id" onclick="event.stopPropagation();sp2TruckPop(this,\'' + k + '\')" ' +
+          'title="Change truck">' + d.truck + (trl ? ' + ' + d.trailer : '') +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>' +
+        '</button>' +
         '<span class="sp2-ln-comps">' + (caps.length + (trl ? trl.caps.length : 0)) + ' compartments · ' +
           cap.toLocaleString() + ' gal</span>' +
         '<span class="sp2-ln-cap"><b>' + pct + '%</b> · ' + q.toLocaleString() + ' aboard</span>' +
@@ -5409,12 +5436,8 @@ function sp2RenderLanes() {
 }
 
 function sp2RenderUnit() {
-  var v2 = sp2Layout === 'v2';
-  document.getElementById('sp2V1').style.display = v2 ? 'none' : 'flex';
-  document.getElementById('sp2V2').style.display = v2 ? 'block' : 'none';
   document.getElementById('sp2V2').setAttribute('data-dense', sp2Dense);
-  if (v2) sp2RenderLanes();
-  else { sp2RenderDrivers(); sp2RenderRig(); }
+  sp2RenderLanes();
 }
 
 function sp2PickDriver(k) {
@@ -5457,8 +5480,53 @@ function sp2Toast(msg) {
 
 (function () {
   document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor);
-  sp2FltDot();
   sp2Render();
+})();
+
+
+// ══════════════════════════════════════════════════════════
+//  Columns: resize the split, or take one into its own window
+// ══════════════════════════════════════════════════════════
+// A popped-out column is a second copy of the page showing only that column.
+// It keeps its own state — the two windows do not talk to each other, so an
+// order cannot be dragged from one into the other.
+function sp2PopOut(which) {
+  var u = new URL(location.href);
+  u.searchParams.set('only', which);
+  window.open(u.toString(), 'sp2-' + which, 'width=1000,height=900');
+}
+
+(function () {
+  var only = new URL(location.href).searchParams.get('only');
+  if (only === 'orders' || only === 'drivers') {
+    document.getElementById('sp2Body').setAttribute('data-only', only);
+    var nav = document.querySelector('.shell-nav');        // only in the combined file
+    if (nav) nav.style.display = 'none';
+  }
+
+  var grip = document.getElementById('sp2Split');
+  var body = document.getElementById('sp2Body');
+  var col  = document.querySelector('.sp2-col-orders');
+  var on = false;
+  grip.addEventListener('mousedown', function (e) {
+    on = true; grip.classList.add('on');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!on) return;
+    var r = body.getBoundingClientRect();
+    // a hand-set width wins over the one the view would pick
+    col.style.flexBasis = Math.min(72, Math.max(14, (e.clientX - r.left) / r.width * 100)) + '%';
+    sp2FitRig();
+  });
+  document.addEventListener('mouseup', function () {
+    if (!on) return;
+    on = false; grip.classList.remove('on');
+    document.body.style.cursor = ''; document.body.style.userSelect = '';
+    sp2FitRig();
+  });
 })();
 
 // the header arrows move the day
