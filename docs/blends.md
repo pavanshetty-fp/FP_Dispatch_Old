@@ -156,7 +156,7 @@ listed, or it will be the one screen that does not say it:
 
 | Where | Today |
 |---|---|
-| Shift planner — order cards in column 1 | No badge of any kind |
+| Shift planner — order cards in column 1 | **Done 2026-11-20** — a `Blend` pill on the order, and one chip per constituent carrying its blend and share |
 | Shift planner — order chips in a driver's lane | No badge |
 | Create order — the lines table | `badge-blend` exists, fed by an empty list |
 | Edit order — the lines table and compartment labels | `badge-blend` and the "(blend)" suffix exist, fed by `['CLR DSL']`, which is wrong |

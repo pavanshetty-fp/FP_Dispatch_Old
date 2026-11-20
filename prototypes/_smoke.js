@@ -168,12 +168,32 @@
   }
 
   if (out.page.startsWith('shift-planner')) {
+    // V2 is the same planner with a different information model: a lane at rest
+    // shows its hours only when one bites, the card leads with the order number
+    // on its own row, and the products are chips in aligned rows. The checks
+    // that read those three things branch; everything else is shared.
+    const V2 = out.page.indexOf('ui2') >= 0;
     // A hand-set column width is remembered and beats the per-view widths — which
     // is right in use and wrong for a test run, so start every run without one.
+    // The column width a person dragged for themselves lives in this key. The
+    // width tests have to start from a clean slate, so stash whatever is there
+    // and hand it back when they are done — a test run must not cost someone
+    // the layout they set.
+    let sp2TheirWidth = null;
+    try { sp2TheirWidth = localStorage.getItem('sp2ColWidth'); } catch (e) {}
     const sp2ResetWidth = () => {
       try { localStorage.removeItem('sp2ColWidth'); } catch (e) {}
       const c = document.querySelector('.sp2-col-orders');
       if (c) { c.style.flexBasis = ''; }
+      if (typeof sp2FitRig === 'function') sp2FitRig();
+    };
+    const sp2GiveWidthBack = () => {
+      try {
+        if (sp2TheirWidth) localStorage.setItem('sp2ColWidth', sp2TheirWidth);
+        else localStorage.removeItem('sp2ColWidth');
+      } catch (e) {}
+      const c = document.querySelector('.sp2-col-orders');
+      if (c) c.style.flexBasis = sp2TheirWidth || '';
       if (typeof sp2FitRig === 'function') sp2FitRig();
     };
     sp2ResetWidth();
@@ -451,7 +471,9 @@
       if (sel < 0) throw new Error('no lane is chosen');
       if (comp[sel] !== full[sel]) throw new Error('the chosen lane shrank in compact');
       const other = sel === 0 ? 1 : 0;
-      if (comp[other] >= full[other] - 40)
+      // V2's resting lane is already short, so compact has less left to take
+      const least = V2 ? 12 : 40;
+      if (comp[other] >= full[other] - least)
         throw new Error('compact saved only ' + Math.round(full[other] - comp[other]) + 'px');
       // the chosen lane keeps its tanker; the rest keep bars and lose the writing
       if (!document.querySelector('.sp2-ln.on .sp2-sv')) throw new Error('compact took the tanker away');
@@ -459,8 +481,10 @@
         if (i === sel) return;
         if (!l.querySelector('.sp2-bars')) throw new Error('compact dropped the bars');
         if (!l.querySelector('.sp2-bar2-fill')) throw new Error('compact dropped the fuel');
-        if (getComputedStyle(l.querySelector('.sp2-bar2-p')).display !== 'none')
+        if (!V2 && getComputedStyle(l.querySelector('.sp2-bar2-p')).display !== 'none')
           throw new Error('compact still writes the product on every bar');
+        if (V2 && getComputedStyle(l.querySelector('.sp2-ln-sync')).display !== 'none')
+          throw new Error('compact still writes the hub on every lane');
       });
     });
     step('a lane takes the drop, whoever is selected', () => {
@@ -646,6 +670,149 @@
       sp2PickDriver('d0');
       if (first() !== a) throw new Error('coming back gave a different answer');
     });
+    step('an empty transport has a list of orders that fill it', () => {
+      // Order sizes are cut from the fleet's own compartments, so a planner
+      // looking at an empty rig sees work that fills it: the top of the fit
+      // sort reads 85–100%, and the band is a per-class promise — a 9,000-gal
+      // order is a bobtail's problem, not its load.
+      const unp = SP2_ORDERS.filter(o => !o.driver);
+      if (unp.length < 12) throw new Error('only ' + unp.length + ' unplanned orders to choose from');
+      ['HV', 'LT'].forEach(pre => {
+        const k = Object.keys(SP2_DRIVERS).filter(x =>
+          SP2_DRIVERS[x].truck.split('-')[0] === pre && !SP2_DRIVERS[x].trailer &&
+          sp2Cells(x).every(c => c.l.q === 0))[0];
+        if (!k) throw new Error('no empty ' + pre + ' to measure against');
+        const was = sp2Driver;
+        sp2Driver = k;
+        const top = unp.slice().sort((a, b) => sp2FitScore(b) - sp2FitScore(a)).slice(0, 8);
+        const read = top.map(o => { const f = sp2FitFor(k, o); return f.pct < 100 ? 'over' : f.rigPct; });
+        sp2Driver = was;
+        const band = read.filter(v => v !== 'over' && v >= 85).length;
+        if (band < 8)
+          throw new Error(pre + ' tops out at ' + band + ' of 8 in the 85–100% band: [' + read.join(' ') + ']');
+      });
+      // and every class has work of its own size, or its list is all overflow
+      ['BT', 'TW', 'PB'].forEach(pre => {
+        const caps = SP2_SPECS.filter(s => s.pre === pre)[0].caps;
+        const cap = caps.reduce((a, b) => a + b, 0);
+        const own = unp.filter(o => { const g = sp2Gal(o); return g <= cap && g >= cap * 0.85; }).length;
+        if (own < 2) throw new Error(pre + ' has ' + own + ' orders cut to its size');
+      });
+    });
+    step(V2 ? 'a resting lane shows its hours only when one bites'
+            : 'every lane carries the four Samsara clocks', () => {
+      const lanes = [...document.querySelectorAll('.sp2-ln')];
+      if (!lanes.length) throw new Error('no lanes on screen');
+      if (V2) {
+        lanes.forEach(l => {
+          const k = l.dataset.k, worst = sp2HosWorst(SP2_DRIVERS[k].hos);
+          const chip = l.querySelector('.sp2-hos-chip');
+          const open = l.classList.contains('on');
+          if (worst === 'ok' && chip)
+            throw new Error(SP2_DRIVERS[k].name + ' is clear of every limit but still carries a chip');
+          if (worst !== 'ok' && !chip && !open)
+            throw new Error(SP2_DRIVERS[k].name + ' is near a limit and the lane says nothing');
+          if (chip) {
+            const bind = sp2HosBind(SP2_DRIVERS[k].hos);
+            const want = SP2_HOS_NAME[bind] + ' ' + sp2Hm(SP2_DRIVERS[k].hos[bind]);
+            if (chip.textContent.trim() !== want)
+              throw new Error(chip.textContent.trim() + ' is not the binding clock (' + want + ')');
+          }
+          // the strip itself belongs to the lane you are working in
+          if (!open && l.querySelector('.sp2-hos'))
+            throw new Error(SP2_DRIVERS[k].name + ' is shut but still carries the full strip');
+        });
+        const on = lanes.find(l => l.classList.contains('on'));
+        const hos = on && on.querySelector('.sp2-hos');
+        if (!hos) throw new Error('the open lane has no HOS strip');
+        if (hos.querySelectorAll('.sp2-hos-c').length !== 4)
+          throw new Error('the open lane shows ' + hos.querySelectorAll('.sp2-hos-c').length + ' clocks, not 4');
+        if (hos.textContent.indexOf('Samsara') < 0)
+          throw new Error('the HOS strip does not say where the numbers come from');
+        const k = on.dataset.k, h = SP2_DRIVERS[k].hos;
+        const shown = [...on.querySelectorAll('.sp2-hos-c-v')].map(e => e.textContent);
+        ['brk','drv','shf','cyc'].forEach((c, n) => {
+          if (shown[n] !== sp2Hm(h[c]))
+            throw new Error(SP2_HOS_NAME[c] + ' reads ' + shown[n] + ', the pull says ' + sp2Hm(h[c]));
+        });
+        return;
+      }
+      lanes.forEach(l => {
+        const hos = l.querySelector('.sp2-hos');
+        if (!hos) throw new Error(l.querySelector('.sp2-ln-name').textContent + ' has no HOS');
+        if (hos.querySelectorAll('.sp2-hos-c').length !== 4)
+          throw new Error('a lane shows ' + hos.querySelectorAll('.sp2-hos-c').length + ' clocks, not 4');
+        if (hos.textContent.indexOf('Samsara') < 0)
+          throw new Error('the HOS strip does not say where the numbers come from');
+        if (!hos.querySelector('.sp2-hos-go')) throw new Error('a lane has no way into the detail');
+      });
+      // the numbers on screen are the numbers in the pull — nothing is computed here
+      const k = lanes[0].dataset.k, h = SP2_DRIVERS[k].hos;
+      const shown = [...lanes[0].querySelectorAll('.sp2-hos-c-v')].map(e => e.textContent);
+      ['brk','drv','shf','cyc'].forEach((c, n) => {
+        if (shown[n] !== sp2Hm(h[c]))
+          throw new Error(SP2_HOS_NAME[c] + ' reads ' + shown[n] + ', the pull says ' + sp2Hm(h[c]));
+      });
+    });
+    step('a driver out of hours is flagged where it matters', () => {
+      // the warning is only worth anything on a driver you could still pick
+      const tight = Object.keys(SP2_DRIVERS)
+        .filter(k => sp2HosWorst(SP2_DRIVERS[k].hos) !== 'ok' && sp2Avail(SP2_DRIVERS[k]));
+      if (!tight.length) throw new Error('no available driver is near a limit, so the strip warns no one');
+      tight.forEach(k => {
+        const bind = sp2HosBind(SP2_DRIVERS[k].hos);
+        const lane = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === k);
+        if (!lane) return;
+        if (V2) {
+          if (lane.classList.contains('on')) return;   // the open lane shows the whole strip
+          const chip = lane.querySelector('.sp2-hos-chip');
+          if (!chip) throw new Error(SP2_DRIVERS[k].name + ' is ' + bind + '-limited and the lane is silent');
+          if (chip.textContent.indexOf(SP2_HOS_NAME[bind]) < 0)
+            throw new Error(SP2_DRIVERS[k].name + ' is ' + bind + '-limited but the chip names something else');
+          return;
+        }
+        const cell = lane.querySelectorAll('.sp2-hos-c')[['brk','drv','shf','cyc'].indexOf(bind)];
+        if (!cell.classList.contains('bind'))
+          throw new Error(SP2_DRIVERS[k].name + ' is ' + bind + '-limited and the clock is not marked');
+      });
+      // and a rested driver has nothing underlined
+      const rested = Object.keys(SP2_DRIVERS).filter(k => sp2HosWorst(SP2_DRIVERS[k].hos) === 'ok')[0];
+      const rl = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === rested);
+      if (rl && rl.querySelector(V2 ? '.sp2-hos-chip' : '.sp2-hos-c.bind'))
+        throw new Error(SP2_DRIVERS[rested].name + ' is clear of every limit but a clock is marked');
+    });
+    step('view detail opens the HOS side sheet', () => {
+      const mid = Object.keys(SP2_DRIVERS).find(k => SP2_DRIVERS[k].state === 'driving' &&
+        SP2_SHIFTS[SP2_DRIVERS[k].shift].from < SP2_NOW);
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === mid);
+      lane.querySelector('.sp2-hos').click();
+      const sheet = document.getElementById('sp2HosSheet');
+      if (!sheet.classList.contains('on')) throw new Error('the sheet did not open');
+      if (!document.getElementById('sp2HosScrim').classList.contains('on'))
+        throw new Error('the sheet opened without a scrim behind it');
+      const body = document.getElementById('sp2HosBody');
+      if (body.querySelectorAll('.sp2-dial').length !== 4)
+        throw new Error('the sheet shows ' + body.querySelectorAll('.sp2-dial').length + ' dials, not 4');
+      if (!body.querySelector('.sp2-g')) throw new Error('the day graph is missing');
+      if (!body.querySelectorAll('.sp2-dl-row').length)
+        throw new Error('a driver mid-shift has an empty duty log');
+      if (body.textContent.indexOf('Samsara') < 0)
+        throw new Error('the sheet does not say the numbers come from Samsara');
+      if (!/Break|Drive|Shift|Cycle/.test(body.querySelector('.sp2-hos-bind').textContent))
+        throw new Error('the sheet does not name the binding limit');
+      // the four dials read the pull, in order
+      const h = SP2_DRIVERS[mid].hos;
+      const vals = [...body.querySelectorAll('.sp2-dial-v')].map(e => e.textContent);
+      ['brk','drv','shf','cyc'].forEach((c, n) => {
+        if (vals[n] !== sp2Hm(h[c])) throw new Error('the ' + SP2_HOS_NAME[c] + ' dial does not match the pull');
+      });
+      // a rig still in the yard has nothing logged, and says so
+      sp2HosOpen(null, SP2_YARD[0]);
+      if (!body.querySelector('.sp2-hos-none') && !body.querySelectorAll('.sp2-dl-row').length)
+        throw new Error('an unstarted shift shows an empty log with no explanation');
+      sp2HosClose();
+      if (sheet.classList.contains('on')) throw new Error('the sheet did not close');
+    });
     step('sorting by fit puts the best first', () => {
       sp2SetQuick('unplanned');
       sp2PickDriver('d2');
@@ -770,6 +937,65 @@
       });
       sp2SetDrvFilter('all');
     });
+    step('Available holds its order while you work in it', () => {
+      sp2SetDrvFilter('available');
+      const before = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (before.length < 4) throw new Error('too few available drivers');
+      const k = before[0];
+      sp2PickDriver(k);
+      const was = sp2RigFill(k).pct;
+      // load it up, the way a dispatcher would
+      SP2_ORDERS.filter(o => !o.driver).slice(0, 3).forEach(o => {
+        sp2Drag = o.id;
+        sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
+      });
+      if (sp2RigFill(k).pct <= was) throw new Error('nothing actually loaded');
+      const after = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (after[0] !== k) throw new Error('the card you were working on slid down the list');
+      if (after.join() !== before.join()) throw new Error('the list re-sorted under you');
+      // fill it right up: it still must not vanish mid-job
+      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+        if (sp2RigFill(k).pct >= 100) return;
+        sp2Drag = o.id;
+        sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
+      });
+      if (![...document.querySelectorAll('.sp2-ln')].some(l => l.dataset.k === k))
+        throw new Error('a rig you filled disappeared from under you');
+      // leaving and coming back is the ask for a fresh order, and only then
+      sp2SetDrvFilter('all');
+      sp2SetDrvFilter('available');
+      const fresh = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (sp2RigFill(k).pct >= 100 && fresh.indexOf(k) >= 0)
+        throw new Error('a full rig is still offered as available after a fresh ask');
+      sp2Unload(k);
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      sp2SetDrvFilter('available');
+    });
+    step('a card moves only when asked', () => {
+      sp2SetDrvFilter('available');
+      const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const k = lanes[0];
+      sp2PickDriver(k);
+      if (!document.querySelector('.sp2-ln.on .sp2-ln-truck').textContent.match(/Move/))
+        throw new Error('no way to move the card by hand');
+      // give it a load so its place by space is no longer the top
+      SP2_ORDERS.filter(o => !o.driver).slice(0, 2).forEach(o => {
+        sp2Drag = o.id;
+        sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
+      });
+      if ([...document.querySelectorAll('.sp2-ln')][0].dataset.k !== k)
+        throw new Error('it moved before being asked');
+      sp2MoveLane({ stopPropagation(){} }, k);
+      const moved = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (moved[0] === k) throw new Error('asking it to move did nothing');
+      // and where it landed is where its space puts it
+      const at = moved.indexOf(k);
+      if (at > 0 && sp2RigFill(moved[at - 1]).pct > sp2RigFill(k).pct + 0.01)
+        throw new Error('it landed above a rig with more room');
+      sp2Unload(k);
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      sp2SetDrvFilter('all');
+    });
     step('Available leads with the emptiest rig', () => {
       sp2SetDrvFilter('available');
       const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
@@ -807,45 +1033,112 @@
       if (!L || !R) throw new Error('the card is not in two halves');
       if (L.getBoundingClientRect().left >= R.getBoundingClientRect().left)
         throw new Error('the halves are the wrong way round');
-      ['.sp2-kind', '.sp2-ord', '.sp2-pill', '.sp2-ship', '.sp2-addr'].forEach(sel => {
+      // V2 lifts the order number, type and status onto their own row above the
+      // split, because the number is the primary fact; the split below is still
+      // who-and-where on the left, what on the right.
+      const head = V2 ? card.querySelector('.sp2-card-top') : L;
+      ['.sp2-kind', '.sp2-ord', '.sp2-pill'].forEach(sel => {
+        if (!head.querySelector(sel)) throw new Error(sel + ' is not in the head');
+      });
+      ['.sp2-ship', '.sp2-addr'].forEach(sel => {
         if (!L.querySelector(sel)) throw new Error(sel + ' is not on the left');
       });
-      if (L.querySelector('.sp2-prow')) throw new Error('a product is on the left');
+      if (V2) {
+        if (!L.querySelector('.sp2-meta')) throw new Error('the window and the run are not on the left');
+        if (!L.querySelector('.sp2-when')) throw new Error('the card does not state its delivery window');
+        if (!L.querySelector('.sp2-trip')) throw new Error('the card does not state the run from the hub');
+        if (!card.querySelector('.sp2-cbx')) throw new Error('the card cannot be picked');
+        if (!card.querySelector('.sp2-open')) throw new Error('the card has no way into its sheet');
+      }
+      if (L.querySelector(V2 ? '.sp2-prow-q' : '.sp2-prow')) throw new Error('a product is on the left');
       const id = card.querySelector('.sp2-ord').textContent;
       const o = SP2_ORDERS.filter(x => x.id === id)[0];
-      if (R.querySelectorAll('.sp2-prow').length !== o.prods.length)
-        throw new Error(id + ' lists ' + R.querySelectorAll('.sp2-prow').length + ' of ' + o.prods.length + ' products');
+      // a blend is two lines on the card — one per constituent — so the chips
+      // are counted against what is actually racked, not against the order lines
+      const want = sp2Lines(o).length;
+      const seen = R.querySelectorAll(V2 ? '.sp2-prow-q' : '.sp2-prow').length;
+      if (seen !== want) throw new Error(id + ' lists ' + seen + ' of ' + want + ' products');
+      if (V2 && R.querySelectorAll('.sp2-chip').length !== want)
+        throw new Error(id + ' does not give every product its own chip');
       R.querySelectorAll('.sp2-prow-q').forEach(q => {
         if (!/[\d,]+ gal/.test(q.textContent)) throw new Error('a product has no quantity');
       });
     });
-    step('a blended product shows its ratio on the product', () => {
+    step('a blend is one chip per constituent, not one for the pair', () => {
       sp2SetQuick('all');
       if (!sp2BlendOnly) sp2ToggleBlend();
-      const rows = [...document.querySelectorAll('.sp2-prow.blend')];
+      // V2 draws each constituent as a chip with its share beside it, so a row
+      // is the chip + the share + the quantity rather than one boxed line.
+      const rows = V2
+        ? [...document.querySelectorAll('.sp2-prow-b')]
+            .filter(b => b.textContent.trim())
+            .map(b => ({ name: b.previousElementSibling.textContent.trim(), share: b.textContent.trim() }))
+        : [...document.querySelectorAll('.sp2-prow.blend')];
       if (!rows.length) throw new Error('no blended product on screen');
+      if (V2) {
+        rows.forEach(r => {
+          if (SP2_BLENDS[r.name])
+            throw new Error(r.name + ' is the blend itself — the constituents are still sharing a chip');
+          const m = r.share.match(/^(\S+) \u00b7 (\d+)%$/);
+          if (!m) throw new Error(r.name + ' does not name its blend and share: ' + r.share);
+          const b = SP2_BLENDS[m[1]];
+          if (!b) throw new Error(m[1] + ' is not a blend we carry');
+          const part = b.parts.filter(x => x.p === r.name)[0];
+          if (!part) throw new Error(r.name + ' is not part of ' + m[1]);
+          if (String(part.pct) !== m[2])
+            throw new Error(r.name + ' shows ' + m[2] + '% of ' + m[1] + ', not ' + part.pct + '%');
+        });
+      } else
       rows.forEach(r => {
         const name = r.querySelector('.sp2-prow-p').textContent;
-        const b = SP2_BLENDS[name];
-        if (!b) throw new Error(name + ' is marked a blend and is not one');
-        if (!r.querySelector('.sp2-pill-blend')) throw new Error(name + ' has no Blend label beside it');
-        const mix = r.querySelector('.sp2-prow-mix');
-        if (!mix) throw new Error(name + ' does not show what it is made of');
-        // the ratio on screen is the ratio in the data, both parts and both numbers
-        b.parts.forEach(part => {
-          if (mix.textContent.indexOf(part.p) < 0) throw new Error(name + ' omits ' + part.p);
-          if (mix.textContent.indexOf(String(part.pct)) < 0)
-            throw new Error(name + ' omits the ' + part.pct + '% share');
-        });
+        if (SP2_BLENDS[name])
+          throw new Error(name + ' is the blend itself — the constituents are still sharing a chip');
+        const pill = r.querySelector('.sp2-pill-blend');
+        if (!pill) throw new Error(name + ' has no blend label beside it');
+        const m = pill.textContent.match(/^(\S+) (\d+)%$/);
+        if (!m) throw new Error(name + ' does not name its blend and share: ' + pill.textContent);
+        const b = SP2_BLENDS[m[1]];
+        if (!b) throw new Error(m[1] + ' is not a blend we carry');
+        const part = b.parts.filter(x => x.p === name)[0];
+        if (!part) throw new Error(name + ' is not part of ' + m[1]);
+        if (String(part.pct) !== m[2])
+          throw new Error(name + ' shows ' + m[2] + '% of ' + m[1] + ', not ' + part.pct + '%');
       });
-      // and a straight product carries neither
+      // both constituents are on the card, and the gallons split in ratio
+      const o = SP2_ORDERS.filter(x => sp2HasBlend(x))[0];
+      const on = [...document.querySelectorAll('.sp2-card')]
+        .filter(c => c.querySelector('.sp2-ord').textContent === o.id)[0];
+      if (on) {
+        const bl = o.prods.filter(pr => sp2IsBlend(pr.p))[0], parts = SP2_BLENDS[bl.p].parts;
+        const texts = V2
+          ? [...on.querySelectorAll('.sp2-card-r')].map(r => r.innerText)
+          : [...on.querySelectorAll('.sp2-prow')].map(r => r.innerText);
+        parts.forEach(part => {
+          const want = Math.round(bl.q * part.pct / 100).toLocaleString() + ' gal';
+          if (!texts.some(x => x.indexOf(part.p) >= 0 && x.indexOf(want) >= 0))
+            throw new Error(o.id + ' has no chip for ' + part.p + ' at ' + want);
+        });
+      }
+      // and a straight product carries neither label nor share
       sp2ToggleBlend();
+      if (V2) {
+        // the share cell is there for every product and empty on a straight one
+        const shares = [...document.querySelectorAll('.sp2-prow-b')];
+        if (!shares.length) throw new Error('no products on screen to compare');
+        const plain = shares.filter(b => !b.textContent.trim());
+        if (!plain.length) throw new Error('no straight product to compare');
+        plain.forEach(b => {
+          const name = b.previousElementSibling.textContent.trim();
+          if (SP2_BLENDS[name]) throw new Error(name + ' is a blend drawn as a straight product');
+        });
+      } else {
       const plain = [...document.querySelectorAll('.sp2-prow:not(.blend)')];
       if (!plain.length) throw new Error('no straight product to compare');
       plain.forEach(r => {
-        if (r.querySelector('.sp2-pill-blend') || r.querySelector('.sp2-prow-mix'))
+        if (r.querySelector('.sp2-pill-blend'))
           throw new Error(r.querySelector('.sp2-prow-p').textContent + ' is not a blend but reads like one');
       });
+      }
     });
     step('a width set by hand is remembered', () => {
       const grip = document.getElementById('sp2Split');
@@ -995,6 +1288,13 @@
         if (!l.querySelector('.sp2-ln-stops')) throw new Error('a lane has no stops row');
       });
     });
+    step('the run gives back the column width it borrowed', () => {
+      sp2GiveWidthBack();
+      let now = null;
+      try { now = localStorage.getItem('sp2ColWidth'); } catch (e) { return; }
+      if (now !== sp2TheirWidth)
+        throw new Error('the width was ' + sp2TheirWidth + ' before the run and ' + now + ' after it');
+    });
   }
 
   // Text that cannot be read on its own fill. Composite every alpha layer down
@@ -1025,7 +1325,7 @@
   contrastSweep();
 
   // anything visually cut off, anywhere on the page
-  document.querySelectorAll('td,th,select,option,button,.comp-prod,.const-name,.bb-mode-name').forEach(e => {
+  document.querySelectorAll('td,th,select,option,button,.comp-prod,.const-name,.bb-mode-name,.sp2-hos-c-top,.sp2-prow-top').forEach(e => {
     if (e.scrollWidth > e.clientWidth + 2 && e.clientWidth > 0) {
       out.layout.push('clipped: "' + (e.value || e.textContent || '').trim().slice(0, 24) + '" ' + e.clientWidth + '<' + e.scrollWidth);
     }

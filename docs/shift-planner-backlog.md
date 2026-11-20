@@ -92,9 +92,13 @@ Written down there, absent here.
 - **Fleet-day utilisation** — the target is **≥95% across the fleet per day**,
   counting multi-load cycles, on the minimum trucks deployed. We show per-rig
   percentages and no day total.
-- **HOS** — 11h driving inside a 14h window, 30-min break after 8h driving. We
-  show only the shift window. Field research also says real shifts run 5–6h
-  with 3–4 deliveries, against our 8h.
+- **HOS** — **done 2026-11-20.** Every lane carries the four Samsara clocks
+  (Break · Drive · Shift · Cycle) as minutes remaining, and *View detail* opens
+  a side sheet with the dials, the weekly cycle, the ELD day graph and the duty
+  log. Surfaced, never computed: Samsara runs the rules, we read the numbers.
+  See [`hos.md`](hos.md). Still open: the capacity score (*+N orders*) from the
+  original prototype, and the mismatch between our 8h shifts and the 5–6h with
+  3–4 deliveries the field research describes.
 
 ---
 
@@ -124,7 +128,32 @@ Deliberate so far; worth revisiting.
 
 ---
 
-## 6. Smaller, but real
+## 6. The band is per class, not fleet-wide
+
+Order sizes are now cut from the fleet's own compartments: four cuts in five
+aim to fill a rig to 85–100%, the fifth to 60–84%. Against an empty transport
+the top eight orders by fit all read 85–100%.
+
+It cannot hold across the whole fleet at once, and the reason is arithmetic.
+An order is a fixed number of gallons; the rigs run from 2,800 to 10,500. A
+9,000-gal order fills an HV exactly and is three bobtail loads. The only strip
+where one quantity serves two classes is 8,900–9,000 gal, which reads 100% on
+an HV and 85–86% on an LT — so that is where most of the day's work is cut.
+
+Against 26 unplanned orders and one empty rig of each class:
+
+| Rig | Capacity | In band | 60–84% | Top 8 by fit |
+|---|---|---|---|---|
+| BT | 2,800 | 3 | 1 | 4 in band, then overflow |
+| TW | 5,000 | 3 | 0 | 3 in band |
+| PB | 6,000 | 4 | 3 | 4 in band, 3 mid |
+| HV | 9,000 | 12 | 4 | **8 of 8** |
+| LT | 10,500 | 14 | 1 | **8 of 8** |
+
+To make it 80% of the list whatever is selected, the available fleet would have
+to be mostly one size — which is a change to the trucks, not to the orders.
+
+## 7. Smaller, but real
 
 - **No undo.** Dragging is destructive and Unload is all-or-nothing — you
   cannot take one order back off a truck.
@@ -145,5 +174,7 @@ Deliberate so far; worth revisiting.
 For contrast, so the list above is not read as the whole picture: lanes with a
 drawn rig that fills the lane, drag-to-load with one-product-per-compartment
 packing, trailers that hitch and unhitch, a 30-driver roster with search and
-status tabs, an Available filter, two timeline views, filters behind one icon,
+status tabs, an Available filter that holds its order while you work in it,
+orders cut to the fleet's own compartments, HOS on every lane with a
+detail sheet, two timeline views, filters behind one icon,
 a compact density, and 57 automated checks across the three prototypes.
