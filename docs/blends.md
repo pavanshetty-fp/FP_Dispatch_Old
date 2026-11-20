@@ -151,17 +151,41 @@ is that you can read the load at a glance.
 
 ---
 
-## 4. Decisions needed before any of it can be built
+## 4. Decisions
 
-1. **Which modes do we model?** Splash only, or all three? Pre-mixed is nearly
-   free; separate-compartment changes delivery rather than loading.
-2. **Is the ratio fixed by product or set per order?** (O16)
-3. **What tolerance** counts as still-in-spec, and is being out of it a warning
-   or a block?
-4. **Can a comparable substitute inside a blend?**
-5. **Which blends do we carry** — the US catalogue suggests E10, E15, E85, B5,
-   B20 — and which constituents become products in their own right?
-6. **How should a blended compartment read** in the drawing?
+### Settled
+**1. Splash only** (2026-11-20). Pre-mixed and separate-compartment are out of
+scope. That is the right call for a first build — splash is the only one that
+needs new rules, so the other two add screens without teaching us anything.
+
+Worth knowing what it leaves out: a pre-mixed blend is how most retail fuel
+actually moves, and separate-compartment is the mode a customer uses when they
+want the mixing done at their own tank. Neither is modelled, so the prototype
+will show splash as if it were the only way.
+
+### Proposed, unless you say otherwise
+These are defaults I would build to. None is a guess I am hiding — each is the
+conservative reading, and each is one line to change.
+
+| | Default | Why |
+|---|---|---|
+| **2. Ratio** | Fixed by the product (E20 is always 80/20) | The industry norm and the simpler half of O16. Customer-custom ratios can come later as an order-line override. |
+| **3. Tolerance** | **Block**, not warn, outside ±1% of the ratio | Off-spec fuel is a compliance problem, not a preference. A warning you can click past is the wrong shape for it. The ±1% is mine and should be checked. |
+| **4. Comparable inside a blend** | Not allowed | Substituting a constituent changes the product. It needs an approval flow we have not designed. |
+| **5. Blends we carry** | E10, E15, E85, B5, B20 — plus **Ethanol** and **Biodiesel** as constituent products | Straight from the US catalogue already in `planning-rules.md`. E15 is worth having because it cannot be terminal-blended, so it is splash by necessity. |
+
+### Still yours to call
+**6. How a blended compartment reads.** Our drawing gives a compartment one
+fill colour and this one holds two products. The options:
+
+- **two bands stacked in ratio** inside the compartment — shows the make-up at
+  a glance, but a 95/5 blend is a hairline and may read as a drawing artefact
+- **the blend's own colour** with the parts named below — clean, but the
+  compartment stops telling you what is physically in it
+- **one colour plus a blend marker** — least change, least information
+
+I would build the first. It is the only one that keeps the drawing's promise
+that you can read the load by looking at it.
 
 ---
 
