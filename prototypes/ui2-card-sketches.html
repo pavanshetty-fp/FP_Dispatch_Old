@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1420">
+<title>Order card — three directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+<style>
+/* Deliberately greyscale. Every grey below stands for something that will
+   carry colour, weight or a token in the real build — the point here is the
+   order you read things in, not what they look like. */
+:root{
+  --page:#f1f2f4; --paper:#ffffff; --fill:#e8eaed; --fill2:#f2f3f5;
+  --ink1:#16191d; --ink2:#5b636e; --ink3:#8c939d;
+  --line:#ccd1d8; --line2:#aeb4bd; --rail:#6f7781;
+  --warn:#3d424a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*{scrollbar-width:none;}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--page);color:var(--ink1);
+  padding:30px 34px 90px;-webkit-font-smoothing:antialiased;}
+h1{font-size:18px;font-weight:600;}
+.lede{font-size:13px;color:var(--ink2);margin-top:7px;max-width:820px;line-height:1.65;}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--ink3);}
+.legend b{font-weight:500;color:var(--ink2);}
+
+.sec{margin-top:30px;background:var(--paper);border:1px solid var(--line);
+  border-radius:10px;padding:20px 22px 24px;}
+.sec-n{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);}
+.sec-t{font-size:16px;font-weight:600;margin-top:5px;}
+.sec-s{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.65;max-width:900px;}
+.sec-s b{color:var(--ink1);font-weight:500;}
+
+.cols{display:flex;gap:26px;margin-top:22px;align-items:flex-start;}
+.col{flex:0 0 440px;}
+.col-h{display:flex;align-items:baseline;gap:9px;}
+.col-k{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink3);}
+.col-n{font-size:15px;font-weight:600;}
+.col-w{font-size:12.5px;color:var(--ink2);line-height:1.6;margin:8px 0 6px;min-height:76px;}
+.col-w b{color:var(--ink1);font-weight:500;}
+.ord{font-size:11px;color:var(--ink3);line-height:1.8;margin-bottom:14px;}
+.ord i{font-style:normal;display:inline-block;width:15px;height:15px;line-height:15px;
+  border-radius:50%;background:var(--fill);color:var(--ink2);text-align:center;
+  font-size:9px;font-weight:700;margin-right:6px;}
+.stack{display:flex;flex-direction:column;gap:9px;}
+.cost{font-size:12px;color:var(--ink2);margin-top:13px;line-height:1.6;padding-top:11px;
+  border-top:1px solid var(--line);}
+.cost b{color:var(--ink1);font-weight:500;}
+
+/* ── shared card furniture ─────────────────────────── */
+.c{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--rail);
+  border-radius:8px;padding:11px 13px;}
+.c.pl{border-left-color:var(--line2);}
+.cb{width:15px;height:15px;border:1px solid var(--line2);border-radius:3px;flex-shrink:0;}
+.ic{width:22px;height:22px;border:1px solid var(--line2);border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.ic::after{content:'';width:8px;height:8px;border-top:1.5px solid var(--ink3);
+  border-right:1.5px solid var(--ink3);transform:rotate(45deg) translate(-1px,1px);}
+.no{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;}
+.dsc{width:18px;height:18px;border-radius:4px;background:var(--fill);color:var(--ink2);
+  font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.p{display:inline-flex;align-items:center;height:19px;padding:0 8px;border-radius:999px;
+  background:var(--fill);font-size:11px;color:var(--ink2);white-space:nowrap;}
+.p.o{background:transparent;border:1px solid var(--line2);}
+.p.w{background:var(--warn);color:#fff;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--line2);flex-shrink:0;}
+.row{display:flex;align-items:center;gap:8px;}
+.sh{font-size:13px;font-weight:500;}
+.ad{font-size:11.5px;color:var(--ink3);}
+.mt{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums;}
+.sep{width:1px;height:11px;background:var(--line2);}
+.big{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.unit{font-size:11px;color:var(--ink3);font-weight:400;}
+.fit{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums;}
+.fit b{color:var(--ink1);font-weight:600;}
+.hair{height:1px;background:var(--line);margin:9px -13px;}
+
+/* products, three ways */
+.plist{display:grid;grid-template-columns:auto 1fr auto;gap:4px 9px;align-items:center;}
+.plist .pn{font-size:11.5px;color:var(--ink1);}
+.plist .pb{font-size:10.5px;color:var(--ink3);}
+.plist .pq{font-size:11.5px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums;}
+.pbar{display:flex;height:7px;border-radius:999px;overflow:hidden;background:var(--fill);gap:1px;}
+.pbar i{display:block;background:var(--line2);}
+.pbar i:nth-child(2){background:var(--rail);}
+.pbar i:nth-child(3){background:var(--ink3);}
+.pinline{display:flex;flex-wrap:wrap;gap:5px;}
+</style>
+</head>
+<body>
+
+<h1>Order card — three directions, in wireframe</h1>
+<p class="lede">
+  Greyscale on purpose. Every grey here stands for something that will carry a
+  token, a weight or a colour later; what is being decided is <b>the order you
+  read things in</b>, not the finish. All three hold exactly the same facts and
+  are drawn at the column's real width, three cards deep, so the rhythm of a
+  list is visible and not just one card in isolation.
+</p>
+<div class="legend">
+  <span><b>Left rail</b> — planned / unplanned</span>
+  <span><b>Dark pill</b> — the one thing that is wrong</span>
+  <span><b>Grey dot</b> — the product's colour</span>
+  <span><b>□</b> — the pick checkbox · <b>↗</b> — opens the sheet</span>
+</div>
+
+<!-- ══════════ what is wrong now ══════════ -->
+<div class="sec">
+  <div class="sec-n">Where we are</div>
+  <div class="sec-t">What the card is doing wrong today</div>
+  <div class="sec-s">
+    <b>1 — There is no headline figure.</b> The single number that decides
+    everything, <b>the total gallons</b>, is not on the card at all. You have to
+    add three quantities to learn whether an order is big.<br>
+    <b>2 — Four zones, no reading order.</b> A head row, a left column, a right
+    column and a full-width foot strip, all at roughly one volume. The card's
+    height is set by whichever column happens to be taller.<br>
+    <b>3 — The products float.</b> They sit in an unlabelled right column with
+    no relationship to anything beside them.<br>
+    <b>4 — The loudest thing is the least useful.</b> A full-width tinted fit
+    strip across the foot out-shouts the ship-to and the gallons.<br>
+    <b>5 — Five pills compete</b> — type, status, blend, the window when it
+    clashes, and the fit. Each was added for a good reason; together they are a
+    border.
+  </div>
+</div>
+
+<!-- ══════════ the three ══════════ -->
+<div class="sec">
+  <div class="sec-n">Three directions</div>
+  <div class="sec-t">Each takes a different view of what you are doing when you look at this list</div>
+  <div class="sec-s">
+    <b>A</b> says you are sizing. <b>B</b> says you are reading one order at a
+    time. <b>C</b> says you are comparing twenty-six of them. They are not
+    polish variants of one idea — pick the sentence that is true and the layout
+    follows.
+  </div>
+
+  <div class="cols">
+
+    <!-- ───────── A ───────── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">A</span><span class="col-n">The figure leads</span></div>
+      <div class="col-w">The total gallons becomes the card's headline, set
+        against the order number. <b>Everything else drops a level</b> and
+        becomes quiet rows. The fit loses its strip and becomes a line under the
+        figure, where the figure already is.</div>
+      <div class="ord">
+        <i>1</i>how big · <i>2</i>which order · <i>3</i>where · <i>4</i>when and how far · <i>5</i>what
+      </div>
+      <div class="stack">
+
+        <div class="c">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157092</span>
+            <span class="dsc">D</span><span class="p o">Unplanned</span>
+            <span style="margin-left:auto" class="ic"></span>
+          </div>
+          <div class="row" style="margin-top:9px;align-items:flex-end">
+            <div style="flex:1;min-width:0">
+              <div class="sh">Harbor Marine — Slip 40</div>
+              <div class="ad">1 Ferry Plaza, San Francisco CA 94111</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="big">8,900 <span class="unit">gal</span></div>
+              <div class="fit">Fits · rig <b>99%</b></div>
+            </div>
+          </div>
+          <div class="hair"></div>
+          <div class="row">
+            <span class="mt">05:29–08:29</span><span class="sep"></span>
+            <span class="mt">29.1 mi · 57 min</span>
+            <span class="mt" style="color:var(--ink3)">Tampa</span>
+            <span class="p" style="margin-left:auto"><i class="dot"></i>HO DSL</span>
+          </div>
+        </div>
+
+        <div class="c">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157113</span>
+            <span class="dsc">T</span><span class="p o">Unplanned</span>
+            <span style="margin-left:auto" class="ic"></span>
+          </div>
+          <div class="row" style="margin-top:9px;align-items:flex-end">
+            <div style="flex:1;min-width:0">
+              <div class="sh">Harbor Marine — Slip 40</div>
+              <div class="ad">1 Ferry Plaza, San Francisco CA 94111</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="big">8,950 <span class="unit">gal</span></div>
+              <div class="fit">Fits · rig <b>99%</b></div>
+            </div>
+          </div>
+          <div class="hair"></div>
+          <div class="row">
+            <span class="p w">05:33–07:33 · before Diego’s shift</span>
+            <span class="mt" style="margin-left:auto">85.0 mi · 153 min</span>
+          </div>
+          <div class="row" style="margin-top:7px;gap:5px;flex-wrap:wrap">
+            <span class="p"><i class="dot"></i>CLR DSL 5,700</span>
+            <span class="p"><i class="dot"></i>Biodiesel 300</span>
+            <span class="p"><i class="dot"></i>Diesel DEF 2,950</span>
+          </div>
+        </div>
+
+        <div class="c pl">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157077</span>
+            <span class="dsc">E</span><span class="p">Planned</span>
+            <span style="margin-left:auto" class="ic"></span>
+          </div>
+          <div class="row" style="margin-top:9px;align-items:flex-end">
+            <div style="flex:1;min-width:0">
+              <div class="sh">Summit Builders — Site 7</div>
+              <div class="ad">3300 E 1st Ave, Denver CO 80206</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="big">2,600 <span class="unit">gal</span></div>
+              <div class="fit">Diego Fuentes · HV-13</div>
+            </div>
+          </div>
+          <div class="hair"></div>
+          <div class="row">
+            <span class="mt">06:04–10:04</span><span class="sep"></span>
+            <span class="mt">63.3 mi · 116 min</span>
+            <span class="p" style="margin-left:auto"><i class="dot"></i>Kerosene 2,100</span>
+            <span class="p"><i class="dot"></i>CLR DSL 500</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="cost"><b>The cost:</b> the products lose their aligned
+        quantities and go back to wrapping chips, because the right edge now
+        belongs to the figure.<br>
+        <b>133 · 159 · 133px</b> — about five and a half orders on screen.</div>
+    </div>
+
+    <!-- ───────── B ───────── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">B</span><span class="col-n">Three bands, read down</span></div>
+      <div class="col-w">No side-by-side split at all. <b>One subject per band</b>,
+        separated by space rather than rules: which order · where it goes · what
+        is on it. The total closes the load band where the quantities already
+        line up, and the fit is a quiet chip in the head.</div>
+      <div class="ord">
+        <i>1</i>which order and does it fit · <i>2</i>where and when · <i>3</i>what and how much
+      </div>
+      <div class="stack">
+
+        <div class="c">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157092</span>
+            <span class="dsc">D</span><span class="p o">Unplanned</span>
+            <span class="fit" style="margin-left:auto">Fits · rig <b>99%</b></span>
+            <span class="ic"></span>
+          </div>
+          <div style="margin-top:11px">
+            <div class="sh">Harbor Marine — Slip 40</div>
+            <div class="ad">1 Ferry Plaza, San Francisco CA 94111</div>
+            <div class="row" style="margin-top:5px">
+              <span class="mt">05:29–08:29</span><span class="sep"></span>
+              <span class="mt">29.1 mi · 57 min from Tampa</span>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="plist">
+              <span class="p"><i class="dot"></i>HO DSL</span><span class="pb"></span>
+              <span class="pq">8,900 gal</span>
+            </div>
+            <div class="row" style="margin-top:7px">
+              <span class="mt" style="color:var(--ink3)">1 product</span>
+              <span class="no" style="margin-left:auto">8,900 gal</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="c">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157113</span>
+            <span class="dsc">T</span><span class="p o">Unplanned</span>
+            <span class="fit" style="margin-left:auto">Fits · rig <b>99%</b></span>
+            <span class="ic"></span>
+          </div>
+          <div style="margin-top:11px">
+            <div class="sh">Harbor Marine — Slip 40</div>
+            <div class="ad">1 Ferry Plaza, San Francisco CA 94111</div>
+            <div class="row" style="margin-top:5px">
+              <span class="p w">05:33–07:33 · before Diego’s shift</span>
+              <span class="mt">85.0 mi · 153 min</span>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="plist">
+              <span class="p"><i class="dot"></i>CLR DSL</span><span class="pb">B5 · 95%</span>
+              <span class="pq">5,700 gal</span>
+              <span class="p"><i class="dot"></i>Biodiesel</span><span class="pb">B5 · 5%</span>
+              <span class="pq">300 gal</span>
+              <span class="p"><i class="dot"></i>Diesel DEF</span><span class="pb"></span>
+              <span class="pq">2,950 gal</span>
+            </div>
+            <div class="row" style="margin-top:7px">
+              <span class="mt" style="color:var(--ink3)">3 products · 1 blend</span>
+              <span class="no" style="margin-left:auto">8,950 gal</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="c pl">
+          <div class="row">
+            <span class="cb"></span><span class="no">D-5157077</span>
+            <span class="dsc">E</span><span class="p">Planned</span>
+            <span class="fit" style="margin-left:auto">Diego · HV-13</span>
+            <span class="ic"></span>
+          </div>
+          <div style="margin-top:11px">
+            <div class="sh">Summit Builders — Site 7</div>
+            <div class="ad">3300 E 1st Ave, Denver CO 80206</div>
+            <div class="row" style="margin-top:5px">
+              <span class="mt">06:04–10:04</span><span class="sep"></span>
+              <span class="mt">63.3 mi · 116 min from Denver</span>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="plist">
+              <span class="p"><i class="dot"></i>Kerosene</span><span class="pb"></span>
+              <span class="pq">2,100 gal</span>
+              <span class="p"><i class="dot"></i>CLR DSL</span><span class="pb"></span>
+              <span class="pq">500 gal</span>
+            </div>
+            <div class="row" style="margin-top:7px">
+              <span class="mt" style="color:var(--ink3)">2 products</span>
+              <span class="no" style="margin-left:auto">2,600 gal</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="cost"><b>The cost:</b> the tallest of the three, and it grows
+        with the order — a blended one is 50px taller than a plain one.<br>
+        <b>165 · 215 · 188px</b> — about four orders on screen.</div>
+    </div>
+
+    <!-- ───────── C ───────── -->
+    <div class="col">
+      <div class="col-h"><span class="col-k">C</span><span class="col-n">A line you can compare</span></div>
+      <div class="col-w">You are not reading one order, you are choosing among
+        twenty-six. So the card compresses to <b>two lines and a load bar</b>:
+        everything you choose on, nothing you do not. The products become one
+        bar in their proportions with a count; the full list is a click away in
+        the sheet.</div>
+      <div class="ord">
+        <i>1</i>size and fit, on one edge · <i>2</i>which and where · <i>3</i>when and how far · <i>4</i>shape of the load
+      </div>
+      <div class="stack">
+
+        <div class="c" style="padding:10px 12px">
+          <div class="row">
+            <span class="cb"></span>
+            <span class="no">D-5157092</span><span class="dsc">D</span>
+            <span class="no" style="margin-left:auto">8,900 <span class="unit">gal</span></span>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="sh" style="font-weight:400">Harbor Marine — Slip 40</span>
+            <span class="fit" style="margin-left:auto">rig <b>99%</b></span>
+          </div>
+          <div class="row" style="margin-top:7px">
+            <span class="mt">05:29–08:29</span><span class="sep"></span>
+            <span class="mt">29.1 mi</span><span class="sep"></span>
+            <span class="mt" style="color:var(--ink3)">1 product</span>
+            <span class="ic" style="margin-left:auto;width:20px;height:20px"></span>
+          </div>
+          <div class="pbar" style="margin-top:8px"><i style="flex:1"></i></div>
+        </div>
+
+        <div class="c" style="padding:10px 12px">
+          <div class="row">
+            <span class="cb"></span>
+            <span class="no">D-5157113</span><span class="dsc">T</span>
+            <span class="p o">Blend</span>
+            <span class="no" style="margin-left:auto">8,950 <span class="unit">gal</span></span>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="sh" style="font-weight:400">Harbor Marine — Slip 40</span>
+            <span class="fit" style="margin-left:auto">rig <b>99%</b></span>
+          </div>
+          <div class="row" style="margin-top:7px">
+            <span class="p w">05:33–07:33</span>
+            <span class="mt">85.0 mi</span><span class="sep"></span>
+            <span class="mt" style="color:var(--ink3)">3 products</span>
+            <span class="ic" style="margin-left:auto;width:20px;height:20px"></span>
+          </div>
+          <div class="pbar" style="margin-top:8px">
+            <i style="flex:5700"></i><i style="flex:300"></i><i style="flex:2950"></i>
+          </div>
+        </div>
+
+        <div class="c pl" style="padding:10px 12px">
+          <div class="row">
+            <span class="cb"></span>
+            <span class="no">D-5157077</span><span class="dsc">E</span>
+            <span class="no" style="margin-left:auto">2,600 <span class="unit">gal</span></span>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="sh" style="font-weight:400">Summit Builders — Site 7</span>
+            <span class="fit" style="margin-left:auto">Diego · HV-13</span>
+          </div>
+          <div class="row" style="margin-top:7px">
+            <span class="mt">06:04–10:04</span><span class="sep"></span>
+            <span class="mt">63.3 mi</span><span class="sep"></span>
+            <span class="mt" style="color:var(--ink3)">2 products</span>
+            <span class="ic" style="margin-left:auto;width:20px;height:20px"></span>
+          </div>
+          <div class="pbar" style="margin-top:8px">
+            <i style="flex:2100"></i><i style="flex:500"></i>
+          </div>
+        </div>
+
+      </div>
+      <div class="cost"><b>The cost:</b> the address and the product names leave
+        the card. You would be trusting the ship-to name and one click.<br>
+        <b>105px, every order</b> — about seven and a half on screen, and the
+        height never moves.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-n">What I would do</div>
+  <div class="sec-t">B, with its load band capped</div>
+  <div class="sec-s">
+    <b>B</b> is the one that reads. It is also the only one of the three where
+    the quantities stay on a single right edge, which is what lets you compare
+    two orders without doing arithmetic — and it already closes with the total,
+    so it needs nothing from A.<br><br>
+    Its one real weakness is that <b>the card grows with the order</b>: 165px
+    plain, 215px blended. The fix is to cap the load band — show the first two
+    products and a <b>“+1”</b> that opens the rest in place, so every card is
+    about 165px whatever is on it. That is roughly five on screen, against four
+    today.<br><br>
+    <b>C</b> I would keep for later as a density toggle — the same card with its
+    middle band folded away — rather than as the default. <b>A</b> reads well
+    but it buys the headline figure by giving up the aligned quantities, and
+    those are worth more in a list you are picking from.
+  </div>
+</div>
+
+</body>
+</html>

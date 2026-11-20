@@ -866,7 +866,11 @@
       [...document.querySelectorAll('.sp2-card')].forEach(c => {
         const id = c.querySelector('.sp2-ord').textContent;
         const o = SP2_ORDERS.filter(x => x.id === id)[0];
-        const badged = !!c.querySelector('.sp2-pill-blend');
+        // V2 says it in the load band's foot ("3 products · 2 in a blend")
+        // rather than as a sixth pill in the head
+        const badged = V2
+          ? /in a blend/.test(c.querySelector('.sp2-load-n').textContent)
+          : !!c.querySelector('.sp2-pill-blend');
         if (sp2HasBlend(o) !== badged)
           throw new Error(id + (badged ? ' is labelled a blend and is not' : ' carries a blend and is not labelled'));
       });
@@ -1025,41 +1029,79 @@
       if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
         throw new Error('the tabs still carry the margin from when they were in a panel');
     });
-    step('the card splits: who and where left, what right', () => {
+    step(V2 ? 'the card reads down in bands: which order, where, what'
+            : 'the card splits: who and where left, what right', () => {
       sp2SetQuick('all');
       if (sp2BlendOnly) sp2ToggleBlend();
       const card = document.querySelector('.sp2-card');
       const L = card.querySelector('.sp2-card-l'), R = card.querySelector('.sp2-card-r');
-      if (!L || !R) throw new Error('the card is not in two halves');
-      if (L.getBoundingClientRect().left >= R.getBoundingClientRect().left)
+      if (!L || !R) throw new Error('the card is missing a band');
+      if (!V2 && L.getBoundingClientRect().left >= R.getBoundingClientRect().left)
         throw new Error('the halves are the wrong way round');
-      // V2 lifts the order number, type and status onto their own row above the
-      // split, because the number is the primary fact; the split below is still
-      // who-and-where on the left, what on the right.
+      // V2 does not split side by side at all — it reads down in three bands:
+      // which order it is, where it goes, what is on it.
       const head = V2 ? card.querySelector('.sp2-card-top') : L;
       ['.sp2-kind', '.sp2-ord', '.sp2-pill'].forEach(sel => {
         if (!head.querySelector(sel)) throw new Error(sel + ' is not in the head');
       });
       ['.sp2-ship', '.sp2-addr'].forEach(sel => {
-        if (!L.querySelector(sel)) throw new Error(sel + ' is not on the left');
+        if (!L.querySelector(sel)) throw new Error(sel + ' is not in the destination band');
       });
       if (V2) {
-        if (!L.querySelector('.sp2-meta')) throw new Error('the window and the run are not on the left');
+        // unplanned: how it would fit · planned: who already has it
+        if (!head.querySelector('.sp2-fit,.sp2-who'))
+          throw new Error('the head says neither the fit nor who has it');
+        if (!L.querySelector('.sp2-meta')) throw new Error('the window and the run are not in the band');
         if (!L.querySelector('.sp2-when')) throw new Error('the card does not state its delivery window');
         if (!L.querySelector('.sp2-trip')) throw new Error('the card does not state the run from the hub');
         if (!card.querySelector('.sp2-cbx')) throw new Error('the card cannot be picked');
         if (!card.querySelector('.sp2-open')) throw new Error('the card has no way into its sheet');
+        // the bands stack, one under the next
+        const tops = ['.sp2-card-top', '.sp2-card-l', '.sp2-card-r', '.sp2-load-foot']
+          .map(sel => { const e = card.querySelector(sel);
+                        if (!e) throw new Error(sel + ' band is missing');
+                        return e.getBoundingClientRect().top; });
+        tops.forEach((t, i) => {
+          if (i && t <= tops[i - 1]) throw new Error('the bands do not read top to bottom');
+        });
+        // the load band closes with the order's total
+        const tot = card.querySelector('.sp2-load-tot').textContent;
+        const ord = SP2_ORDERS.filter(x => x.id === card.querySelector('.sp2-ord').textContent)[0];
+        if (tot !== sp2Gal(ord).toLocaleString() + ' gal')
+          throw new Error('the load band closes with ' + tot + ', not ' + sp2Gal(ord).toLocaleString() + ' gal');
       }
-      if (L.querySelector(V2 ? '.sp2-prow-q' : '.sp2-prow')) throw new Error('a product is on the left');
+      if (L.querySelector(V2 ? '.sp2-prow-q' : '.sp2-prow')) throw new Error('a product is in the wrong band');
       const id = card.querySelector('.sp2-ord').textContent;
       const o = SP2_ORDERS.filter(x => x.id === id)[0];
       // a blend is two lines on the card — one per constituent — so the chips
       // are counted against what is actually racked, not against the order lines
       const want = sp2Lines(o).length;
+      // V2 caps the load band: the first two, then a "+N" that opens the rest
+      const cap = V2 ? Math.min(want, SP2_PROD_CAP) : want;
       const seen = R.querySelectorAll(V2 ? '.sp2-prow-q' : '.sp2-prow').length;
-      if (seen !== want) throw new Error(id + ' lists ' + seen + ' of ' + want + ' products');
-      if (V2 && R.querySelectorAll('.sp2-chip').length !== want)
-        throw new Error(id + ' does not give every product its own chip');
+      if (seen !== cap) throw new Error(id + ' lists ' + seen + ' of ' + cap + ' products');
+      if (V2) {
+        if (R.querySelectorAll('.sp2-chip').length !== cap)
+          throw new Error(id + ' does not give every shown product its own chip');
+        const more = card.querySelector('.sp2-more');
+        if (want > SP2_PROD_CAP) {
+          if (!more) throw new Error(id + ' hides ' + (want - cap) + ' products with no way to them');
+          if (more.textContent !== '+' + (want - cap))
+            throw new Error(id + ' says ' + more.textContent + ', not +' + (want - cap));
+          // opening re-renders the column, so the card has to be found again
+          more.click();
+          const re = document.querySelector('.sp2-card[data-id="' + id + '"]');
+          if (!re) throw new Error(id + ' left the column when its load band opened');
+          const opened = re.querySelectorAll('.sp2-prow-q').length;
+          if (opened !== want) throw new Error(id + ' opened to ' + opened + ' of ' + want);
+          const less = re.querySelector('.sp2-more');
+          if (!less || less.textContent !== 'Show less')
+            throw new Error(id + ' is open with no way to fold it back');
+          less.click();
+        } else if (more) {
+          throw new Error(id + ' has nothing hidden but still offers a "+N"');
+        }
+      }
       R.querySelectorAll('.sp2-prow-q').forEach(q => {
         if (!/[\d,]+ gal/.test(q.textContent)) throw new Error('a product has no quantity');
       });

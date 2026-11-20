@@ -115,3 +115,39 @@ clip or overflow findings on either, at 1512×950.
 ### Not done
 V2 is not in the merged `prototypes/fleetpanda.html`; it is a standalone file.
 Dark theme is deliberately out until light is finished.
+
+
+---
+
+## The order card, rebuilt (2026-11-20, round 2)
+
+Pavan: *"it's not good enough."* Three lo-fi directions went to him in
+`prototypes/ui2-card-sketches.html`; he picked **B, capped**.
+
+**What was wrong with the first card**
+
+1. No headline figure — the total gallons, the number that decides everything,
+   was not on the card at all.
+2. Four zones at one volume (head row, left column, right column, foot strip)
+   with no reading order; the height was set by whichever column was taller.
+3. The products floated in an unlabelled right column.
+4. The loudest thing was the least useful — a full-width tinted fit strip.
+5. Five pills competing: type, status, blend, the window when it clashed, the fit.
+
+**B, as built** — three bands, grouped by space, no rules between them:
+
+| Band | Holds |
+|---|---|
+| **Which order it is** | checkbox · order number · type disc · planned / unplanned · **the fit**, quiet, on the right (a planned order says who has it instead) · the button into the sheet |
+| **Where it goes** | ship-to · address · the delivery window (amber only when it cannot be met) · the run from the hub |
+| **What is on it** | a chip per product, the blend's share beside the name, every quantity on one right edge — **capped at two** — then a foot: "3 products · 2 in a blend" · **+1** · **8,950 gal** |
+
+The `Blend` pill is gone; the load foot says it in words. The fit strip is gone;
+the fit is a line in the head where its question belongs.
+
+**Height** 178–207px, near-constant whatever is on the order, because the cap
+holds the load band to two rows. Uncapped it ran to 248.
+
+**Checks** V1 54/54, V2 54/54, no console errors, no clip findings at 1512×950.
+`_smoke.js` gained a V2 branch for the band stack, the capped load band and its
+"+N", and the blend label moving to the foot.

@@ -115,7 +115,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-grid-col{flex-shrink:0;border-left:1px solid color-mix(in oklab,var(--fp-outline-1) 55%,transparent);}
 
 /* the order card — board card's shape and stack levels */
-.sp2-card{position:absolute;top:0;height:142px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
+.sp2-card{position:absolute;top:0;height:142px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-left:3px solid var(--status-neutral);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:0;cursor:pointer;overflow:hidden;transition:border-color .12s,box-shadow .12s,background .12s;}
 .sp2-card:hover{border-color:var(--fp-outline-2);box-shadow:0 1px 3px rgba(3,4,5,.10),0 1px 2px rgba(3,4,5,.06);}
 .sp2-card.sel{border-color:var(--fp-selected-border);background:var(--fp-selected);}
 .sp2-card.planned{border-left-color:var(--status-success);}
@@ -574,11 +574,18 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-move-quick{display:flex;align-items:center;gap:6px;margin-top:11px;}
 /* ── how much of this order the chosen rig could take ── */
 .sp2-vs{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.sp2-fit{display:block;margin-top:6px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
-.sp2-fit.perfect{background:var(--status-success);color:var(--primary-foreground);font-weight:600;}
-.sp2-fit.full{background:color-mix(in oklab,var(--status-success) 12%,transparent);color:var(--status-success);}
-.sp2-fit.part{background:color-mix(in oklab,var(--status-caution) 12%,transparent);color:var(--status-caution);}
-.sp2-fit.none{background:var(--muted);color:var(--status-neutral);}
+/* The fit belongs beside the order number, not across the foot — it answers
+   "is this one mine?", which is the head's question. */
+.sp2-fit,.sp2-who{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.sp2-fit b{font-weight:600;color:var(--fp-ink-1);}
+.sp2-fit.perfect{color:var(--status-success);font-weight:600;}
+.sp2-fit.perfect b{color:var(--status-success);}
+.sp2-fit.full b{color:var(--fp-ink-1);}
+.sp2-fit.part{color:var(--status-caution);}
+.sp2-fit.part b{color:var(--status-caution);}
+.sp2-fit.none{color:var(--status-neutral);}
+.sp2-card-top .sp2-open{margin-left:0;}
 /* ranked by fit: no rail, no gaps — those are about time */
 .sp2-vt.ranked .sp2-vrow{gap:10px;}
 .sp2-vrow.ranked .sp2-vtime{width:auto;padding-top:11px;opacity:.75;}
@@ -599,17 +606,25 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-drv-tabs{align-self:center;margin-bottom:0;}
 .sp2-col-hdr{align-items:center;}
 /* ── the order card: who and where on the left, what on the right ── */
-.sp2-card-cols{display:flex;gap:12px;align-items:flex-start;margin-top:9px;}
-.sp2-card-l{flex:1 1 0;min-width:0;}
-.sp2-card-r{flex:0 1 auto;min-width:0;max-width:52%;display:grid;
-  grid-template-columns:auto 1fr auto;gap:5px 9px;align-items:center;}
+/* Three bands, grouped by space, no rules between them. */
+.sp2-card-l{min-width:0;margin-top:10px;}
+.sp2-card-r{min-width:0;margin-top:11px;display:grid;
+  grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;}
 .sp2-card-r .sp2-chip{justify-self:start;max-width:100%;overflow:hidden;}
+.sp2-more{height:20px;padding:0 9px;border:1px solid var(--fp-stroke-field);
+  border-radius:9999px;background:var(--fp-surface-1b);color:var(--fp-ink-3);
+  font-family:inherit;font-size:12px;cursor:pointer;font-variant-numeric:tabular-nums;}
+.sp2-more:hover{background:var(--fp-emphasis);color:var(--fp-ink-1);}
+.sp2-load-foot{display:flex;align-items:center;gap:9px;margin-top:9px;}
+.sp2-load-n{font-size:12px;color:var(--fp-ink-3);}
+.sp2-load-tot{margin-left:auto;font-size:14px;font-weight:600;color:var(--fp-ink-1);
+  font-variant-numeric:tabular-nums;}
 .sp2-prow-b{font-size:11px;color:var(--fp-ink-3);white-space:nowrap;}
 .sp2-prow-q{font-size:12px;font-weight:500;color:var(--fp-ink-1);white-space:nowrap;
   text-align:right;font-variant-numeric:tabular-nums;}
 
 /* the window, the clash, and the run from the hub */
-.sp2-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px;
+.sp2-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px;
   font-size:12px;color:var(--fp-ink-3);}
 .sp2-when{font-variant-numeric:tabular-nums;}
 .sp2-when.clash{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:9999px;
@@ -1194,7 +1209,13 @@ function sp2Dur(m) {
 }
 
 function sp2FitChip(o) {
-  if (o.driver) return '';
+  // A planned order's head answers a different question: not "would it fit"
+  // but "who has it".
+  if (o.driver) {
+    var od = SP2_DRIVERS[o.driver];
+    return od ? '<span class="sp2-who" title="Planned on ' + od.name + '">' +
+                  od.name.split(' ')[0] + ' \u00b7 ' + od.truck + '</span>' : '';
+  }
   var f = sp2FitFor(sp2Driver, o);
   if (!f) return '';
   var d = SP2_DRIVERS[sp2Driver];
@@ -1202,8 +1223,8 @@ function sp2FitChip(o) {
             ' of ' + f.total.toLocaleString() + ' gal would load, leaving the rig ' + f.rigPct + '% full';
   var cls, text;
   if (f.pct >= 100 && f.rigPct >= 100) { cls = 'perfect'; text = 'Fills the truck'; }
-  else if (f.pct >= 100)               { cls = 'full';    text = 'Fits · rig ' + f.rigPct + '%'; }
-  else if (f.pct > 0)                  { cls = 'part';    text = f.pct + '% fits · ' + f.over.toLocaleString() + ' gal over'; }
+  else if (f.pct >= 100)               { cls = 'full';    text = 'Fits \u00b7 rig <b>' + f.rigPct + '%</b>'; }
+  else if (f.pct > 0)                  { cls = 'part';    text = '<b>' + f.pct + '%</b> fits \u00b7 ' + f.over.toLocaleString() + ' gal over'; }
   else                                 { cls = 'none';    text = 'No room'; }
   return '<span class="sp2-fit ' + cls + '" title="' + why + '">' + text + '</span>';
 }
@@ -1232,14 +1253,30 @@ function sp2Lines(o) {
   return out;
 }
 
+// The card reads down in three bands, separated by space and nothing else:
+// which order it is, where it goes, and what is on it. One subject per band,
+// and the quantities on a single right edge so two orders compare by eye.
+var sp2OpenProds = {};         // orders whose load band has been opened out
+var SP2_PROD_CAP = 2;          // products shown before the rest fold into "+N"
+
+function sp2TogglePlist(e, id) {
+  e.stopPropagation();
+  if (sp2OpenProds[id]) delete sp2OpenProds[id]; else sp2OpenProds[id] = true;
+  sp2Render();
+}
+
 function sp2CardHtml(o, style) {
   var planned = sp2Planned(o);
   var picked  = sp2Picked[o.id] ? ' picked' : '';
+  var lines   = sp2Lines(o);
+  var open    = !!sp2OpenProds[o.id];
+  var shown   = open ? lines : lines.slice(0, SP2_PROD_CAP);
+  var hidden  = lines.length - shown.length;
 
-  // Every product is its own chip, each on its own row, with the quantity on
-  // one right edge — two orders can then be compared without reading. A splash
-  // blend puts its share under the name rather than inside the chip.
-  var rows = sp2Lines(o).map(function (pr) {
+  // Every product is its own chip on its own row, the blend's share beside the
+  // name and the gallons on the right edge. Capped at two, so a blended order
+  // costs a plain order's height until you ask for the rest.
+  var rows = shown.map(function (pr) {
     var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
     return '<span class="sp2-chip"><i class="sp2-dot" style="background:' + col + ';"></i>' +
              pr.p + '</span>' +
@@ -1247,17 +1284,21 @@ function sp2CardHtml(o, style) {
            '<span class="sp2-prow-q">' + pr.q.toLocaleString() + ' gal</span>';
   }).join('');
 
-  // The window is the fact that can be wrong, so the window is what carries the
+  // The window is the fact that can be wrong, so the window carries the
   // warning — not the card, which has nothing else the matter with it.
   var w = sp2Win(o), clash = sp2WinClash(o, sp2Driver), trip = sp2Trip(o, sp2Driver);
-  var when = '<span class="sp2-when' + (clash ? ' clash' : '') + '">' +
-               sp2Hhmm(w.from) + '\u2013' + sp2Hhmm(w.to) + '</span>' +
-             (clash ? '<span class="sp2-clash">' + clash + '</span>' : '');
+  var when = '<span class="sp2-when' + (clash ? ' clash' : '') + '">' + sp2Hhmm(w.from) +
+               '\u2013' + sp2Hhmm(w.to) + (clash ? ' \u00b7 ' + clash : '') + '</span>';
   var run = trip
-    ? '<span class="sp2-sep"></span><span class="sp2-trip"><b>' + trip.mi.toFixed(1) +
-      ' mi</b> \u00b7 ' + trip.min + ' min</span>' +
-      '<span class="sp2-from" title="Measured from ' + trip.hub + '">from ' + trip.hub.replace(' Hub','') + '</span>'
+    ? (clash ? '' : '<span class="sp2-sep"></span>') +
+      '<span class="sp2-trip"><b>' + trip.mi.toFixed(1) + ' mi</b> \u00b7 ' + trip.min + ' min</span>' +
+      '<span class="sp2-from" title="Measured from ' + trip.hub + '">from ' +
+        trip.hub.replace(' Hub', '') + '</span>'
     : '';
+
+  var blended = lines.filter(function (pr) { return pr.blend; }).length;
+  var count = lines.length + ' product' + (lines.length === 1 ? '' : 's') +
+              (sp2HasBlend(o) ? ' \u00b7 ' + blended + ' in a blend' : '');
 
   return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
       (sp2SelOrder === o.id ? ' sel' : '') + picked + '" ' + (style ? 'style="' + style + '" ' : '') +
@@ -1265,6 +1306,7 @@ function sp2CardHtml(o, style) {
       'draggable="true" ondragstart="sp2DragStart(event,\'' + o.id + '\')" ondragend="sp2DragEnd()" ' +
       'onclick="sp2PickOrder(\'' + o.id + '\')" title="Drag onto the truck to load it \u00b7 ' + o.ship + '">' +
 
+    // ── band 1 · which order it is, and whether it fits ──
     '<div class="sp2-card-top">' +
       '<button class="sp2-cbx' + picked + '" title="Pick this order, and drag them together" ' +
         'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>' +
@@ -1272,7 +1314,7 @@ function sp2CardHtml(o, style) {
       '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
       '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
         (planned ? 'Planned' : 'Unplanned') + '</span>' +
-      (sp2HasBlend(o) ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+      sp2FitChip(o) +
       '<button class="sp2-open" title="Open this order" ' +
         'onclick="sp2OrderOpen(event,\'' + o.id + '\')">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
@@ -1280,15 +1322,24 @@ function sp2CardHtml(o, style) {
         '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></button>' +
     '</div>' +
 
-    '<div class="sp2-card-cols">' +
-      '<div class="sp2-card-l">' +
-        '<div class="sp2-ship">' + o.ship + '</div>' +
-        '<div class="sp2-addr">' + o.addr + '</div>' +
-        '<div class="sp2-meta">' + when + run + '</div>' +
-      '</div>' +
-      '<div class="sp2-card-r">' + rows + '</div>' +
+    // ── band 2 · where it goes, and when ──
+    '<div class="sp2-card-l">' +
+      '<div class="sp2-ship">' + o.ship + '</div>' +
+      '<div class="sp2-addr">' + o.addr + '</div>' +
+      '<div class="sp2-meta">' + when + run + '</div>' +
     '</div>' +
-    sp2FitChip(o) +
+
+    // ── band 3 · what is on it, closing with the total ──
+    '<div class="sp2-card-r">' + rows + '</div>' +
+    '<div class="sp2-load-foot">' +
+      '<span class="sp2-load-n">' + count + '</span>' +
+      (lines.length > SP2_PROD_CAP
+        ? '<button class="sp2-more" onclick="sp2TogglePlist(event,\'' + o.id + '\')" ' +
+            'title="' + (open ? 'Fold the rest away' : 'Show the other ' + hidden) + '">' +
+            (open ? 'Show less' : '+' + hidden) + '</button>'
+        : '') +
+      '<span class="sp2-load-tot">' + sp2Gal(o).toLocaleString() + ' gal</span>' +
+    '</div>' +
   '</div>';
 }
 
