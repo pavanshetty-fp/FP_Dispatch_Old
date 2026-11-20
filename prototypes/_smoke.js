@@ -627,6 +627,48 @@
       sp2PickDriver('d0');
       if (first() !== a) throw new Error('coming back gave a different answer');
     });
+    step('sorting by fit puts the best first', () => {
+      sp2SetQuick('unplanned');
+      sp2PickDriver('d2');
+      sp2SetSort('time');
+      const byTime = [...document.querySelectorAll('.sp2-card .sp2-ord')].map(e => e.textContent);
+      if (byTime.length < 3) throw new Error('not enough orders to rank');
+      sp2SetSort('fit');
+      const byFit = [...document.querySelectorAll('.sp2-card .sp2-ord')].map(e => e.textContent);
+      if (byFit.length !== byTime.length) throw new Error('sorting lost or gained orders');
+      if (byFit.join() === byTime.join()) throw new Error('sorting by fit changed nothing');
+      // the order on screen matches the score, best first
+      const score = id => sp2FitScore(SP2_ORDERS.filter(o => o.id === id)[0]);
+      for (let i = 1; i < byFit.length; i++)
+        if (score(byFit[i - 1]) < score(byFit[i]))
+          throw new Error(byFit[i] + ' outranks ' + byFit[i - 1] + ' but sits below it');
+      if (!document.querySelector('.sp2-rank')) throw new Error('the ranking is not numbered');
+      if (document.querySelector('.sp2-vt-rail')) throw new Error('a ranking still draws the time rail');
+      // the horizontal view is a time axis and cannot be re-ordered
+      if (!document.querySelector('[data-v="h"]').disabled)
+        throw new Error('the horizontal view is still offered while ranking');
+      sp2SetSort('time');
+      if (document.querySelector('[data-v="h"]').disabled) throw new Error('it stayed disabled');
+      if (!document.querySelector('.sp2-vt-rail')) throw new Error('the rail did not come back');
+      sp2PickDriver('d0');
+    });
+    step('the ranking follows the rig', () => {
+      sp2SetQuick('unplanned');
+      sp2SetSort('fit');
+      sp2PickDriver('d0');
+      const a = document.querySelector('.sp2-card .sp2-ord').textContent;
+      sp2PickDriver('d2');
+      const b = document.querySelector('.sp2-card .sp2-ord').textContent;
+      if (a === b) {
+        // not wrong on its own, but the whole order must not be identical
+        const f = [...document.querySelectorAll('.sp2-card .sp2-ord')].map(e => e.textContent).join();
+        sp2PickDriver('d0');
+        if (f === [...document.querySelectorAll('.sp2-card .sp2-ord')].map(e => e.textContent).join())
+          throw new Error('two different rigs rank the orders identically');
+      }
+      sp2SetSort('time');
+      sp2PickDriver('d0');
+    });
     step('an assigned order leaves the orders column', () => {
       sp2SetQuick('unplanned');
       const un = SP2_ORDERS.filter(o => !o.driver)[0];

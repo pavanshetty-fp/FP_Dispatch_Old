@@ -1300,6 +1300,14 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-fit.full{background:color-mix(in oklab,var(--status-success) 12%,transparent);color:var(--status-success);}
 #scr-plan .sp2-fit.part{background:color-mix(in oklab,var(--status-caution) 12%,transparent);color:var(--status-caution);}
 #scr-plan .sp2-fit.none{background:var(--muted);color:var(--status-neutral);}
+/* ranked by fit: no rail, no gaps — those are about time */
+#scr-plan .sp2-vt.ranked .sp2-vrow{gap:10px;}
+#scr-plan .sp2-vrow.ranked .sp2-vtime{width:auto;padding-top:11px;opacity:.75;}
+#scr-plan .sp2-vrow.ranked .sp2-vnode{display:none;}
+#scr-plan .sp2-vrow.ranked .sp2-vcard{margin-left:0;}
+#scr-plan .sp2-rank{flex-shrink:0;width:20px;padding-top:10px;text-align:right;font-size:12px;font-weight:700;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-seg-btn:disabled{opacity:.4;cursor:not-allowed;}
+#scr-plan .sp2-seg-btn:disabled:hover{background:transparent;color:var(--fp-ink-3);}
 
 </style>
 </head>
@@ -2380,6 +2388,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
             <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
             <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
             <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+          </div>
+          <span class="sp2-flt-lbl">Sort</span>
+          <div class="sp2-seg">
+            <button class="sp2-seg-btn on" data-o="time" onclick="sp2SetSort('time')" title="In the order the day runs them">Time</button>
+            <button class="sp2-seg-btn"    data-o="fit"  onclick="sp2SetSort('fit')"  title="Best fit for the chosen rig first">Fit</button>
           </div>
           <div class="sp2-seg">
             <button class="sp2-seg-btn" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
@@ -4555,6 +4568,7 @@ var SP2_NOW = 13 * 60 + 30;  // 13:30 — late enough that the early shift has e
                              // standings are not all the same
 var sp2SelOrder = null;
 var sp2View = 'v';            // v vertical (the default) · h horizontal
+var sp2Sort = 'time';         // time · fit — fit ranks against the chosen rig
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 206;
@@ -4575,14 +4589,28 @@ function sp2Window() { return { from:5*60, to:22*60 }; }
 // AM is the early shifts, PM the late ones, as the docs name them.
 function sp2ShiftBand(k) { return (SP2_SHIFTS[k] && SP2_SHIFTS[k].name === 'Early') ? 'am' : 'pm'; }
 
+// Worth-doing-first, against the chosen rig: an order that fills the truck
+// outright, then ones that go on whole (fuller rig first), then part loads by
+// how much of them lands.
+function sp2FitScore(o) {
+  var f = sp2FitFor(sp2Driver, o);
+  if (!f) return -1;
+  if (f.pct >= 100 && f.rigPct >= 100) return 1e9;
+  if (f.pct >= 100) return 1e6 + f.rigPct * 1000 + f.fits;
+  return f.pct * 1000 + f.fits;
+}
+
 function sp2Visible() {
   var w = sp2Window();
-  return SP2_ORDERS.filter(function(o) {
+  var list = SP2_ORDERS.filter(function(o) {
     if (o.t < w.from || o.t > w.to) return false;
     if (sp2Quick === 'planned')   return sp2Planned(o);
     if (sp2Quick === 'unplanned') return !sp2Planned(o);
     return true;
-  }).sort(function(a,b){ return a.t - b.t; });
+  });
+  if (sp2Sort === 'fit')
+    return list.sort(function (a, b) { return sp2FitScore(b) - sp2FitScore(a) || a.t - b.t; });
+  return list.sort(function(a,b){ return a.t - b.t; });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4663,23 +4691,27 @@ function sp2CardHtml(o, style) {
 // is written on the rail, so the shape of the day still reads without an axis
 // wide enough to scale it.
 function sp2RenderVertical(orders) {
-  if (!orders.length) return '<div class="sp2-empty">No orders in this window — widen the shift range or clear the filter.</div>';
+  if (!orders.length) return '<div class="sp2-empty">Nothing here — try another status or shift.</div>';
+  var ranked = sp2Sort === 'fit';
   var rows = orders.map(function(o, i) {
     var gap = '';
-    if (i) {
+    if (i && !ranked) {
       var mins = o.t - orders[i-1].t;
       if (mins >= 45) {
         var h = Math.floor(mins/60), m = mins%60;
         gap = '<div class="sp2-vgap">' + (h ? h + 'h ' : '') + (m ? m + 'm' : '') + ' later</div>';
       }
     }
-    return gap + '<div class="sp2-vrow ' + (sp2Planned(o) ? 'planned' : 'unplanned') + '">' +
+    return gap + '<div class="sp2-vrow' + (ranked ? ' ranked' : '') + ' ' +
+      (sp2Planned(o) ? 'planned' : 'unplanned') + '">' +
+      (ranked ? '<span class="sp2-rank">' + (i + 1) + '</span>' : '') +
       '<span class="sp2-vtime">' + sp2Hhmm(o.t) + '</span>' +
       '<span class="sp2-vnode"></span>' +
       '<div class="sp2-vcard">' + sp2CardHtml(o) + '</div>' +
     '</div>';
   }).join('');
-  return '<div class="sp2-vt"><div class="sp2-vt-rail"></div>' + rows + '</div>';
+  return '<div class="sp2-vt' + (ranked ? ' ranked' : '') + '">' +
+    (ranked ? '' : '<div class="sp2-vt-rail"></div>') + rows + '</div>';
 }
 
 function sp2RenderTimeline() {
@@ -4762,6 +4794,19 @@ function sp2SetQuick(q) {
   });
   sp2RenderTimeline();
 }
+// A time axis cannot be re-sorted, so ranking by fit means the vertical list.
+function sp2SetSort(o) {
+  sp2Sort = o;
+  document.querySelectorAll('[data-o]').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.o === o);
+  });
+  var h = document.querySelector('[data-v="h"]');
+  h.disabled = o === 'fit';
+  h.title = o === 'fit' ? 'Not available while sorting by fit — a time axis cannot be re-ordered'
+                        : 'Horizontal timeline';
+  if (o === 'fit' && sp2View === 'h') sp2SetView('v'); else sp2RenderTimeline();
+}
+
 function sp2SetView(v) {
   sp2View = v;
   document.querySelectorAll('[data-v]').forEach(function(b) {
