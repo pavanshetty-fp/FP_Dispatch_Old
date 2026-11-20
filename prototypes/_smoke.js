@@ -168,6 +168,16 @@
   }
 
   if (out.page.startsWith('shift-planner')) {
+    // A hand-set column width is remembered and beats the per-view widths — which
+    // is right in use and wrong for a test run, so start every run without one.
+    const sp2ResetWidth = () => {
+      try { localStorage.removeItem('sp2ColWidth'); } catch (e) {}
+      const c = document.querySelector('.sp2-col-orders');
+      if (c) { c.style.flexBasis = ''; }
+      if (typeof sp2FitRig === 'function') sp2FitRig();
+    };
+    sp2ResetWidth();
+
     step('orders on the timeline', () => {
       if (document.querySelectorAll('.sp2-card').length < 3) throw new Error('too few order cards');
       // runs before anything touches the view, so this is the state it opened in
@@ -495,18 +505,27 @@
       if (!c2.querySelector('[data-s]')) throw new Error('the shift filter did not move to driver & truck');
       if (!c2.querySelector('[data-d]')) throw new Error('the driver tabs left their header');
       // search first on the left, every filter to its right
+      sp2ResetWidth();
       const search = c2.querySelector('#sp2DrvSearch').getBoundingClientRect();
       const tools = c2.querySelector('.sp2-hdr-tools').getBoundingClientRect();
-      if (search.left >= tools.left) throw new Error('search is not ahead of the filters');
+      // ahead of them on the line, or above them when the column is too narrow
+      const sameRow = Math.abs(search.top - tools.top) < 6;
+      if (sameRow ? search.left >= tools.left : search.top > tools.top)
+        throw new Error('search is not ahead of the filters');
       if (document.getElementById('sp2LayoutSeg')) throw new Error('the V1/V2 switch is still here');
       if (typeof sp2Layout !== 'undefined') throw new Error('V1 left its state behind');
     });
     step('the rig faces left and leaves air either side', () => {
+      sp2ResetWidth();
       sp2PickDriver('d0');
       const box = document.querySelector('.sp2-rig'), svg = box.querySelector('.sp2-sv');
       const slack = box.clientWidth - svg.getBoundingClientRect().width;
-      if (Math.abs(slack - 2 * TK_SIDE_PAD) > 6)
+      // when the compartments are already at their floor the rig cannot give
+      // back the full padding; it just must not spill past the lane
+      const atFloor = svg.getBoundingClientRect().width >= box.clientWidth - 2 * TK_SIDE_PAD - 2;
+      if (!atFloor && Math.abs(slack - 2 * TK_SIDE_PAD) > 6)
         throw new Error('leaves ' + Math.round(slack / 2) + 'px a side, not ' + TK_SIDE_PAD);
+      if (slack < -2) throw new Error('the rig spills past the lane by ' + Math.round(-slack) + 'px');
       // the tractor is flipped about its own middle, and drawn first
       const flipped = [...svg.querySelectorAll('g')].some(g => /scale\(-1,1\)/.test(g.getAttribute('transform') || ''));
       if (!flipped) throw new Error('the tractor is not mirrored');
@@ -741,6 +760,7 @@
         throw new Error('All is no longer in roster order');
     });
     step('the driver header sits on one line', () => {
+      sp2ResetWidth();
       const hdr = document.querySelector('.sp2-col-unit .sp2-col-hdr');
       const mid = el => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
       const title = hdr.querySelector('.sp2-col-title');
@@ -752,6 +772,69 @@
         throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(search)) + 'px off the search');
       if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
         throw new Error('the tabs still carry the margin from when they were in a panel');
+    });
+    step('the card splits: who and where left, what right', () => {
+      sp2SetQuick('all');
+      if (sp2BlendOnly) sp2ToggleBlend();
+      const card = document.querySelector('.sp2-card');
+      const L = card.querySelector('.sp2-card-l'), R = card.querySelector('.sp2-card-r');
+      if (!L || !R) throw new Error('the card is not in two halves');
+      if (L.getBoundingClientRect().left >= R.getBoundingClientRect().left)
+        throw new Error('the halves are the wrong way round');
+      ['.sp2-kind', '.sp2-ord', '.sp2-pill', '.sp2-ship', '.sp2-addr'].forEach(sel => {
+        if (!L.querySelector(sel)) throw new Error(sel + ' is not on the left');
+      });
+      if (L.querySelector('.sp2-prow')) throw new Error('a product is on the left');
+      const id = card.querySelector('.sp2-ord').textContent;
+      const o = SP2_ORDERS.filter(x => x.id === id)[0];
+      if (R.querySelectorAll('.sp2-prow').length !== o.prods.length)
+        throw new Error(id + ' lists ' + R.querySelectorAll('.sp2-prow').length + ' of ' + o.prods.length + ' products');
+      R.querySelectorAll('.sp2-prow-q').forEach(q => {
+        if (!/[\d,]+ gal/.test(q.textContent)) throw new Error('a product has no quantity');
+      });
+    });
+    step('a blended product shows its ratio on the product', () => {
+      sp2SetQuick('all');
+      if (!sp2BlendOnly) sp2ToggleBlend();
+      const rows = [...document.querySelectorAll('.sp2-prow.blend')];
+      if (!rows.length) throw new Error('no blended product on screen');
+      rows.forEach(r => {
+        const name = r.querySelector('.sp2-prow-p').textContent;
+        const b = SP2_BLENDS[name];
+        if (!b) throw new Error(name + ' is marked a blend and is not one');
+        if (!r.querySelector('.sp2-pill-blend')) throw new Error(name + ' has no Blend label beside it');
+        const mix = r.querySelector('.sp2-prow-mix');
+        if (!mix) throw new Error(name + ' does not show what it is made of');
+        // the ratio on screen is the ratio in the data, both parts and both numbers
+        b.parts.forEach(part => {
+          if (mix.textContent.indexOf(part.p) < 0) throw new Error(name + ' omits ' + part.p);
+          if (mix.textContent.indexOf(String(part.pct)) < 0)
+            throw new Error(name + ' omits the ' + part.pct + '% share');
+        });
+      });
+      // and a straight product carries neither
+      sp2ToggleBlend();
+      const plain = [...document.querySelectorAll('.sp2-prow:not(.blend)')];
+      if (!plain.length) throw new Error('no straight product to compare');
+      plain.forEach(r => {
+        if (r.querySelector('.sp2-pill-blend') || r.querySelector('.sp2-prow-mix'))
+          throw new Error(r.querySelector('.sp2-prow-p').textContent + ' is not a blend but reads like one');
+      });
+    });
+    step('a width set by hand is remembered', () => {
+      const grip = document.getElementById('sp2Split');
+      const col = document.querySelector('.sp2-col-orders');
+      const body = document.getElementById('sp2Body');
+      try { localStorage.removeItem('sp2ColWidth'); } catch (e) { return; }
+      const r = body.getBoundingClientRect();
+      grip.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + col.getBoundingClientRect().width }));
+      document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width * 0.45 }));
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      const kept = localStorage.getItem('sp2ColWidth');
+      if (!kept) throw new Error('the width was not kept');
+      if (Math.abs(parseFloat(kept) - 45) > 1) throw new Error('kept ' + kept + ', expected about 45%');
+      if (col.style.flexBasis !== kept) throw new Error('what was kept is not what is showing');
+      sp2ResetWidth();
     });
     step('an assigned order leaves the orders column', () => {
       sp2SetQuick('unplanned');
@@ -868,7 +951,7 @@
       const after = col.getBoundingClientRect().width;
       col.style.transition = keep;
       if (Math.abs(after - before) < 40) throw new Error('the column did not move: ' + Math.round(before) + ' → ' + Math.round(after));
-      col.style.flexBasis = '';
+      sp2ResetWidth();
       if (typeof sp2PopOut !== 'function') throw new Error('a column cannot be popped out');
       if (document.querySelectorAll('.sp2-col-hdr .sp2-ico-btn').length < 2)
         throw new Error('only one column offers to pop out');

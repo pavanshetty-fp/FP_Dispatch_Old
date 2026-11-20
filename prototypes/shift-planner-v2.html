@@ -81,7 +81,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* plain percentages, not clamp(): flex-basis cannot interpolate between a
    clamp() and a percentage, so the transition stalls where it started. */
 .sp2-col-orders{flex:0 0 40%;min-width:272px;border-right:1px solid var(--fp-stroke-hairline);transition:flex-basis .22s ease;background:var(--fp-card-1);}
-.sp2-body[data-view="v"] .sp2-col-orders{flex-basis:25%;}
+.sp2-body[data-view="v"] .sp2-col-orders{flex-basis:36%;}
 .sp2-body[data-view="v"] .sp2-tl-wrap{overflow-x:hidden;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1a);}
 
@@ -468,6 +468,18 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* the driver tabs sit on the header line like everything else on it */
 .sp2-drv-tabs{align-self:center;margin-bottom:0;}
 .sp2-col-hdr{align-items:center;}
+/* ── the order card: who and where on the left, what on the right ── */
+.sp2-card-cols{display:flex;gap:12px;align-items:flex-start;}
+.sp2-card-l{flex:1 1 0;min-width:0;}
+.sp2-card-r{flex:0 1 auto;min-width:0;max-width:56%;display:flex;flex-direction:column;gap:4px;}
+.sp2-prow{padding:3px 7px;border-radius:5px;background:var(--chip);}
+.sp2-prow.blend{background:color-mix(in oklab,var(--status-info) 7%,var(--chip));}
+.sp2-prow-top{display:flex;align-items:center;gap:6px;}
+.sp2-prow-p{font-size:12px;font-weight:500;color:var(--fp-ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-prow-q{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.sp2-prow-mix{font-size:10.5px;color:var(--fp-ink-3);margin-top:2px;padding-left:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp2-prow .sp2-pill-blend{height:16px;padding:0 6px;font-size:10px;flex-shrink:0;}
+.sp2-card-l .sp2-ship{margin-top:6px;}
 </style>
 </head>
 <body>
@@ -772,7 +784,7 @@ var sp2Sort = 'time';         // time · fit — fit ranks against the chosen ri
 var sp2BlendOnly = false;     // narrow to orders carrying a blend
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
-var SP2_CARD_W = 206;
+var SP2_CARD_W = 290;
 
 function sp2Hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
 function sp2Short(m){
@@ -864,29 +876,50 @@ function sp2FitChip(o) {
 }
 
 // The card is the same in every view; only where it sits changes.
+// A blended product carries its make-up: the constituents and the ratio they
+// are splash-blended at, since that is what the terminal is being asked for.
+function sp2Ratio(p) {
+  var b = SP2_BLENDS[p];
+  if (!b) return '';
+  return b.parts.map(function (x) { return x.p + ' ' + x.pct; }).join(' · ');
+}
+
 function sp2CardHtml(o, style) {
   var planned = sp2Planned(o);
-  var chips = o.prods.map(function (pr) {
+  // the products are a list now, not a run of chips — the column is wide
+  // enough to give each one a line, a quantity and its make-up
+  var rows = o.prods.map(function (pr) {
     var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
-    return '<span class="sp2-chip' + (sp2IsBlend(pr.p) ? ' blend' : '') + '">' +
-           '<span class="sp2-dot" style="background:' + col + ';"></span>' +
-           pr.p + ' <span class="sp2-chip-q">' + pr.q.toLocaleString() + '</span></span>';
+    var blend = sp2IsBlend(pr.p);
+    return '<div class="sp2-prow' + (blend ? ' blend' : '') + '">' +
+        '<div class="sp2-prow-top">' +
+          '<span class="sp2-dot" style="background:' + col + ';"></span>' +
+          '<span class="sp2-prow-p">' + pr.p + '</span>' +
+          (blend ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+          '<span class="sp2-prow-q">' + pr.q.toLocaleString() + ' gal</span>' +
+        '</div>' +
+        (blend ? '<div class="sp2-prow-mix">' + sp2Ratio(pr.p) + '</div>' : '') +
+      '</div>';
   }).join('');
+
   // the time is on the rail beside the card, so it is not repeated here
   return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
       (sp2SelOrder === o.id ? ' sel' : '') + '" ' + (style ? 'style="' + style + '" ' : '') +
       'draggable="true" ondragstart="sp2DragStart(event,\'' + o.id + '\')" ondragend="sp2DragEnd()" ' +
       'onclick="sp2PickOrder(\'' + o.id + '\')" title="Drag onto the truck to load it · ' + o.ship + '">' +
-    '<div class="sp2-card-top">' +
-      '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
-      '<span class="sp2-ord">' + o.id + '</span>' +
-      '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
-        (planned ? 'Planned' : 'Unplanned') + '</span>' +
-      (sp2HasBlend(o) ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+    '<div class="sp2-card-cols">' +
+      '<div class="sp2-card-l">' +
+        '<div class="sp2-card-top">' +
+          '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+          '<span class="sp2-ord">' + o.id + '</span>' +
+          '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
+            (planned ? 'Planned' : 'Unplanned') + '</span>' +
+        '</div>' +
+        '<div class="sp2-ship">' + o.ship + '</div>' +
+        '<div class="sp2-addr">' + o.addr + '</div>' +
+      '</div>' +
+      '<div class="sp2-card-r">' + rows + '</div>' +
     '</div>' +
-    '<div class="sp2-ship">' + o.ship + '</div>' +
-    '<div class="sp2-addr">' + o.addr + '</div>' +
-    '<div class="sp2-prods">' + chips + '</div>' +
     sp2FitChip(o) +
   '</div>';
 }
@@ -2027,8 +2060,16 @@ function sp2PopOut(which) {
     if (!on) return;
     on = false; grip.classList.remove('on');
     document.body.style.cursor = ''; document.body.style.userSelect = '';
+    // a width you set by hand is the width you keep, across reloads
+    try { localStorage.setItem('sp2ColWidth', col.style.flexBasis); } catch (e) {}
     sp2FitRig();
   });
+
+  // restore it before anything measures the lane
+  try {
+    var saved = localStorage.getItem('sp2ColWidth');
+    if (saved) { col.style.flexBasis = saved; sp2FitRig(); }
+  } catch (e) {}
 })();
 
 // the header arrows move the day
