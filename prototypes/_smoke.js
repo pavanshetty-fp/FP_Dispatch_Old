@@ -176,6 +176,7 @@
       if (document.querySelector('.sp2-ruler')) throw new Error('the top axis is drawn on load');
     });
     step('quick filter narrows', () => {
+      sp2SetQuick('all');
       const all = document.querySelectorAll('.sp2-card').length;
       sp2SetQuick('unplanned');
       const un = document.querySelectorAll('.sp2-card').length;
@@ -184,14 +185,25 @@
       sp2SetQuick('all');
       if (un + pl !== all) throw new Error('planned + unplanned does not equal all');
     });
-    step('shift range changes the window', () => {
-      const am = document.querySelectorAll('.sp2-card').length;
-      sp2SetShift('pm');
-      const pm = document.querySelectorAll('.sp2-card').length;
-      sp2SetShift('custom');
-      if (!document.getElementById('sp2Custom').classList.contains('on')) throw new Error('custom range hidden');
+    step('the shift filter narrows drivers, not orders', () => {
+      if (document.getElementById('sp2Custom')) throw new Error('the custom range is still here');
+      if (document.querySelectorAll('[data-s]').length !== 3) throw new Error('expected All, AM and PM');
+      sp2SetShift('all');
+      const orders = document.querySelectorAll('.sp2-card').length;
+      const all = document.querySelectorAll('.sp2-ln').length;
       sp2SetShift('am');
-      if (am === pm && am !== 0) throw new Error('AM and PM show the same orders');
+      const am = document.querySelectorAll('.sp2-ln').length;
+      if (document.querySelectorAll('.sp2-card').length !== orders)
+        throw new Error('the shift filter still cuts the orders column');
+      if (am >= all || !am) throw new Error('AM did not narrow the drivers: ' + am + ' of ' + all);
+      [...document.querySelectorAll('.sp2-ln')].forEach(l => {
+        if (SP2_SHIFTS[SP2_DRIVERS[l.dataset.k].shift].name !== 'Early')
+          throw new Error('a late-shift driver is showing under AM');
+      });
+      sp2SetShift('pm');
+      const pm = document.querySelectorAll('.sp2-ln').length;
+      if (am + pm !== all) throw new Error('AM + PM should be every driver: ' + am + ' + ' + pm + ' vs ' + all);
+      sp2SetShift('all');
     });
     step('two views, and the column resizes with them', () => {
       const col = document.querySelector('.sp2-col-orders');
@@ -553,33 +565,101 @@
       sp2PickDriverFor('d2', 'd0');
       if (SP2_DRIVERS.d0.truck !== was) throw new Error('handing back did not restore the rig');
     });
-    step('fuel moves between compartments', () => {
+    step('an assigned order leaves the orders column', () => {
+      sp2SetQuick('unplanned');
+      const un = SP2_ORDERS.filter(o => !o.driver)[0];
+      const onList = () => [...document.querySelectorAll('.sp2-card .sp2-ord')].some(e => e.textContent === un.id);
+      if (!onList()) throw new Error(un.id + ' is not in the column to begin with');
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
+      const k = lane.dataset.k;
+      sp2Drag = un.id;
+      sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => un.id } }, 'auto', -1, k);
+      if (un.driver !== k) throw new Error('the drop did not take');
+      if (onList()) throw new Error(un.id + ' is still in the orders column after being planned');
+      // and it can be taken back off, which puts it back
+      sp2UnplanOrder({ stopPropagation(){} }, k, un.id);
+      if (un.driver) throw new Error('taking it off left it assigned');
+      if (!onList()) throw new Error('it did not come back to the orders column');
+      if (SP2_DRIVERS[k].load.some(l => l.p === un.prods[0].p && l.q >= un.prods[0].q) &&
+          !SP2_ORDERS.some(o => o.driver === k && o.prods.some(pr => pr.p === un.prods[0].p)))
+        throw new Error('its gallons are still on the truck');
+    });
+    step('an order planned on someone else cannot be taken', () => {
+      const taken = SP2_ORDERS.filter(o => o.driver)[0];
+      const owner = taken.driver;
+      const other = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k).find(x => x !== owner);
+      sp2Drag = taken.id;
+      sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => taken.id } }, 'auto', -1, other);
+      if (taken.driver !== owner) throw new Error('it moved to another driver behind their back');
+      if (!/planned on/.test(document.getElementById('sp2Toast').textContent))
+        throw new Error('nothing said why it was refused');
+    });
+    step('too many gallons is flagged, with ways out', () => {
+      // load a rig past its capacity and see what the lane says
+      const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
+      const k = lane.dataset.k;
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      sp2Unload(k);
+      const cap = sp2RigCap(k);
+      let piled = 0;
+      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+        if (piled > cap) return;
+        o.driver = k; piled += sp2Gal(o);
+      });
+      sp2RenderUnit();
+      const over = sp2Overload(k);
+      if (!over) throw new Error('piled ' + piled + ' gal onto ' + cap + ' and it did not notice');
+      const card = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === k);
+      const warn = card.querySelector('.sp2-over-warn');
+      if (!warn) throw new Error('no warning on the lane');
+      if (!/over by/.test(warn.textContent)) throw new Error('it does not say by how much');
+      const fixes = warn.querySelectorAll('.sp2-fix');
+      if (fixes.length < 2) throw new Error('only ' + fixes.length + ' way out offered');
+      // and the first one actually clears it
+      const before = sp2Overload(k).over;
+      sp2TrimOrder({ stopPropagation(){} }, k, over.trim.id, over.over);
+      if (sp2Overload(k)) throw new Error('cutting ' + before + ' gal did not clear the overload');
+    });
+    step('fuel moves in the quantity you choose', () => {
       sp2PickDriver('d0');
       const d = SP2_DRIVERS.d0;
-      const from = d.load.findIndex(l => l.q > 0);
-      const to = d.load.findIndex((l, i) => i !== from && !l.q && SP2_TRUCKS[d.truck].comps[i].cap >= d.load[from].q);
-      if (from < 0 || to < 0) throw new Error('nothing to move, or nowhere to put it');
+      // a known load, since the steps before this one move rigs between drivers
+      sp2Unload('d0');
+      d.load[1].p = 'HO DSL'; d.load[1].q = Math.min(800, SP2_TRUCKS[d.truck].comps[1].cap);
+      sp2RenderUnit();
+      const from = 1, to = 0;
       const moved = { p: d.load[from].p, q: d.load[from].q };
-      const stop = { stopPropagation() {} };
+      const stop = { stopPropagation() {}, currentTarget: document.querySelector('.sp2-sv') };
       sp2CompClick(stop, 'd0', 'truck', from);
       if (!sp2MoveFrom) throw new Error('the compartment was not picked up');
       if (!document.querySelector('.sp2-sv-held')) throw new Error('nothing shows it is held');
       sp2CompClick(stop, 'd0', 'truck', to);
-      if (sp2MoveFrom) throw new Error('it was never put down');
-      if (d.load[to].p !== moved.p || d.load[to].q !== moved.q) throw new Error('it did not arrive');
-      if (d.load[from].q) throw new Error('it is still in the old compartment');
-      // capacity still decides
-      const big = d.load.findIndex(l => l.q > 0);
-      const small = SP2_TRUCKS[d.truck].comps.findIndex((c, i) => i !== big && c.cap < d.load[big].q);
-      if (small >= 0) {
-        sp2CompClick(stop, 'd0', 'truck', big);
-        sp2CompClick(stop, 'd0', 'truck', small);
-        if (d.load[small].q === d.load[big].q && d.load[small].q > SP2_TRUCKS[d.truck].comps[small].cap)
-          throw new Error('it went into a compartment too small for it');
-        sp2MoveFrom = null; sp2RenderUnit();
+      // it asks how much rather than tipping the whole compartment across
+      const n = document.getElementById('sp2MoveN');
+      if (!n) throw new Error('it did not ask how much to move');
+      if (+n.value !== Math.min(moved.q, SP2_TRUCKS[d.truck].comps[to].cap))
+        throw new Error('it did not default to as much as fits');
+      if (d.load[to].q) throw new Error('it moved before being told how much');
+      // a part of it, not all
+      const part = Math.round(moved.q / 4 / 50) * 50 || 50;
+      sp2MoveSync(part);
+      sp2DoMove('d0');
+      if (d.load[to].q !== part) throw new Error('moved ' + d.load[to].q + ' gal, not ' + part);
+      if (d.load[from].q !== moved.q - part) throw new Error('the source did not keep the rest');
+      if (d.load[from].p !== moved.p) throw new Error('the source forgot its product');
+      if (sp2MoveFrom || sp2MoveTo) throw new Error('the move did not finish');
+      // and never more than the destination holds
+      if (sp2MoveMax > SP2_TRUCKS[d.truck].comps[to].cap)
+        throw new Error('it would allow more than the compartment holds');
+      // one product per compartment still stands
+      const otherProd = d.load.findIndex((l, i) => i !== to && l.q > 0 && l.p !== d.load[to].p);
+      if (otherProd >= 0) {
+        sp2CompClick(stop, 'd0', 'truck', otherProd);
+        sp2CompClick(stop, 'd0', 'truck', to);
+        if (!/one product per compartment/.test(document.getElementById('sp2Toast').textContent))
+          throw new Error('it allowed two products into one compartment');
+        sp2MoveCancel();
       }
-      sp2CompClick(stop, 'd0', 'truck', to);
-      sp2CompClick(stop, 'd0', 'truck', from);
     });
     step('the columns resize, and either can go its own way', () => {
       const grip = document.getElementById('sp2Split');

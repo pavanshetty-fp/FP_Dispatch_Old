@@ -20,8 +20,16 @@ but the planner knows nothing about it. Three consequences:
   way that matters: a tank wagon order can be split, a transport order cannot.
 
 ### 1.2 The overflow message names the problem but offers no way out
-Dropping an order that does not fit says what will not fit and stops. It should
-offer the three routes, and which ones are allowed depends on the line:
+**Half done, 2026-11-20.** A lane whose planned gallons exceed its rig now says
+so and offers two ways out — cut the biggest order back by the overage, or drop
+one order and take an unplanned one that fits the space better. What is still
+missing is the line-of-service rule: those fixes are offered to every truck,
+and a transport is not allowed the first one.
+
+The compartment-level case is still bare — dropping an order whose fuel will
+not fit the compartments still just names what was left over.
+
+The three routes, and which are allowed by line:
 
 | | Tank wagon / Lubes | Transport |
 |---|---|---|

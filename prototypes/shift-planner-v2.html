@@ -421,6 +421,25 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-body[data-only="drivers"] .sp2-split{display:none;}
 .sp2-body[data-only="orders"] .sp2-col-orders,
 .sp2-body[data-only="drivers"] .sp2-col-unit{flex:1 1 100% !important;}
+.sp2-ln-stops{display:flex;align-items:center;gap:12px;}
+.sp2-stop-list{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.sp2-ln-stops-lbl{margin-left:auto;flex-shrink:0;}
+.sp2-stop-x{border:none;background:none;padding:0 0 0 3px;margin-right:-3px;font-family:inherit;font-size:15px;line-height:1;color:var(--fp-ink-3);cursor:pointer;}
+.sp2-stop-x:hover{color:var(--status-failed);}
+
+/* more gallons than rig: say by how much, and offer the ways out */
+.sp2-over-warn{margin-top:9px;padding:9px 11px;border-radius:var(--r-md);background:color-mix(in oklab,var(--status-failed) 9%,transparent);border:1px solid color-mix(in oklab,var(--status-failed) 30%,transparent);}
+.sp2-over-head{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--status-failed);font-variant-numeric:tabular-nums;}
+.sp2-over-head b{font-weight:600;}
+.sp2-over-fixes{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.sp2-fix{height:28px;padding:0 11px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;font-variant-numeric:tabular-nums;}
+.sp2-fix:hover{background:var(--fp-emphasis);border-color:var(--fp-ink-3);}
+.sp2-move{min-width:290px;}
+.sp2-move-range{width:100%;accent-color:var(--brand);margin:2px 0 10px;}
+.sp2-move-row{display:flex;align-items:center;gap:8px;}
+.sp2-move-row .sp2-time{width:88px;text-align:right;}
+.sp2-move-of{font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-move-quick{display:flex;align-items:center;gap:6px;margin-top:11px;}
 </style>
 </head>
 <body>
@@ -456,9 +475,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
         <div class="sp2-hdr-tools">
           <div class="sp2-seg" id="sp2Quick">
-            <button class="sp2-seg-btn on" data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
-            <button class="sp2-seg-btn"    data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
+            <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
             <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
+            <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
           </div>
           <div class="sp2-seg">
             <button class="sp2-seg-btn" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
@@ -496,14 +515,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
           </div>
           <span class="sp2-flt-lbl">Shift</span>
           <div class="sp2-seg">
-            <button class="sp2-seg-btn on" data-s="am"     onclick="sp2SetShift('am')">AM</button>
-            <button class="sp2-seg-btn"    data-s="pm"     onclick="sp2SetShift('pm')">PM</button>
-            <button class="sp2-seg-btn"    data-s="custom" onclick="sp2SetShift('custom')">Custom</button>
-          </div>
-          <div class="sp2-custom" id="sp2Custom">
-            <input class="sp2-time" id="sp2From" value="05:00" onchange="sp2Render()">
-            <span style="color:var(--fp-ink-3);font-size:13px;">–</span>
-            <input class="sp2-time" id="sp2To" value="22:00" onchange="sp2Render()">
+            <button class="sp2-seg-btn on" data-s="all" onclick="sp2SetShift('all')">All</button>
+            <button class="sp2-seg-btn"    data-s="am"  onclick="sp2SetShift('am')">AM</button>
+            <button class="sp2-seg-btn"    data-s="pm"  onclick="sp2SetShift('pm')">PM</button>
           </div>
           <div class="sp2-seg" id="sp2DenseSeg">
             <button class="sp2-seg-btn on" data-z="compact" onclick="sp2SetDense('compact')" title="Compact — more drivers on screen">
@@ -663,8 +677,9 @@ var SP2_ORDERS = (function buildOrders() {
 // ══════════════════════════════════════════════════════════
 //  State
 // ══════════════════════════════════════════════════════════
-var sp2Quick = 'all';          // all · unplanned · planned
-var sp2Shift_ = 'am';          // am · pm · custom
+var sp2Quick = 'unplanned';    // unplanned · planned · all — the column is the
+                               // still-to-plan list, so an assigned order leaves it
+var sp2Shift_ = 'all';         // all · am · pm — which drivers' shifts, not which orders
 var sp2Driver = 'd0';
 var sp2DrvFilter = 'all';
 var sp2Dense = 'compact';    // compact · full — the chosen lane is always full        // v1 roster + one rig · v2 a lane per driver   // all · driving · on-duty · off-duty
@@ -691,19 +706,12 @@ function sp2ShiftLabel(k){ var s = SP2_SHIFTS[k]; return s ? s.name + ' ' + sp2H
 function sp2Planned(o){ return !!o.driver; }
 function sp2Gal(o){ return o.prods.reduce(function(s,p){ return s+p.q; },0); }
 
-// the window the timeline draws, from the shift filter
-function sp2Window() {
-  if (sp2Shift_ === 'am') return { from:5*60,  to:13*60 };
-  if (sp2Shift_ === 'pm') return { from:13*60, to:22*60 };
-  var f = sp2ParseTime(document.getElementById('sp2From').value, 5*60);
-  var t = sp2ParseTime(document.getElementById('sp2To').value, 22*60);
-  if (t <= f) t = f + 60;
-  return { from:f, to:t };
-}
-function sp2ParseTime(v, dflt) {
-  var m = String(v||'').match(/^(\d{1,2}):(\d{2})$/);
-  return m ? Math.min(1440, Math.max(0, +m[1]*60 + +m[2])) : dflt;
-}
+// The timeline draws the whole working day. The shift filter no longer cuts it
+// down — a shift belongs to a driver, so it narrows the driver list instead.
+function sp2Window() { return { from:5*60, to:22*60 }; }
+
+// AM is the early shifts, PM the late ones, as the docs name them.
+function sp2ShiftBand(k) { return (SP2_SHIFTS[k] && SP2_SHIFTS[k].name === 'Early') ? 'am' : 'pm'; }
 
 function sp2Visible() {
   var w = sp2Window();
@@ -860,8 +868,7 @@ function sp2SetShift(s) {
   document.querySelectorAll('[data-s]').forEach(function(b) {
     b.classList.toggle('on', b.dataset.s === s);
   });
-  document.getElementById('sp2Custom').classList.toggle('on', s === 'custom');
-  sp2RenderTimeline();
+  sp2RenderUnit();
 }
 
 // Only two controls sit in the header: the view switch, and this. Everything
@@ -922,6 +929,7 @@ function sp2DriverKeys() {
   var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
   return Object.keys(SP2_DRIVERS).filter(function (k) {
     var d = SP2_DRIVERS[k];
+    if (sp2Shift_ !== 'all' && sp2ShiftBand(d.shift) !== sp2Shift_) return false;
     if (sp2DrvFilter === 'available') { if (!sp2Avail(d)) return false; }
     else if (sp2DrvFilter !== 'all' && d.state !== sp2DrvFilter) return false;
     if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
@@ -1025,44 +1033,93 @@ function sp2Cell(k, unit, i) {
   return { cap:SP2_TRUCKS[d.truck].comps[i].cap, l:d.load[i] };
 }
 
-// Pick a compartment up, then put it down somewhere else. Click rather than
-// drag: an SVG rect is not a draggable element, and the order drag already
-// owns the dragging gesture.
+// Moving fuel is a quantity, not a compartment. Pick the compartment it comes
+// out of, pick the one it goes into, then say how much — all of it, or 200 gal
+// of it. One product per compartment still holds, so the destination has to be
+// empty or already hold the same thing.
+var sp2MoveTo = null, sp2MoveMax = 0;
+
 function sp2CompClick(e, k, unit, i) {
   e.stopPropagation();
   var here = sp2Cell(k, unit, i);
   if (!here) return;
 
   if (!sp2MoveFrom) {
-    if (!here.l.q) return;                       // nothing to pick up
+    if (!here.l.q) return;                       // nothing in it to move
     sp2MoveFrom = { k:k, unit:unit, i:i };
     sp2RenderUnit();
-    sp2Toast('Moving ' + here.l.p + ' — pick the compartment to put it in');
+    sp2Toast('Moving ' + here.l.p + ' — pick the compartment it goes into');
     return;
   }
-  if (sp2MoveFrom.k === k && sp2MoveFrom.unit === unit && sp2MoveFrom.i === i) {
-    sp2MoveFrom = null; sp2RenderUnit(); return;  // put it back
-  }
+  if (sp2MoveFrom.k === k && sp2MoveFrom.unit === unit && sp2MoveFrom.i === i)
+    return sp2MoveCancel();                      // put it back
   if (sp2MoveFrom.k !== k) {
     sp2Toast('Fuel moves between compartments of one rig, not between trucks');
-    sp2MoveFrom = null; sp2RenderUnit(); return;
+    return sp2MoveCancel();
   }
 
   var from = sp2Cell(k, sp2MoveFrom.unit, sp2MoveFrom.i);
-  // capacity is the whole point of a compartment, so it still decides
-  if (from.l.q > here.cap)
-    return sp2Toast(from.l.p + ' is ' + from.l.q.toLocaleString() + ' gal; that compartment holds ' +
-                    here.cap.toLocaleString());
-  if (here.l.q > from.cap)
-    return sp2Toast('Swapping would put ' + here.l.q.toLocaleString() + ' gal into a ' +
-                    from.cap.toLocaleString() + ' gal compartment');
+  if (here.l.q && here.l.p !== from.l.p)
+    return sp2Toast('That compartment holds ' + here.l.p + ' — one product per compartment');
+  var room = here.cap - here.l.q;
+  if (room <= 0) return sp2Toast('That compartment is full');
 
-  var a = { p:from.l.p, q:from.l.q }, b = { p:here.l.p, q:here.l.q };
-  from.l.p = b.p; from.l.q = b.q;
-  here.l.p = a.p; here.l.q = a.q;
-  sp2MoveFrom = null;
+  sp2MoveTo = { unit:unit, i:i };
+  sp2MoveMax = Math.min(from.l.q, room);
+  var step = sp2MoveMax >= 400 ? 50 : 10;
+  document.getElementById('sp2TrlPop').innerHTML =
+    '<div class="sp2-pop-ttl">Move ' + from.l.p + ' · ' +
+      sp2CompName(sp2MoveFrom.unit, sp2MoveFrom.i) + ' → ' + sp2CompName(unit, i) + '</div>' +
+    '<div class="sp2-move">' +
+      '<input class="sp2-move-range" id="sp2MoveR" type="range" min="0" step="' + step + '" max="' +
+        sp2MoveMax + '" value="' + sp2MoveMax + '" oninput="sp2MoveSync(this.value)">' +
+      '<div class="sp2-move-row">' +
+        '<input class="sp2-time" id="sp2MoveN" value="' + sp2MoveMax + '" oninput="sp2MoveSync(this.value)">' +
+        '<span class="sp2-move-of">gal of ' + from.l.q.toLocaleString() +
+          ' · room for ' + room.toLocaleString() + '</span>' +
+      '</div>' +
+      '<div class="sp2-move-quick">' +
+        '<button class="sp2-fix" onclick="sp2MoveSync(' + Math.round(sp2MoveMax * 0.25) + ')">25%</button>' +
+        '<button class="sp2-fix" onclick="sp2MoveSync(' + Math.round(sp2MoveMax * 0.5) + ')">50%</button>' +
+        '<button class="sp2-fix" onclick="sp2MoveSync(' + sp2MoveMax + ')">All</button>' +
+        '<button class="sp2-view" style="margin-left:auto;height:28px;padding:0 14px;font-size:12px;" ' +
+          'onclick="sp2DoMove(\'' + k + '\')">Move</button>' +
+      '</div>' +
+    '</div>';
+  sp2PopAt('sp2TrlPop', e.currentTarget);
+}
+
+function sp2CompName(unit, i) { return (unit === 'trailer' ? 'Trailer C' : 'C') + (i + 1); }
+
+function sp2MoveSync(v) {
+  v = Math.max(0, Math.min(sp2MoveMax, Math.round(+v || 0)));
+  var r = document.getElementById('sp2MoveR'), n = document.getElementById('sp2MoveN');
+  if (r) r.value = v;
+  if (n && +n.value !== v) n.value = v;
+}
+
+function sp2MoveCancel() {
+  sp2MoveFrom = null; sp2MoveTo = null;
+  var pop = document.getElementById('sp2TrlPop');
+  if (pop) pop.classList.remove('on');
   sp2RenderUnit();
-  sp2Toast(b.q ? a.p + ' and ' + b.p + ' swapped compartments' : a.p + ' moved');
+}
+
+function sp2DoMove(k) {
+  if (!sp2MoveFrom || !sp2MoveTo) return sp2MoveCancel();
+  var n = document.getElementById('sp2MoveN');
+  var qty = Math.max(0, Math.min(sp2MoveMax, Math.round(+(n && n.value) || 0)));
+  if (!qty) return sp2MoveCancel();
+  var from = sp2Cell(k, sp2MoveFrom.unit, sp2MoveFrom.i);
+  var to   = sp2Cell(k, sp2MoveTo.unit,   sp2MoveTo.i);
+  var prod = from.l.p;
+  from.l.q -= qty;
+  if (!from.l.q) from.l.p = '';
+  to.l.p = prod;
+  to.l.q += qty;
+  var what = sp2CompName(sp2MoveFrom.unit, sp2MoveFrom.i) + ' → ' + sp2CompName(sp2MoveTo.unit, sp2MoveTo.i);
+  sp2MoveCancel();
+  sp2Toast(qty.toLocaleString() + ' gal of ' + prod + ' moved · ' + what);
 }
 
 // ── changing who drives what ─────────────────────────────
@@ -1198,30 +1255,25 @@ function sp2DragLeave(e) {
 
 // One product per compartment — the rule only bends for a blend, and none of
 // these are blends. So a line fills what already holds it, then takes an empty.
-function sp2Drop(e, unit, idx, k) {
-  e.preventDefault(); e.stopPropagation();
-  var id = sp2Drag || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
-  sp2DragEnd();
-  if (!id) return;
-  k = k || sp2Driver;
-  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
-  var d = SP2_DRIVERS[k];
-  if (!o || !d) return;
+// Every compartment on the rig, rear to front, as somewhere to put fuel.
+function sp2Cells(k) {
+  var d = SP2_DRIVERS[k], out = [];
+  SP2_TRUCKS[d.truck].comps.forEach(function (c, i) { out.push({ cap:c.cap, l:d.load[i], u:'truck', i:i }); });
+  if (d.trailer) SP2_TRAILERS[d.trailer].caps.forEach(function (c, i) {
+    out.push({ cap:c, l:d.tload[i], u:'trailer', i:i });
+  });
+  return out;
+}
 
-  var cells = [];
-  var push = function (caps, load, u) {
-    caps.forEach(function (cap, i) { cells.push({ cap:cap, l:load[i], u:u, i:i }); });
-  };
-  push(SP2_TRUCKS[d.truck].comps.map(function (c) { return c.cap; }), d.load, 'truck');
-  if (d.trailer) push(SP2_TRAILERS[d.trailer].caps, d.tload, 'trailer');
-
-  // dropped on one compartment in particular? try that one first
+// One product per compartment — the rule only bends for a blend, and none of
+// these are blends. So a line fills what already holds it, then takes an empty.
+function sp2PackInto(k, prods, unit, idx) {
+  var cells = sp2Cells(k);
   if (idx >= 0) cells.sort(function (a, b) {
     return (b.u === unit && b.i === idx) - (a.u === unit && a.i === idx);
   });
-
   var short = [], put = 0;
-  o.prods.forEach(function (pr) {
+  prods.forEach(function (pr) {
     var left = pr.q;
     [1, 2].forEach(function (pass) {
       cells.forEach(function (c) {
@@ -1235,21 +1287,118 @@ function sp2Drop(e, unit, idx, k) {
     });
     if (left) short.push(pr.p + ' ' + left.toLocaleString() + ' gal');
   });
+  return { put:put, short:short };
+}
 
-  var was = o.driver;
+// Taking an order off a truck takes its gallons with it, product by product,
+// from wherever they ended up — fuel can have been moved since it was loaded.
+function sp2TakeOut(k, prods) {
+  var cells = sp2Cells(k);
+  prods.forEach(function (pr) {
+    var left = pr.q;
+    cells.forEach(function (c) {
+      if (!left || c.l.p !== pr.p) return;
+      var take = Math.min(c.l.q, left);
+      c.l.q -= take; left -= take;
+      if (!c.l.q) c.l.p = '';
+    });
+  });
+}
+
+function sp2Drop(e, unit, idx, k) {
+  e.preventDefault(); e.stopPropagation();
+  var id = sp2Drag || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
+  sp2DragEnd();
+  if (!id) return;
+  k = k || sp2Driver;
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var d = SP2_DRIVERS[k];
+  if (!o || !d) return;
+
+  // An order already planned on someone else is theirs until it is taken off
+  // their lane. Moving it across behind their back is how double-booking starts.
+  if (o.driver && o.driver !== k)
+    return sp2Toast(o.id + ' is planned on ' + SP2_DRIVERS[o.driver].name +
+                    ' — take it off that lane first');
+  if (o.driver === k) return;
+
+  var r = sp2PackInto(k, o.prods, unit, idx);
   o.driver = k;
   sp2Driver = k;
   sp2SelOrder = o.id;
   sp2Render();
 
-  if (short.length)
-    sp2Toast(o.id + ' on ' + d.truck + ' — ' + short.join(', ') + ' would not fit' +
+  if (r.short.length)
+    sp2Toast(o.id + ' on ' + d.truck + ' — ' + r.short.join(', ') + ' would not fit' +
              (d.trailer ? '' : '; hitch a trailer'));
   else
-    sp2Toast(o.id + ' loaded onto ' + d.truck + ' · ' + put.toLocaleString() + ' gal' +
-             (was && was !== k ? ' (moved from ' + SP2_DRIVERS[was].name + ')' : ''));
+    sp2Toast(o.id + ' loaded onto ' + d.truck + ' · ' + r.put.toLocaleString() + ' gal');
 }
 
+// ── taking orders back off, and what to do when the rig is over ──
+function sp2UnplanOrder(e, k, id) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  if (!o) return;
+  sp2TakeOut(k, o.prods);
+  o.driver = '';
+  if (sp2SelOrder === id) sp2SelOrder = null;
+  sp2Render();
+  sp2Toast(id + ' taken off ' + SP2_DRIVERS[k].truck + ' — back in the orders column');
+}
+
+function sp2RigCap(k) {
+  var d = SP2_DRIVERS[k];
+  var cap = SP2_TRUCKS[d.truck].comps.reduce(function (s, c) { return s + c.cap; }, 0);
+  if (d.trailer) cap += SP2_TRAILERS[d.trailer].caps.reduce(function (s, c) { return s + c; }, 0);
+  return cap;
+}
+
+// More gallons planned than the rig holds. Say by how much, and offer the two
+// ways out a dispatcher actually has: cut the biggest order back, or drop one
+// and take a smaller one that fills the space better.
+function sp2Overload(k) {
+  var cap = sp2RigCap(k);
+  var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; });
+  var want = mine.reduce(function (s, o) { return s + sp2Gal(o); }, 0);
+  if (want <= cap) return null;
+  var over = want - cap;
+  var bySize = mine.slice().sort(function (a, b) { return sp2Gal(b) - sp2Gal(a); });
+  var drop = mine.slice().sort(function (a, b) { return sp2Gal(a) - sp2Gal(b); })
+                 .filter(function (o) { return sp2Gal(o) >= over; })[0] || bySize[0];
+  var roomAfter = cap - (want - sp2Gal(drop));
+  var swapIn = SP2_ORDERS.filter(function (o) { return !o.driver && sp2Gal(o) <= roomAfter; })
+                 .sort(function (a, b) { return sp2Gal(b) - sp2Gal(a); })[0];
+  return { over:over, cap:cap, want:want, trim:bySize[0], drop:drop, swapIn:swapIn, roomAfter:roomAfter };
+}
+
+function sp2TrimOrder(e, k, id, by) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  if (!o) return;
+  var total = sp2Gal(o), cut = [], run = 0;
+  o.prods.forEach(function (pr, n) {
+    // the last line absorbs the rounding, so the total cut is exactly `by`
+    var c = n === o.prods.length - 1 ? by - run : Math.min(pr.q, Math.round(by * pr.q / total));
+    c = Math.max(0, Math.min(pr.q, c));
+    run += c; cut.push({ p:pr.p, q:c }); pr.q -= c;
+  });
+  sp2TakeOut(k, cut);
+  sp2Render();
+  sp2Toast(id + ' cut by ' + by.toLocaleString() + ' gal');
+}
+
+function sp2SwapOrder(e, k, dropId, addId) {
+  e.stopPropagation();
+  sp2UnplanOrder({ stopPropagation: function () {} }, k, dropId);
+  if (addId) {
+    var o = SP2_ORDERS.filter(function (x) { return x.id === addId; })[0];
+    sp2PackInto(k, o.prods, 'auto', -1);
+    o.driver = k;
+  }
+  sp2Render();
+  sp2Toast(addId ? dropId + ' out, ' + addId + ' in' : dropId + ' taken off');
+}
 
 // ══════════════════════════════════════════════════════════
 //  V2 — a lane per driver
@@ -1517,9 +1666,30 @@ function sp2LaneHtml(k) {
         return '<span class="sp2-stop' + (sp2SelOrder === o.id ? ' sel' : '') +
             '" onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + '">' +
             '<span class="sp2-stop-t">' + sp2Hhmm(o.t) + '</span>' + o.id +
-            '<b>' + sp2Gal(o).toLocaleString() + ' gal</b></span>';
+            '<b>' + sp2Gal(o).toLocaleString() + ' gal</b>' +
+            '<button class="sp2-stop-x" title="Take this order off ' + d.truck + '" ' +
+              'onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + o.id + '\')">×</button></span>';
       }).join('')
     : '<span class="sp2-stop-none">No orders planned — drag one here</span>';
+
+  var over = sp2Overload(k);
+  var warn = !over ? '' :
+    '<div class="sp2-over-warn">' +
+      '<div class="sp2-over-head">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        over.want.toLocaleString() + ' gal planned onto ' + over.cap.toLocaleString() +
+        ' gal of rig — over by <b>' + over.over.toLocaleString() + ' gal</b>' +
+      '</div>' +
+      '<div class="sp2-over-fixes">' +
+        '<button class="sp2-fix" onclick="sp2TrimOrder(event,\'' + k + '\',\'' + over.trim.id + '\',' + over.over + ')">' +
+          'Cut ' + over.trim.id + ' by ' + over.over.toLocaleString() + ' gal</button>' +
+        '<button class="sp2-fix" onclick="sp2SwapOrder(event,\'' + k + '\',\'' + over.drop.id + '\',' +
+            (over.swapIn ? '\'' + over.swapIn.id + '\'' : 'null') + ')">' +
+          'Drop ' + over.drop.id + ' (' + sp2Gal(over.drop).toLocaleString() + ' gal)' +
+          (over.swapIn ? ' and take ' + over.swapIn.id + ' (' + sp2Gal(over.swapIn).toLocaleString() + ' gal)' : '') +
+        '</button>' +
+      '</div>' +
+    '</div>';
 
   return '<div class="sp2-ln' + (k === sp2Driver ? ' on' : '') + ' ' + d.state + '" data-k="' + k + '" ' +
       'ondragover="sp2DragOver(event)" ondragleave="sp2DragLeave(event)" ' +
@@ -1557,9 +1727,11 @@ function sp2LaneHtml(k) {
 
       (k === sp2Driver ? sp2RigArt(k) : sp2SimpleBars(k)) +
 
+      warn +
       '<div class="sp2-ln-stops">' +
+        '<div class="sp2-stop-list">' + stops + '</div>' +
         '<span class="sp2-ln-stops-lbl">' + mine.length + ' order' + (mine.length === 1 ? '' : 's') +
-          ' · ' + gal.toLocaleString() + ' gal planned</span>' + stops +
+          ' · ' + gal.toLocaleString() + ' gal planned</span>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -1573,7 +1745,8 @@ function sp2RenderLanes() {
   host.innerHTML =
     '<div class="sp2-ln-hdr">' +
       '<span class="sp2-ln-hdr-drv">Driver · availability</span>' +
-      '<span class="sp2-ln-hdr-day">Shift · ' + sp2Hhmm(w.from) + '–' + sp2Hhmm(w.to) + '</span>' +
+      '<span class="sp2-ln-hdr-day">' + (sp2Shift_ === 'all' ? 'All shifts'
+          : sp2Shift_ === 'am' ? 'AM · early shifts' : 'PM · late shifts') + '</span>' +
       '<span class="sp2-ln-hdr-sum">' + SP2_ORDERS.filter(sp2Planned).length + ' planned · ' +
         SP2_ORDERS.filter(function (o) { return !sp2Planned(o); }).length + ' unplanned</span>' +
     '</div>' +
