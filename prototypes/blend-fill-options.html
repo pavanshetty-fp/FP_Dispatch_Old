@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<title>Blend fill — four ways to draw it</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fp-shell-ground:#f2f2f2; --fp-surface-1b:#ffffff; --fp-surface-1a:#f4f5f8;
+  --fp-card-1:#dee1e7; --fp-card-2:#e8eaed;
+  --fp-ink-1:#030405; --fp-ink-3:#4f5968;
+  --fp-outline-1:#cfd3d9; --fp-outline-2:#adaeb4; --fp-stroke-hairline:#c8c9cd;
+  --status-caution:#b45309; --status-success:#15803d;
+  --r-md:6px; --r-lg:10px;
+  /* the drawing's own colours, from the Figma truck */
+  --shell:#E0E0DF; --divider:#878686; --frame:#878686; --dark:#242425;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-shell-ground);color:var(--fp-ink-1);padding:28px 32px 60px;}
+h1{font-size:18px;font-weight:600;}
+.sub{font-size:13px;color:var(--fp-ink-3);margin-top:5px;max-width:760px;line-height:1.55;}
+.opt{background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:18px 20px 20px;margin-top:20px;}
+.opt-top{display:flex;align-items:baseline;gap:10px;}
+.opt-n{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--fp-ink-3);}
+.opt-name{font-size:15px;font-weight:600;}
+.opt-note{font-size:12.5px;color:var(--fp-ink-3);margin-top:6px;line-height:1.55;max-width:780px;}
+.opt-note b{color:var(--fp-ink-1);font-weight:600;}
+.row{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap;}
+.case{}
+.case-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fp-ink-3);margin-bottom:7px;}
+svg{display:block;}
+svg text{font-family:inherit;text-anchor:middle;dominant-baseline:middle;fill:#242425;}
+.c{font-size:13px;font-weight:700;letter-spacing:.06em;opacity:.55;}
+.p{font-size:18px;font-weight:600;}
+.q{font-size:16px;}
+.s{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75;}
+.parts{font-size:13px;opacity:.72;}
+</style>
+</head>
+<body>
+
+<h1>A compartment holding a splash blend — four ways to draw it</h1>
+<p class="sub">
+  Drawn at the size the planner uses. Each option is shown at <b>E20 (80/20)</b>,
+  at <b>B5 (95/5)</b> where the minor part is a hairline, and beside a straight
+  product so the difference from an ordinary compartment is visible.
+  Splash-blended fuel is <b>mixed</b>, not layered — which is the thing the first
+  option gets wrong and the middle two get right.
+</p>
+
+<div id="out"></div>
+
+<script>
+var W = 190, H = 100, R = 34;          // one compartment, planner scale
+var GOLD = '#c4a319', ETH = '#8a6cff', DSL = '#2f9be0', BIO = '#46cf9c';
+
+// the design's own wave, normalised — same curve at any width and level
+function wave(w, y, h) {
+  var p = function (fx, fy) { return (fx * w).toFixed(2) + ',' + (y + fy).toFixed(2); };
+  return 'M' + p(0.3972, 8.4352) +
+         'C' + p(0.2402, 12.4047) + ' ' + p(0.06698, 4.4657) + ' ' + p(0, 0) +
+         'V' + h + 'H' + w.toFixed(2) + 'V' + y.toFixed(2) +
+         'C' + p(0.8552, -8.4352) + ' ' + p(0.5934, 3.4733) + ' ' + p(0.3972, 8.4352) + 'Z';
+}
+
+// one compartment: shell, fill (however the option paints it), labels
+function comp(id, fillDefs, fillPaint, name, qty, state, parts, pct) {
+  var top = H * (1 - pct / 100);
+  return '<svg width="' + W + '" height="' + (H + 6) + '" viewBox="0 0 ' + W + ' ' + (H + 6) + '">' +
+    '<defs>' +
+      '<clipPath id="clip' + id + '"><rect x="0" y="0" width="' + W + '" height="' + H + '" rx="' + R + '"/></clipPath>' +
+      fillDefs +
+    '</defs>' +
+    '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="' + R + '" fill="var(--shell)"/>' +
+    '<g clip-path="url(#clip' + id + ')">' + fillPaint(top) + '</g>' +
+    '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="' + R + '" fill="none" stroke="var(--dark)" stroke-width="2.5"/>' +
+    '<text class="c" x="' + W / 2 + '" y="20">C2 · 2,000</text>' +
+    '<text class="p" x="' + W / 2 + '" y="42">' + name + '</text>' +
+    '<text class="q" x="' + W / 2 + '" y="60">' + qty + '</text>' +
+    (parts ? '<text class="parts" x="' + W / 2 + '" y="76">' + parts + '</text>' : '') +
+    '<text class="s" x="' + W / 2 + '" y="' + (parts ? 91 : 78) + '">' + state + '</text>' +
+  '</svg>';
+}
+
+// ── the four ways ────────────────────────────────────────
+var WAYS = [
+  { n:'A', name:'Two bands, stacked in ratio',
+    note:'The make-up is explicit and measurable — you can see 80/20 without reading. But it says the compartment holds two <b>layers</b>, and a splash blend does not: the point of the method is that it mixes in transit. At 95/5 the minor band is a hairline that reads as a drawing artefact rather than 5% of the load.',
+    defs: function (id, a, b, pct, ratio) { return ''; },
+    paint: function (id, a, b, pct, ratio) {
+      return function (top) {
+        var lo = H - (H - top) * ratio / 100;       // minor part sits at the bottom
+        return '<path d="' + wave(W, top, H) + '" fill="' + a + '"/>' +
+               '<rect x="0" y="' + lo + '" width="' + W + '" height="' + (H - lo) + '" fill="' + b + '"/>';
+      };
+    } },
+
+  { n:'B', name:'The two colours mixed',
+    note:'A single fill blended from the constituent colours in their ratio. Honest about the physical state — it is one mixed liquid — and it stays legible at any ratio, because 95/5 simply looks like the major product with a cast. The cost: you cannot read the exact ratio off it, so the numbers have to carry that.',
+    defs: function (id, a, b, pct, ratio) { return ''; },
+    paint: function (id, a, b, pct, ratio) {
+      var mix = 'color-mix(in oklab, ' + b + ' ' + ratio + '%, ' + a + ')';
+      return function (top) { return '<path d="' + wave(W, top, H) + '" fill="' + mix + '"/>'; };
+    } },
+
+  { n:'C', name:'Striped with both colours',
+    note:'Diagonal stripes of the two constituents. Reads as "these two, together" rather than as layers, and both products stay visible however lopsided the ratio. It is the busiest of the four, and with several blended compartments side by side the stripes start to fight the fuel levels for attention.',
+    defs: function (id, a, b, pct, ratio) {
+      return '<pattern id="st' + id + '" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+               '<rect width="14" height="14" fill="' + a + '"/>' +
+               '<rect width="5" height="14" fill="' + b + '"/>' +
+             '</pattern>';
+    },
+    paint: function (id, a, b, pct, ratio) {
+      return function (top) { return '<path d="' + wave(W, top, H) + '" fill="url(#st' + id + ')"/>'; };
+    } },
+
+  { n:'D', name:'One colour and a marker',
+    note:'The blend gets a colour of its own and a small mark; the constituents live in the text. The least change and the least information — the compartment stops telling you what is physically in it, which is the one thing the drawing exists to do. Included because it is what most dashboards would do.',
+    defs: function () { return ''; },
+    paint: function (id, a, b, pct, ratio) {
+      return function (top) {
+        return '<path d="' + wave(W, top, H) + '" fill="#7c8aa0"/>' +
+               '<circle cx="' + (W - 22) + '" cy="20" r="8" fill="var(--fp-surface-1b)" opacity=".92"/>' +
+               '<text x="' + (W - 22) + '" y="20" style="font-size:11px;font-weight:700;">B</text>';
+      };
+    } },
+];
+
+var CASES = [
+  { lbl:'E20 · 80 / 20', a:GOLD, b:ETH, ratio:20, pct:88,
+    name:'E20', qty:'1,760 gal', parts:'UNL87 1,408 · Ethanol 352', state:'88% · Partially full' },
+  { lbl:'B5 · 95 / 5', a:DSL, b:BIO, ratio:5, pct:70,
+    name:'B5', qty:'1,400 gal', parts:'CLR DSL 1,330 · Biodiesel 70', state:'70% · Partially full' },
+  { lbl:'Straight product, for comparison', a:GOLD, b:GOLD, ratio:0, pct:88,
+    name:'UNL87', qty:'1,760 gal', parts:'', state:'88% · Partially full' },
+];
+
+document.getElementById('out').innerHTML = WAYS.map(function (w, wi) {
+  var cases = CASES.map(function (c, ci) {
+    var id = wi + '' + ci;
+    // the straight product is drawn plainly in every option — it is the control
+    var defs  = c.ratio ? w.defs(id, c.a, c.b, c.pct, c.ratio) : '';
+    var paint = c.ratio ? w.paint(id, c.a, c.b, c.pct, c.ratio)
+                        : function (top) { return '<path d="' + wave(W, top, H) + '" fill="' + c.a + '"/>'; };
+    return '<div class="case"><div class="case-lbl">' + c.lbl + '</div>' +
+      comp(id, defs, paint, c.name, c.qty, c.state, c.parts, c.pct) + '</div>';
+  }).join('');
+  return '<div class="opt">' +
+      '<div class="opt-top"><span class="opt-n">OPTION ' + w.n + '</span>' +
+        '<span class="opt-name">' + w.name + '</span></div>' +
+      '<div class="opt-note">' + w.note + '</div>' +
+      '<div class="row">' + cases + '</div>' +
+    '</div>';
+}).join('');
+</script>
+
+</body>
+</html>
