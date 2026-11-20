@@ -744,6 +744,32 @@
       // the time is still on the rail beside it
       if (!document.querySelector('.sp2-vtime')) throw new Error('the time left the rail too');
     });
+    step('the yard has rigs that have not started and are empty', () => {
+      const yard = Object.keys(SP2_DRIVERS).filter(k => {
+        const d = SP2_DRIVERS[k];
+        return d.state !== 'off-duty' &&
+               sp2ShiftState(d).kind === 'before' &&
+               sp2RigFill(k).pct === 0;
+      });
+      if (yard.length < 6)
+        throw new Error('only ' + yard.length + ' rigs are waiting on an unstarted shift with nothing in them');
+      // a rig in the yard with orders already on it would be a contradiction
+      yard.forEach(k => {
+        if (SP2_ORDERS.some(o => o.driver === k))
+          throw new Error(SP2_DRIVERS[k].name + ' has not started but already has orders');
+        if (SP2_DRIVERS[k].trailer && SP2_DRIVERS[k].tload.some(l => l.q))
+          throw new Error(SP2_DRIVERS[k].name + ' has fuel in a trailer but has not started');
+        if (!sp2Avail(SP2_DRIVERS[k])) throw new Error(SP2_DRIVERS[k].name + ' is empty but does not count as available');
+      });
+      // and they are what Available offers first
+      sp2SetDrvFilter('available');
+      const lead = [...document.querySelectorAll('.sp2-ln')].slice(0, 6).map(l => l.dataset.k);
+      lead.forEach(k => {
+        if (yard.indexOf(k) < 0)
+          throw new Error(SP2_DRIVERS[k].name + ' is above a yard rig in Available');
+      });
+      sp2SetDrvFilter('all');
+    });
     step('Available leads with the emptiest rig', () => {
       sp2SetDrvFilter('available');
       const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);

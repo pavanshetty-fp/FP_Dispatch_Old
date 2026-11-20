@@ -603,6 +603,11 @@ var SP2_PROD_COLORS = {
   'E10':'#d8a92e', 'E15':'#e6c04f', 'E85':'#a884ff', 'B5':'#3aa8d8', 'B20':'#5bb98f',
 };
 
+// The planner has no clock of its own — the day is fixed — so "now" is a stated
+// time. 06:30 is a dispatcher's morning: the early shifts are running and the
+// late ones have not begun, which is what puts rigs in the yard.
+var SP2_NOW = 6 * 60 + 30;   // 06:30
+
 // shifts as the docs have them: early 05:00–13:00 / 06:00–14:00, late 07:00–15:00 / 08:00–16:00
 var SP2_SHIFTS = {
   e5:{ name:'Early', from:300, to:780 }, e6:{ name:'Early', from:360, to:840 },
@@ -672,18 +677,21 @@ var SP2_DRIVERS = {};
                           comps:spec.caps.map(function (c) { return { cap:c }; }) };
 
     // A truck that is already rolling is rarely empty; one that is off duty is.
+    // So is one whose shift has not begun — it is standing in the yard waiting
+    // to be loaded, which is exactly what makes it worth picking first.
+    var inYard = state !== 'off-duty' && SP2_SHIFTS[SP2_SHIFTK[i % 4]].from > SP2_NOW;
     // A few leave the yard loaded out, with no room left for anything else.
-    var loaded = state !== 'off-duty' && i % 7 === 3;
+    var loaded = state !== 'off-duty' && !inYard && i % 7 === 3;
     var load = spec.caps.map(function (cap, c) {
       if (loaded) return { p:SP2_PRODS[(i + c) % SP2_PRODS.length], q:cap };
-      if (state === 'off-duty' || (i + c) % 3 === 0) return { p:'', q:0 };
+      if (inYard || state === 'off-duty' || (i + c) % 3 === 0) return { p:'', q:0 };
       var p = SP2_PRODS[(i + c * 2) % SP2_PRODS.length];
       var frac = (i + c) % 4 === 1 ? 1 : ((i * 7 + c * 13) % 55 + 35) / 100;
       return { p:p, q:Math.round(cap * frac / 50) * 50 };
     });
 
     // Transports tend to pull a trailer; the rest start without one.
-    var trl = spec.type === 'Transport' && i % 2 === 0
+    var trl = spec.type === 'Transport' && i % 2 === 0 && !inYard
             ? Object.keys(SP2_TRAILERS)[i % 3] : null;
 
     SP2_DRIVERS['d' + i] = {
@@ -721,6 +729,16 @@ var SP2_SHIPTOS = [
 ];
 var SP2_TYPES = ['Delivery','Delivery','Delivery','Transfer','Delivery','Extraction'];
 
+// Rigs still in the yard have nothing planned on them yet — that is the point
+// of them. Orders go to drivers who are already out.
+var SP2_YARD = Object.keys(SP2_DRIVERS).filter(function (k) {
+  var d = SP2_DRIVERS[k];
+  return d.state !== 'off-duty' && SP2_SHIFTS[d.shift].from > SP2_NOW;
+});
+var SP2_ON_ROAD = Object.keys(SP2_DRIVERS).filter(function (k) {
+  return SP2_YARD.indexOf(k) < 0;
+});
+
 var SP2_ORDERS = (function buildOrders() {
   var out = [], n = 36;
   for (var i = 0; i < n; i++) {
@@ -736,7 +754,7 @@ var SP2_ORDERS = (function buildOrders() {
       ship:st[0], addr:st[1],
       t:305 + ((i * 47) % 740),                 // 05:05 through 21:25
       type:SP2_TYPES[i % SP2_TYPES.length],
-      driver: planned ? 'd' + ((i * 7) % 30) : '',
+      driver: planned ? SP2_ON_ROAD[(i * 7) % SP2_ON_ROAD.length] : '',
       prods:prods,
     });
   }
@@ -754,7 +772,7 @@ var SP2_ORDERS = (function buildOrders() {
       id:'D-' + (5157100 + j), ship:sj[0], addr:sj[1],
       t:300 + ((j * 61) % 760),
       type:SP2_TYPES[(j + 2) % SP2_TYPES.length],
-      driver: j % 5 === 0 ? 'd' + ((j * 3) % 30) : '',
+      driver: j % 5 === 0 ? SP2_ON_ROAD[(j * 3) % SP2_ON_ROAD.length] : '',
       prods:bp,
     });
   }
@@ -775,9 +793,6 @@ var sp2MoveFrom = null;      // a compartment picked up, waiting for somewhere t
 // The planner has no clock of its own — the day is fixed — so 'now' is a
 // stated time rather than a real one. It is what makes a shift read as
 // started, running or over.
-var SP2_NOW = 13 * 60 + 30;  // 13:30 — late enough that the early shift has ended
-                             // and the later ones are still running, so the three
-                             // standings are not all the same
 var sp2SelOrder = null;
 var sp2View = 'v';            // v vertical (the default) · h horizontal
 var sp2Sort = 'time';         // time · fit — fit ranks against the chosen rig
