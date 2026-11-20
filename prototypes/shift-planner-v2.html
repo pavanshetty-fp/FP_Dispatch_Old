@@ -193,7 +193,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
 
 /* ── Header tools: the view switch, and everything else behind one icon ── */
-.sp2-hdr-tools{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;}
+/* a narrow column cannot hold every control on one line, so let them stack
+   rather than run off the edge */
+.sp2-hdr-tools{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;justify-content:flex-end;row-gap:6px;}
 .sp2-ico-btn{position:relative;width:36px;height:36px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sp2-ico-btn:hover{background:var(--fp-emphasis);}
 .sp2-ico-btn.on{border-color:var(--fp-selected-border);background:var(--fp-selected);}
@@ -455,6 +457,17 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-rank{flex-shrink:0;width:20px;padding-top:10px;text-align:right;font-size:12px;font-weight:700;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 .sp2-seg-btn:disabled{opacity:.4;cursor:not-allowed;}
 .sp2-seg-btn:disabled:hover{background:transparent;color:var(--fp-ink-3);}
+/* ── the order card ────────────────────────────────────── */
+.sp2-card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+/* the kind of order, as a letter: D delivery · E extraction · T transfer */
+.sp2-kind{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--fp-card-1);color:var(--fp-ink-1);font-size:9px;font-weight:700;letter-spacing:0;display:flex;align-items:center;justify-content:center;}
+.sp2-pill-blend{background:color-mix(in oklab,var(--status-info) 12%,transparent);color:var(--status-info);}
+.sp2-chip.blend{box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--status-info) 45%,transparent);}
+.sp2-prods{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
+
+/* the driver tabs sit on the header line like everything else on it */
+.sp2-drv-tabs{align-self:center;margin-bottom:0;}
+.sp2-col-hdr{align-items:center;}
 </style>
 </head>
 <body>
@@ -494,6 +507,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
             <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
             <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
+          </div>
+          <div class="sp2-seg">
+            <button class="sp2-seg-btn" id="sp2BlendBtn" onclick="sp2ToggleBlend()" title="Only orders carrying a blended product">Blend <span class="sp2-seg-n" id="sp2nBl"></span></button>
           </div>
           <span class="sp2-flt-lbl">Sort</span>
           <div class="sp2-seg">
@@ -569,6 +585,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 var SP2_PROD_COLORS = {
   'UNL87':'#c4a319', 'UNL93':'#8a6cff', 'CLR DSL':'#2f9be0',
   'HO DSL':'#e0483f', 'Diesel DEF':'#46cf9c', 'Kerosene':'#c8ccd2',
+  // constituents, and the blends themselves — these fills are provisional
+  // until how a blended compartment reads is settled
+  'Ethanol':'#9aa0ff', 'Biodiesel':'#7bd14a',
+  'E10':'#d8a92e', 'E15':'#e6c04f', 'E85':'#a884ff', 'B5':'#3aa8d8', 'B20':'#5bb98f',
 };
 
 // shifts as the docs have them: early 05:00–13:00 / 06:00–14:00, late 07:00–15:00 / 08:00–16:00
@@ -609,6 +629,21 @@ var SP2_ROSTER = [
   ['off-duty', 'Miles Donovan'],   ['off-duty', 'Farah Haddad'],   ['off-duty', 'Gus Lindqvist'],
   ['off-duty', 'Noor Siddiqui'],
 ];
+
+// A blend is a product you order; what the truck carries is its constituents,
+// in a fixed ratio. Splash blending loads them into one compartment in the
+// stated sequence — smaller part first, the larger splashing in on top of it.
+// The planner currently carries a blend as a single product; exploding it into
+// constituents comes with the compartment fill, which is still being decided.
+var SP2_BLENDS = {
+  'E10': { parts:[{p:'UNL87',pct:90},  {p:'Ethanol',pct:10}],   seq:['Ethanol','UNL87'] },
+  'E15': { parts:[{p:'UNL87',pct:85},  {p:'Ethanol',pct:15}],   seq:['Ethanol','UNL87'] },
+  'E85': { parts:[{p:'UNL87',pct:30},  {p:'Ethanol',pct:70}],   seq:['UNL87','Ethanol'] },
+  'B5':  { parts:[{p:'CLR DSL',pct:95},{p:'Biodiesel',pct:5}],  seq:['Biodiesel','CLR DSL'] },
+  'B20': { parts:[{p:'CLR DSL',pct:80},{p:'Biodiesel',pct:20}], seq:['Biodiesel','CLR DSL'] },
+};
+function sp2IsBlend(p) { return !!SP2_BLENDS[p]; }
+function sp2HasBlend(o) { return o.prods.some(function (pr) { return sp2IsBlend(pr.p); }); }
 
 var SP2_HUBS   = ['Denver Hub','Phoenix Hub','Portland Hub','Tampa Hub','San Jose Hub'];
 var SP2_SHIFTK = ['e6','e5','l7','l8'];
@@ -681,6 +716,7 @@ var SP2_ORDERS = (function buildOrders() {
     // two products on every third order, one otherwise
     var prods = [{ p:SP2_PRODS[i % SP2_PRODS.length], q:(((i * 5) % 7) + 8) * 200 }];
     if (i % 3 === 1) prods.push({ p:SP2_PRODS[(i + 2) % SP2_PRODS.length], q:(((i * 3) % 5) + 4) * 200 });
+    if (i % 6 === 4) prods.push({ p:SP2_PRODS[(i + 4) % SP2_PRODS.length], q:(((i * 7) % 6) + 2) * 150 });
     // two thirds of the day's orders are already planned, spread over the roster
     var planned = i % 3 !== 2;
     out.push({
@@ -690,6 +726,24 @@ var SP2_ORDERS = (function buildOrders() {
       type:SP2_TYPES[i % SP2_TYPES.length],
       driver: planned ? 'd' + ((i * 7) % 30) : '',
       prods:prods,
+    });
+  }
+
+  // Eighteen orders carrying a blend. Five of them pair a blend with a straight
+  // product, which is the case that makes a load order read oddly: one line the
+  // terminal splash-blends, one it simply racks.
+  var blends = Object.keys(SP2_BLENDS);
+  for (var j = 0; j < 18; j++) {
+    var sj = SP2_SHIPTOS[(j * 5 + 3) % SP2_SHIPTOS.length];
+    var bp = [{ p:blends[j % blends.length], q:(((j * 3) % 6) + 6) * 200 }];
+    if (j % 4 === 1) bp.push({ p:SP2_PRODS[(j + 1) % SP2_PRODS.length], q:(((j * 2) % 4) + 3) * 200 });
+    else if (j % 7 === 3) bp.push({ p:blends[(j + 2) % blends.length], q:((j % 3) + 4) * 200 });
+    out.push({
+      id:'D-' + (5157100 + j), ship:sj[0], addr:sj[1],
+      t:300 + ((j * 61) % 760),
+      type:SP2_TYPES[(j + 2) % SP2_TYPES.length],
+      driver: j % 5 === 0 ? 'd' + ((j * 3) % 30) : '',
+      prods:bp,
     });
   }
   return out;
@@ -715,6 +769,7 @@ var SP2_NOW = 13 * 60 + 30;  // 13:30 — late enough that the early shift has e
 var sp2SelOrder = null;
 var sp2View = 'v';            // v vertical (the default) · h horizontal
 var sp2Sort = 'time';         // time · fit — fit ranks against the chosen rig
+var sp2BlendOnly = false;     // narrow to orders carrying a blend
 
 var SP2_HOUR_W = 132;          // pixels per hour on the timeline
 var SP2_CARD_W = 206;
@@ -750,6 +805,7 @@ function sp2Visible() {
   var w = sp2Window();
   var list = SP2_ORDERS.filter(function(o) {
     if (o.t < w.from || o.t > w.to) return false;
+    if (sp2BlendOnly && !sp2HasBlend(o)) return false;
     if (sp2Quick === 'planned')   return sp2Planned(o);
     if (sp2Quick === 'unplanned') return !sp2Planned(o);
     return true;
@@ -810,25 +866,27 @@ function sp2FitChip(o) {
 // The card is the same in every view; only where it sits changes.
 function sp2CardHtml(o, style) {
   var planned = sp2Planned(o);
-  var chips = o.prods.map(function(pr) {
+  var chips = o.prods.map(function (pr) {
     var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
-    return '<span class="sp2-chip"><span class="sp2-dot" style="background:' + col + ';"></span>' +
+    return '<span class="sp2-chip' + (sp2IsBlend(pr.p) ? ' blend' : '') + '">' +
+           '<span class="sp2-dot" style="background:' + col + ';"></span>' +
            pr.p + ' <span class="sp2-chip-q">' + pr.q.toLocaleString() + '</span></span>';
   }).join('');
+  // the time is on the rail beside the card, so it is not repeated here
   return '<div class="sp2-card ' + (planned ? 'planned' : 'unplanned') +
       (sp2SelOrder === o.id ? ' sel' : '') + '" ' + (style ? 'style="' + style + '" ' : '') +
       'draggable="true" ondragstart="sp2DragStart(event,\'' + o.id + '\')" ondragend="sp2DragEnd()" ' +
       'onclick="sp2PickOrder(\'' + o.id + '\')" title="Drag onto the truck to load it · ' + o.ship + '">' +
-    '<div class="sp2-card-top"><span class="sp2-ord">' + o.id + '</span>' +
-      '<span class="sp2-time-lbl">' + sp2Hhmm(o.t) + '</span></div>' +
+    '<div class="sp2-card-top">' +
+      '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+      '<span class="sp2-ord">' + o.id + '</span>' +
+      '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
+        (planned ? 'Planned' : 'Unplanned') + '</span>' +
+      (sp2HasBlend(o) ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+    '</div>' +
     '<div class="sp2-ship">' + o.ship + '</div>' +
     '<div class="sp2-addr">' + o.addr + '</div>' +
     '<div class="sp2-prods">' + chips + '</div>' +
-    '<div class="sp2-card-foot">' +
-      '<span class="sp2-pill ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
-        (planned ? 'Planned' : 'Unplanned') + '</span>' +
-      '<span class="sp2-type">' + o.type + '</span>' +
-    '</div>' +
     sp2FitChip(o) +
   '</div>';
 }
@@ -928,6 +986,7 @@ function sp2Counts() {
   document.getElementById('sp2nAll').textContent = inWindow.length;
   document.getElementById('sp2nUn').textContent  = inWindow.length - pl;
   document.getElementById('sp2nPl').textContent  = pl;
+  document.getElementById('sp2nBl').textContent  = inWindow.filter(sp2HasBlend).length;
   document.getElementById('sp2OrdCount').textContent = sp2Visible().length;
   var d = SP2_DRIVERS[sp2Driver], vs = document.getElementById('sp2Vs');
   if (vs) vs.textContent = d ? 'fit vs ' + d.truck : '';
@@ -951,6 +1010,12 @@ function sp2SetSort(o) {
   h.title = o === 'fit' ? 'Not available while sorting by fit — a time axis cannot be re-ordered'
                         : 'Horizontal timeline';
   if (o === 'fit' && sp2View === 'h') sp2SetView('v'); else sp2RenderTimeline();
+}
+
+function sp2ToggleBlend() {
+  sp2BlendOnly = !sp2BlendOnly;
+  document.getElementById('sp2BlendBtn').classList.toggle('on', sp2BlendOnly);
+  sp2RenderTimeline();
 }
 
 function sp2SetView(v) {
@@ -1028,7 +1093,7 @@ function sp2Avail(d) {
 
 function sp2DriverKeys() {
   var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
-  return Object.keys(SP2_DRIVERS).filter(function (k) {
+  var keys = Object.keys(SP2_DRIVERS).filter(function (k) {
     var d = SP2_DRIVERS[k];
     if (sp2Shift_ !== 'all' && sp2ShiftBand(d.shift) !== sp2Shift_) return false;
     if (sp2DrvFilter === 'available') { if (!sp2Avail(d)) return false; }
@@ -1036,6 +1101,20 @@ function sp2DriverKeys() {
     if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
+  // Available is a list you pick from, so lead with the rigs that have most
+  // room: empty ones first, then part-loaded, biggest space breaking the tie.
+  if (sp2DrvFilter === 'available') keys.sort(function (a, b) {
+    var fa = sp2RigFill(a), fb = sp2RigFill(b);
+    return fa.pct - fb.pct || fb.free - fa.free;
+  });
+  return keys;
+}
+
+// How full a rig is, 0–100. Drives the Available ordering.
+function sp2RigFill(k) {
+  var cap = sp2RigCap(k);
+  var on = sp2Cells(k).reduce(function (s, c) { return s + c.l.q; }, 0);
+  return { pct: cap ? on / cap * 100 : 100, free: cap - on };
 }
 
 // One row per driver. The chosen one opens in place — its orders, its gallons

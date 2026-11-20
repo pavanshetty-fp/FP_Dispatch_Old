@@ -669,6 +669,90 @@
       sp2SetSort('time');
       sp2PickDriver('d0');
     });
+    step('an order carrying a blend says so', () => {
+      sp2SetQuick('all');
+      if (sp2BlendOnly) sp2ToggleBlend();
+      const blend = SP2_ORDERS.filter(sp2HasBlend);
+      if (blend.length < 15) throw new Error('only ' + blend.length + ' orders carry a blend');
+      const mixed = blend.filter(o => o.prods.some(pr => !sp2IsBlend(pr.p)));
+      if (mixed.length < 3) throw new Error('only ' + mixed.length + ' mix a blend with a straight product');
+      // every card that has one is labelled, and no card that has not
+      [...document.querySelectorAll('.sp2-card')].forEach(c => {
+        const id = c.querySelector('.sp2-ord').textContent;
+        const o = SP2_ORDERS.filter(x => x.id === id)[0];
+        const badged = !!c.querySelector('.sp2-pill-blend');
+        if (sp2HasBlend(o) !== badged)
+          throw new Error(id + (badged ? ' is labelled a blend and is not' : ' carries a blend and is not labelled'));
+      });
+      // the blend itself is a product with constituents, not a name on a list
+      Object.keys(SP2_BLENDS).forEach(b => {
+        const sum = SP2_BLENDS[b].parts.reduce((s, p) => s + p.pct, 0);
+        if (sum !== 100) throw new Error(b + ' ratio adds to ' + sum + '%');
+        if (SP2_BLENDS[b].seq.length !== SP2_BLENDS[b].parts.length)
+          throw new Error(b + ' has no loading sequence');
+      });
+    });
+    step('the blend filter narrows to them', () => {
+      sp2SetQuick('all');
+      if (sp2BlendOnly) sp2ToggleBlend();
+      const all = document.querySelectorAll('.sp2-card').length;
+      sp2ToggleBlend();
+      const only = [...document.querySelectorAll('.sp2-card .sp2-ord')].map(e => e.textContent);
+      if (!only.length || only.length >= all) throw new Error('the blend filter did not narrow: ' + only.length + ' of ' + all);
+      only.forEach(id => {
+        if (!sp2HasBlend(SP2_ORDERS.filter(o => o.id === id)[0]))
+          throw new Error(id + ' has no blend but survived the filter');
+      });
+      sp2ToggleBlend();
+      if (document.querySelectorAll('.sp2-card').length !== all) throw new Error('turning it off did not restore the list');
+    });
+    step('the card leads with the kind, and drops the repeated time', () => {
+      sp2SetQuick('all');
+      const card = document.querySelector('.sp2-card');
+      const kind = card.querySelector('.sp2-kind');
+      if (!kind) throw new Error('no order-kind mark');
+      const id = card.querySelector('.sp2-ord').textContent;
+      const o = SP2_ORDERS.filter(x => x.id === id)[0];
+      if (kind.textContent !== o.type.charAt(0))
+        throw new Error('the mark says ' + kind.textContent + ' for a ' + o.type);
+      const cs = getComputedStyle(kind);
+      if (parseFloat(cs.borderRadius) * 2 < parseFloat(cs.height) - 1) throw new Error('the mark is not a circle');
+      if (card.querySelector('.sp2-time-lbl')) throw new Error('the card still repeats the time');
+      // the status sits up with the order number now
+      const top = card.querySelector('.sp2-card-top');
+      if (!top.querySelector('.sp2-pill')) throw new Error('the status is not beside the order number');
+      if (card.querySelector('.sp2-card-foot')) throw new Error('the old footer is still there');
+      // the time is still on the rail beside it
+      if (!document.querySelector('.sp2-vtime')) throw new Error('the time left the rail too');
+    });
+    step('Available leads with the emptiest rig', () => {
+      sp2SetDrvFilter('available');
+      const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (lanes.length < 3) throw new Error('too few available drivers to order');
+      const fill = lanes.map(k => +sp2RigFill(k).pct.toFixed(2));
+      for (let i = 1; i < fill.length; i++)
+        if (fill[i] < fill[i - 1] - 0.01)
+          throw new Error('a fuller rig is listed above an emptier one: ' + fill.join(' → '));
+      if (fill[0] >= fill[fill.length - 1]) throw new Error('the ordering did nothing');
+      // and the other tabs are left in their own order
+      sp2SetDrvFilter('all');
+      const byKey = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      if (byKey.join() !== Object.keys(SP2_DRIVERS).filter(k => byKey.indexOf(k) >= 0).join())
+        throw new Error('All is no longer in roster order');
+    });
+    step('the driver header sits on one line', () => {
+      const hdr = document.querySelector('.sp2-col-unit .sp2-col-hdr');
+      const mid = el => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+      const title = hdr.querySelector('.sp2-col-title');
+      const tabs = hdr.querySelector('.sp2-drv-tabs');
+      const search = hdr.querySelector('#sp2DrvSearch');
+      if (Math.abs(mid(tabs) - mid(title)) > 2)
+        throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(title)) + 'px off the title');
+      if (Math.abs(mid(tabs) - mid(search)) > 2)
+        throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(search)) + 'px off the search');
+      if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
+        throw new Error('the tabs still carry the margin from when they were in a panel');
+    });
     step('an assigned order leaves the orders column', () => {
       sp2SetQuick('unplanned');
       const un = SP2_ORDERS.filter(o => !o.driver)[0];
