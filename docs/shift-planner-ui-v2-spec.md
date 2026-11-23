@@ -1173,3 +1173,146 @@ Product    Ratio   Quantity
 ```
 
 The column lost 28px with the name — the product name took them.
+
+---
+
+## Round 27 — the filters say what a dispatcher actually asks
+
+Seven changes, all inside the one head's **Filters** panel.
+
+### Orders
+
+**Products was one option.** It said "Carrying a blend" and nothing else, which
+is not a product filter — it is a flag. The catalogue behind the planner was
+six products wide, so there was nothing else to list.
+
+The fleet's bulk list is now **25 straight products** — gasoline by grade,
+diesel clear, dyed, premium, seasonal and marine, the two ULSD cuts, DEF,
+kerosene, heating oil, the aviation pair, and the two blend components a
+terminal also racks on their own — plus the **five blends**. Thirty options,
+searchable, each counted against the day's orders. Every one of the thirty is
+on an order today; nothing in the list is a dead control.
+
+No ratio appears anywhere in the list. A blend's ratio is decided when the
+order is written, not when the list is narrowed. "Carrying a blend" survives as
+its own dimension underneath, headed **Blended**, because "show me every blend"
+is still one tick rather than five.
+
+**Customer and ship-to are two filters, not one.** A ship-to is already named
+`Customer — Site`, so the customer is the part before the dash and the two
+lists can never fall out of step. Ship-to carries its address on the second
+line.
+
+### Drivers and trucks
+
+| Was | Is | Why |
+|---|---|---|
+| Duty | **Hours of service (HOS)** | What the clock is actually called |
+| Location | **Hubs** | A hub is the only location a rig has |
+| Capacity | **Truck capacity** | It is the truck's room, not the order's |
+| Planning | *(gone)* | — |
+
+**Truck and trailer became one list.** Two facets asked the same question
+twice: a rig is a truck and whatever is hitched behind it, and a dispatcher
+looking for *TR-410* does not first decide which of the two boxes it lives in.
+
+One list now holds every unit by its number, each wearing a **Truck** or
+**Trailer** pill and saying what it holds underneath — `Bobtail · 3
+compartments · 2,800 gal`. Above it, a segment: **All · Trucks · Trailers**,
+opening on All. Below that, a search box that says it takes a number.
+
+The segment is a narrowing of the *options*, not a filter: moving it ticks
+nothing and Apply is unaffected.
+
+### Cost
+
+64 steps green at 1512×950, no console errors, nothing clipped.
+
+---
+
+## Round 28 — the open lane says what it is about to do
+
+### Half each
+
+The band under a driver's head was **348px of table and whatever was left**
+for the drawing — 348 / 554 at 1512px, so the table was cramped while the
+drawing had room to spare. The two say the same thing two ways; neither
+outranks the other.
+
+Both halves are `flex:1 1 0` now. The ratio is fixed at 50/50 and the widths
+follow the screen: 451 / 451 at 1512, 243 / 243 at 1280.
+
+The table's fixed columns gave 6px back to the product name so that
+`PREM DSL` still fits at the narrow end — Comp 46, Gallons 58, TM 46, 7px
+gutters.
+
+### "Fill the rest" said nothing
+
+The strip under the drawing is the orders that would fit on this rig. "Fill
+the rest" names no part of the truck. The heading now names the compartments
+it is talking about, and it reads the rig to say which:
+
+| The rig has | The heading says |
+|---|---|
+| Empty compartments only | Fill the empty compartments |
+| Part-filled only | Fill the part-filled compartments |
+| Both | Fill the empty and part-filled compartments |
+
+The distinction is not decorative: an empty compartment takes anything, a
+part-filled one only takes more of what is already in it.
+
+### The Add button says where the fuel goes
+
+Each row carried `→ 48%`, which is where the *rig* lands. Standing beside a
+button that loads the order, it read as a property of the order.
+
+The row now carries both, stacked:
+
+```
+Into C1 and C3
+Rig at 88%          [ Add ]
+```
+
+Four or more and it says `Into 4 compartments`. The hover spells it out —
+*"Goes into compartment 1 and compartment 3. The rig ends at 88% full."*
+
+The compartments are not a guess. `sp2WouldFill()` is a dry run of the packer
+itself — the same two passes (top off the same product, then take an empty
+cell) on a copy of the cells — so what the row promises is what Add does. The
+smoke suite adds an order and checks the compartments that actually grew
+against the ones the row named.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped at 1512 or 1280.
+
+---
+
+## Round 29 — the order card's expand and collapse
+
+A chevron says *"there is more over here"*. It does not say what the more is,
+and turning it 90° to mean "shut" asks the reader to remember which rotation
+is which.
+
+The order card now uses a drawn pair, in the style Pavan supplied: a list with
+arrows beside it, where **the icon draws what the press will leave behind.**
+
+| State | Control | Icon |
+|---|---|---|
+| Shut (`3 products`) | opens the table | three list lines, arrows pushing **apart** |
+| Open (`Total` row) | shuts the table | one list line, arrows coming **together** |
+
+Each list line is an outlined bullet and a rounded bar, as in the reference.
+`sp2ListRow(y)` draws one, so the two icons are the same part repeated three
+times and once — they cannot drift apart.
+
+The rotation is gone: `.sp2-caret.open` no longer transforms, because the
+icons are swapped rather than turned. The smoke suite asserts the count of
+list lines in each state and that the transform is `none`.
+
+The column's own expand-all tool keeps the box-expansion icon it was given in
+round 24 — it is a tool on the view row, not a control on a card.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped.

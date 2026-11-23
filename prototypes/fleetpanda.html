@@ -1162,6 +1162,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-fp-none{padding:6px 0;font-size:12px;color:var(--fp-ink-3);}
 #scr-plan .sp2-fp-o-n{margin-left:auto;font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 /* a facet with more options than you can scan gets its own search */
+#scr-plan .sp2-fp-seg{display:flex;gap:2px;margin:2px 0 6px;padding:2px;background:var(--muted);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-md);}
+#scr-plan .sp2-fp-seg .sp2-seg-btn{flex:1;justify-content:center;}
+#scr-plan .sp2-pill-kind{height:18px;margin-left:6px;padding:0 7px;font-size:10px;font-weight:500;
+  letter-spacing:.03em;background:var(--chip);color:var(--fp-ink-3);}
 #scr-plan .sp2-fp-srch{margin:2px 0 6px;}
 #scr-plan .sp2-fp-srch input{width:100%;height:32px;padding:0 10px;border:1px solid var(--fp-stroke-field);
   border-radius:var(--r-md);background:var(--fp-surface-1b);font-family:inherit;
@@ -1833,13 +1838,16 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
    picture. Together they take one band of the card instead of two. */
 /* The band is as tall as the table; the drawing sits on its baseline, so the
    bottom of the truck lines up with the bottom of the compartment card. */
+/* Half each, whatever the screen is: the table and the drawing say the same
+   thing two ways, so neither outranks the other. The ratio is fixed; the
+   widths follow the column. */
 #scr-plan .sp2-two{display:flex;gap:12px;align-items:stretch;margin-top:10px;}
-#scr-plan .sp2-two-l{flex:0 0 348px;min-width:0;}
-#scr-plan .sp2-two-r{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
+#scr-plan .sp2-two-l{flex:1 1 0;min-width:0;}
+#scr-plan .sp2-two-r{flex:1 1 0;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
 /* Comp and the readouts take what they need; the product name gets the rest.
    TM is the tank monitor, and the head has to fit at this width. */
-#scr-plan .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 62px 46px;}
-#scr-plan .sp2-two-l .sp2-ct-head>span,#scr-plan .sp2-two-l .sp2-ct-n,#scr-plan .sp2-two-l .sp2-ct-p,#scr-plan .sp2-two-l .sp2-ct-f,#scr-plan .sp2-two-l .sp2-cell{padding-left:9px;padding-right:9px;}
+#scr-plan .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 58px 46px;}
+#scr-plan .sp2-two-l .sp2-ct-head>span,#scr-plan .sp2-two-l .sp2-ct-n,#scr-plan .sp2-two-l .sp2-ct-p,#scr-plan .sp2-two-l .sp2-ct-f,#scr-plan .sp2-two-l .sp2-cell{padding-left:7px;padding-right:7px;}
 #scr-plan .sp2-two-l .sp2-ct-head>span{height:32px;font-size:12px;}
 #scr-plan .sp2-two-l .sp2-ct .sp2-lt-c{height:34px;}
 #scr-plan .sp2-two-l .sp2-ct-n,#scr-plan .sp2-two-l .sp2-ct-p,#scr-plan .sp2-two-l .sp2-ct-f,#scr-plan .sp2-two-l .sp2-cell{font-size:12px;}
@@ -1891,7 +1899,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
    just showed. Every pick is a whole order: there is no splitting here. */
 #scr-plan .sp2-sg{margin-top:10px;padding:10px 12px;border:1px solid var(--fp-outline-1);
   border-radius:var(--r-md);background:var(--fp-surface-1a);}
-#scr-plan .sp2-sg-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}
+#scr-plan .sp2-sg-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;row-gap:4px;margin-bottom:8px;}
 #scr-plan .sp2-sg-ttl{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:var(--fp-ink-3);}
 #scr-plan .sp2-sg-room{margin-left:auto;font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
@@ -1908,7 +1916,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-sg-ship{font-size:13px;color:var(--fp-ink-3);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;}
 #scr-plan .sp2-sg-gal{color:var(--fp-ink-1);font-weight:500;}
-#scr-plan .sp2-sg-to{flex-shrink:0;font-size:12px;font-weight:600;color:var(--status-success);
+#scr-plan .sp2-sg-to{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:1px;
+  text-align:right;}
+#scr-plan .sp2-sg-to-c{font-size:12px;font-weight:600;color:var(--fp-ink-1);}
+#scr-plan .sp2-sg-to-p{font-size:11px;font-weight:600;color:var(--status-success);
   font-variant-numeric:tabular-nums;}
 /* the act is filled: an outline reads as one more thing to look at, not the
    thing to press */
@@ -1960,9 +1971,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-lsum-n{font-size:14px;color:var(--fp-ink-1);white-space:nowrap;}
 #scr-plan .sp2-lsum-q{margin-left:auto;font-size:14px;font-weight:600;color:var(--fp-ink-1);
   font-variant-numeric:tabular-nums;white-space:nowrap;}
+/* The icon says which way the press goes, so it is never turned on its side. */
 #scr-plan .sp2-caret{display:inline-flex;align-items:center;justify-content:center;
-  width:16px;flex-shrink:0;color:var(--fp-ink-3);transition:transform .12s;}
-#scr-plan .sp2-caret.open{transform:rotate(90deg);cursor:pointer;margin-right:4px;}
+  width:17px;flex-shrink:0;color:var(--fp-ink-3);}
+#scr-plan .sp2-caret.open{cursor:pointer;margin-right:4px;}
 #scr-plan .sp2-lt-tot>span:first-child{display:flex;align-items:center;}
 
 #scr-plan .sp2-lt{display:grid;grid-template-columns:minmax(0,1fr) 110px 64px;
@@ -5287,7 +5299,17 @@ function sp2HasBlend(o) { return o.prods.some(function (pr) { return sp2IsBlend(
 
 var SP2_HUBS   = ['Denver Hub','Phoenix Hub','Portland Hub','Tampa Hub','San Jose Hub'];
 var SP2_SHIFTK = ['e6','e5','l7','l8'];
-var SP2_PRODS  = ['UNL87','CLR DSL','HO DSL','UNL93','Diesel DEF','Kerosene'];
+// The bulk products the tank fleet carries, which is what an order is cut
+// from and what the Products filter lists. Twenty-five straight products and
+// the five blends above: gasoline by grade, diesel clear, dyed and seasonal,
+// the heating and aviation cuts, DEF, and the two blend components a terminal
+// also racks on their own.
+var SP2_PRODS = [
+  'UNL87','UNL88','UNL89','UNL91','UNL93','REC90','RACE100',
+  'CLR DSL','DYED DSL','HO DSL','PREM DSL','WIN DSL','OFF-RD DSL','MARINE DSL',
+  'ULSD #1','ULSD #2','Diesel DEF','Kerosene','Kerosene #2','Htg oil #1',
+  'Htg oil #2','Avgas 100LL','Jet A','Ethanol','Biodiesel',
+];
 
 // The four limits Samsara clocks a property-carrying driver against, in
 // minutes: the 30-min break after 8h driving, 11h driving, the 14h on-duty
@@ -5438,6 +5460,16 @@ var SP2_HUB_STATES = {
   'Tampa Hub':['FL'], 'San Jose Hub':['CA'],
 };
 function sp2State(addr) { var m = String(addr).match(/\b([A-Z]{2})\s+\d{5}\b/); return m ? m[1] : ''; }
+// A ship-to is named "Customer \u2014 Site". The customer is the part before the
+// dash, so the two filters read the same list and can never fall out of step.
+function sp2CustOf(ship) { return String(ship).split(' \u2014 ')[0]; }
+function sp2UniqOrd(f) {
+  var seen = {}, out = [];
+  SP2_ORDERS.forEach(function (o) { var v = f(o); if (v && !seen[v]) { seen[v] = 1; out.push(v); } });
+  return out.sort();
+}
+function sp2CustList() { return sp2UniqOrd(function (o) { return sp2CustOf(o.ship); }); }
+function sp2ShipList() { return sp2UniqOrd(function (o) { return o.ship; }); }
 function sp2AddrOf(ship) {
   for (var i = 0; i < SP2_SHIPTOS.length; i++) if (SP2_SHIPTOS[i][0] === ship) return SP2_SHIPTOS[i][1];
   return '';
@@ -5930,6 +5962,51 @@ function sp2Suggest(k, max) {
   return { picks:picks, room:room, cap:cap, best:best0, why:why };
 }
 
+// A dry run of the packer \u2014 the same two passes on a copy of the cells \u2014 so a
+// suggestion can name the compartments the fuel will land in BEFORE it is
+// added. Anything else would be a guess that the Add button then contradicts.
+function sp2WouldFill(k, prods) {
+  var cells = sp2Cells(k).map(function (c) {
+    return { cap:c.cap, p:c.l.p, q:c.l.q, u:c.u, i:c.i };
+  });
+  var hit = {}, names = [];
+  prods.forEach(function (pr) {
+    var left = pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.p === pr.p, empty = !c.p || c.q === 0;
+        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
+        var take = Math.min(c.cap - c.q, left);
+        if (!take) return;
+        if (pass === 2) c.p = pr.p;
+        c.q += take; left -= take;
+        var nm = sp2CompName(c.u, c.i);
+        if (!hit[nm]) { hit[nm] = 1; names.push(nm); }
+      });
+    });
+  });
+  return names;
+}
+// "C1", "C1 and C3", "C1, C3 and C4", then a count \u2014 a list of five numbers
+// beside a button is not a read.
+function sp2CompList(ns) {
+  if (!ns.length) return '';
+  if (ns.length > 3) return ns.length + ' compartments';
+  if (ns.length === 1) return ns[0];
+  return ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1];
+}
+// Spelled out for the hover, where there is room: "compartment 1 and trailer
+// compartment 2" rather than "C1 and Trailer C2".
+function sp2CompLong(ns) {
+  var say = ns.map(function (n) {
+    return n.indexOf('Trailer') === 0
+      ? 'trailer compartment ' + n.slice(9) : 'compartment ' + n.slice(1);
+  });
+  if (say.length === 1) return say[0];
+  return say.slice(0, -1).join(', ') + ' and ' + say[say.length - 1];
+}
+
 function sp2TakeSuggestion(e, k, id) {
   e.stopPropagation();
   var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
@@ -5945,7 +6022,16 @@ function sp2TakeSuggestion(e, k, id) {
 
 function sp2SuggestHtml(k) {
   var sg = sp2Suggest(k, 3);
-  var head = '<div class="sp2-sg-head"><span class="sp2-sg-ttl">Fill the rest</span>' +
+  // The heading says WHICH compartments are being filled, because that is the
+  // question a dispatcher is holding \u2014 an empty one takes anything, a part-filled
+  // one only takes more of what is already in it.
+  var free = sp2Cells(k).filter(function (c) { return c.l.q < c.cap; });
+  var part = free.some(function (c) { return c.l.q > 0; });
+  var bare = free.some(function (c) { return !c.l.q; });
+  var ttl = part && bare ? 'Fill the empty and part-filled compartments'
+          : part ? 'Fill the part-filled compartments'
+          : 'Fill the empty compartments';
+  var head = '<div class="sp2-sg-head"><span class="sp2-sg-ttl">' + ttl + '</span>' +
     (sg.room > 0
       ? '<span class="sp2-sg-room">' + sg.room.toLocaleString() + ' gal of room' +
         (sg.best && sg.best.gal < sg.room
@@ -5975,8 +6061,14 @@ function sp2SuggestHtml(k) {
                     trip.min + ' min</span>' : '') +
           '</div>' +
         '</div>' +
-        '<span class="sp2-sg-to" title="Where the rig lands once this is on">\u2192 ' +
-          o.__after + '%</span>' +
+        (function (into) {
+          return '<span class="sp2-sg-to" title="' +
+              (into.length ? 'Goes into ' + sp2CompLong(into) + '. ' : '') +
+              'The rig ends at ' + o.__after + '% full.">' +
+            (into.length ? '<span class="sp2-sg-to-c">Into ' + sp2CompList(into) + '</span>' : '') +
+            '<span class="sp2-sg-to-p">Rig at ' + o.__after + '%</span>' +
+          '</span>';
+        })(sp2WouldFill(k, o.prods)) +
         '<button class="sp2-sg-add" onclick="sp2TakeSuggestion(event,\'' + k + '\',\'' + o.id + '\')" ' +
           'title="Put ' + o.id + ' on ' + SP2_DRIVERS[k].truck + '">Add</button>' +
       '</div>';
@@ -6321,12 +6413,32 @@ function sp2Clock(m) {
   return h12 + ':' + String(x).padStart(2, '0') + ' ' + ap;
 }
 
+// A chevron says "there is more", not "there are products". These say both:
+// a list with arrows beside it. Shut, the control OPENS \u2014 three lines and the
+// arrows pushing apart. Open, it CLOSES \u2014 one line and the arrows coming
+// together. The icon draws what the press will leave behind.
+function sp2ListRow(y) {
+  return '<circle cx="3.3" cy="' + y + '" r="1.9" stroke-width="1.7"/>' +
+         '<path d="M7.8 ' + y + 'h8"/>';
+}
+function sp2IcoExpand() {
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
+    sp2ListRow(6) + sp2ListRow(12) + sp2ListRow(18) +
+    '<path d="M20.3 10.6V3.6"/><path d="M17.9 6l2.4-2.4L22.7 6"/>' +
+    '<path d="M20.3 13.4v7"/><path d="M17.9 18l2.4 2.4 2.4-2.4"/></svg>';
+}
+function sp2IcoCollapse() {
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
+    sp2ListRow(12) +
+    '<path d="M20.3 3.6v7"/><path d="M17.9 8.2l2.4 2.4 2.4-2.4"/>' +
+    '<path d="M20.3 20.4v-7"/><path d="M17.9 15.8l2.4-2.4 2.4 2.4"/></svg>';
+}
 function sp2Caret(o, open) {
   return '<span class="sp2-caret' + (open ? ' open' : '') + '"' +
       (open ? ' onclick="sp2CardToggle(event,\'' + o.id + '\')" title="Hide the products"' : '') + '>' +
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<polyline points="9 18 15 12 9 6"/></svg></span>';
+      (open ? sp2IcoCollapse() : sp2IcoExpand()) + '</span>';
 }
 function sp2CardToggle(e, id) {
   if (e) e.stopPropagation();
@@ -6729,7 +6841,7 @@ function sp2Avail(d) {
 // dispatcher thinks about a rig; the dimension is what the chip says.
 // The head narrows BOTH columns, so a group says which one it acts on and a
 // facet carries the column its chip belongs in.
-var SP2_GROUPS = ['Order', 'Products', 'Driver', 'Shift', 'Location', 'Truck & trailer', 'Capacity', 'Planning'];
+var SP2_GROUPS = ['Order', 'Products', 'Driver', 'Shift', 'Hubs', 'Truck & trailer', 'Truck capacity'];
 var SP2_GROUP_COL = { 'Order':'orders', 'Products':'orders' };
 // The panel is two tabs, because a filter narrows one list or the other and
 // the reader should never have to work out which.
@@ -6767,7 +6879,22 @@ var SP2_FACETS = [
       return !sp2Planned(o) ? ['Unplanned']
         : sp2Outside(o) ? ['Planned','Outside'] : ['Planned'];
     } },
-  { c:'orders', g:'Products', k:'oblend', label:'Products', opts:['Carrying a blend'],
+  // A ship-to is named "Customer \u2014 Site", so the customer is already in it
+  // and there is no second list to keep in step.
+  { c:'orders', g:'Order', k:'cust', label:'Customer', searchable:true,
+    opts:sp2CustList(), ord:function (o) { return [sp2CustOf(o.ship)]; } },
+  { c:'orders', g:'Order', k:'shipto', label:'Ship-to', searchable:true,
+    ph:'Search ship-to\u2026', opts:sp2ShipList(),
+    desc:function (v) { return sp2AddrOf(v); },
+    ord:function (o) { return [o.ship]; } },
+
+  // Every product the day's orders can carry, blends among them. The ratio a
+  // blend is mixed in belongs to the order, not to the filter, so it is not
+  // named here.
+  { c:'orders', g:'Products', k:'oprod', label:'Product', searchable:true,
+    opts:SP2_PRODS.concat(Object.keys(SP2_BLENDS)).sort(),
+    ord:function (o) { return o.prods.map(function (pr) { return pr.p; }); } },
+  { c:'orders', g:'Products', k:'oblend', label:'Blended', opts:['Carrying a blend'],
     ord:function (o) { return sp2HasBlend(o) ? ['Carrying a blend'] : []; } },
 
   // ── Driver ──
@@ -6775,7 +6902,7 @@ var SP2_FACETS = [
   // under Capacity — an off-duty rig can be empty and still take nothing.
   { c:'drivers', g:'Driver', k:'room', label:'Availability', opts:['Available','Not available'],
     of:function (d) { return sp2Avail(d) ? 'Available' : 'Not available'; } },
-  { c:'drivers', g:'Driver', k:'duty', label:'Duty', opts:['Driving','On duty','Off duty','On leave'],
+  { c:'drivers', g:'Driver', k:'duty', label:'Hours of service (HOS)', opts:['Driving','On duty','Off duty','On leave'],
     of:function (d) { return sp2Duty(d); } },
 
   // ── Shift ──
@@ -6791,30 +6918,37 @@ var SP2_FACETS = [
       return t > 240 ? 'Over 4h' : t > 120 ? '2\u20134h' : t > 0 ? 'Under 2h' : 'Out';
     } },
 
-  // ── Location ──
-  { c:'drivers', g:'Location', k:'hub', label:'Hub', of:function (d) { return d.hub; } },
+  // ── Hubs ──
+  { c:'drivers', g:'Hubs', k:'hub', label:'Hub', of:function (d) { return d.hub; } },
 
   // ── Truck & trailer ──
   // The rigs themselves, each saying what it is and what it holds — thirty of
   // them, so this one is searchable.
-  { c:'drivers', g:'Truck & trailer', k:'truck', label:'Truck', searchable:true,
-    opts:Object.keys(SP2_TRUCKS).sort(), desc:sp2TruckDesc,
-    of:function (d) { return d.truck; } },
+  // A rig is a truck and what is hitched behind it, so the two are one list:
+  // every unit by its number, each saying which it is and what it holds. The
+  // segment is the quick narrowing \u2014 the search is for the number itself.
+  { c:'drivers', g:'Truck & trailer', k:'rig', label:'Truck or trailer', searchable:true,
+    ph:'Search truck or trailer number\u2026',
+    seg:[{ k:'all', label:'All' }, { k:'truck', label:'Trucks' },
+         { k:'trailer', label:'Trailers' }],
+    segOf:function (v) { return SP2_TRUCKS[v] ? 'truck' : 'trailer'; },
+    pill:function (v) { return SP2_TRUCKS[v] ? 'Truck' : v === 'No trailer' ? '' : 'Trailer'; },
+    opts:Object.keys(SP2_TRUCKS).sort()
+           .concat(Object.keys(SP2_TRAILERS).sort(), ['No trailer']),
+    desc:function (v) { return SP2_TRUCKS[v] ? sp2TruckDesc(v) : sp2TrailerDesc(v); },
+    of:function (d) { return [d.truck, d.trailer || 'No trailer']; } },
   { c:'drivers', g:'Truck & trailer', k:'class', label:'Class',
     of:function (d) { return SP2_TRUCKS[d.truck].type; } },
-  { c:'drivers', g:'Truck & trailer', k:'trailer', label:'Trailer',
-    opts:Object.keys(SP2_TRAILERS).sort().concat(['None']), desc:sp2TrailerDesc,
-    of:function (d) { return d.trailer || 'None'; } },
 
-  // ── Capacity ──
+  // ── Truck capacity ──
   // Room left in gallons, as a range you slide — the question is "who can take
   // 2,000 gal", and a bucket does not answer it.
-  { c:'drivers', g:'Capacity', k:'cap', label:'Room left', kind:'range', step:250,
+  { c:'drivers', g:'Truck capacity', k:'cap', label:'Room left', kind:'range', step:250,
     lo:0, hi:SP2_MAX_CAP, unit:'gal',
     val:function (d, k) { return sp2RigFill(k).free; } },
   // Free gallons are not PLACEABLE gallons: one product cannot share a
   // compartment, so this is what decides whether a NEW product can go on.
-  { c:'drivers', g:'Capacity', k:'comps', label:'Compartments free', opts:['None','1','2','3 or more'],
+  { c:'drivers', g:'Truck capacity', k:'comps', label:'Compartments free', opts:['None','1','2','3 or more'],
     of:function (d, k) {
       var n = sp2Cells(k).filter(function (c) { return !c.l.q; }).length;
       return n === 0 ? 'None' : n >= 3 ? '3 or more' : String(n);
@@ -6822,35 +6956,18 @@ var SP2_FACETS = [
   // Which products this rig could actually take: one it is already carrying
   // with room left in that compartment, or anything at all if a compartment
   // is empty. Tick a product and only the rigs that can take it remain.
-  { c:'drivers', g:'Capacity', k:'takes', label:'Takes product', searchable:true,
-    opts:SP2_PRODS.concat(['Ethanol','Biodiesel']).sort(),
+  { c:'drivers', g:'Truck capacity', k:'takes', label:'Takes product', searchable:true,
+    opts:SP2_PRODS.slice().sort(),
     of:function (d, k) {
       var cells = sp2Cells(k), empty = false, top = {};
       cells.forEach(function (c) {
         if (!c.l.q) { if (c.cap > 0) empty = true; return; }
         if (c.l.q < c.cap && c.l.p) top[c.l.p] = 1;
       });
-      if (empty) return SP2_PRODS.concat(['Ethanol','Biodiesel']);
+      if (empty) return SP2_PRODS.slice();
       return Object.keys(top);
     } },
 
-  // ── Planning ──
-  { c:'drivers', g:'Planning', k:'plan', label:'Planning', opts:['Planned','Not started'],
-    of:function (d, k) {
-      return SP2_ORDERS.some(function (o) { return o.driver === k; }) ? 'Planned' : 'Not started'; } },
-  // The exceptions list — the rigs that need a decision today. A run can both
-  // miss a window and finish late, so this one matches on any.
-  { c:'drivers', g:'Planning', k:'risk', label:'Run risk',
-    opts:['Misses a window','Ends past the shift','Clean','Not planned'],
-    of:function (d, k) {
-      var r = sp2Route(k);
-      if (!r.length) return ['Not planned'];
-      var out = [];
-      if (r.some(function (x) { return x.kind === 'late'; })) out.push('Misses a window');
-      var e = sp2RunEnd(k);
-      if (e && e.over) out.push('Ends past the shift');
-      return out.length ? out : ['Clean'];
-    } },
 ];
 function sp2GroupFacets(g) {
   return SP2_FACETS.filter(function (f) { return f.g === g; });
@@ -6879,6 +6996,7 @@ var sp2FpStage = null;   // staged while the panel is open; Apply commits it
 var sp2FpOn    = 'Order';    // which group's options are showing
 var sp2FpTab   = 'orders';   // which list the panel is narrowing
 var sp2FpQ     = {};        // per-facet search text, cleared when the group changes
+var sp2FpSeg   = {};        // per-facet segment, for a list of two kinds
 // "Available" is not a tab on the row any more; it is the view the planner
 // opens on — the rigs that still have room, held in the order they had when
 // you arrived. Every other narrowing is a facet behind Filters.
@@ -6962,10 +7080,14 @@ function sp2FpClose() {
   var p = document.getElementById('sp2Fp');
   if (p) p.classList.remove('on');     // staged ticks are discarded
 }
-function sp2FpPick(k) { sp2FpOn = k; sp2FpQ = {}; sp2FpDraw(); }
+function sp2FpPick(k) { sp2FpOn = k; sp2FpQ = {}; sp2FpSeg = {}; sp2FpDraw(); }
+// The segment is a quick narrowing of ONE facet's options, not a filter of its
+// own \u2014 nothing is ticked by moving it, so Apply is unaffected.
+function sp2FpSegPick(fk, v) { sp2FpSeg[fk] = v; sp2FpDraw(); }
 function sp2FpTabs(k) {
   sp2FpTab = k;
   sp2FpQ = {};
+  sp2FpSeg = {};
   sp2FpOn = sp2TabGroups(k)[0];
   sp2FpDraw();
 }
@@ -7060,21 +7182,31 @@ function sp2FpDraw() {
 
     var on = sp2FpStage[f.k] || [];
     var q = (sp2FpQ[f.k] || '').toLowerCase().trim();
+    var sg = f.seg ? (sp2FpSeg[f.k] || f.seg[0].k) : null;
     var list = sp2FacetOpts(f).filter(function (v) {
+      if (sg && sg !== f.seg[0].k && f.segOf(v) !== sg) return false;
       if (!q) return true;
       return (v + ' ' + (f.desc ? f.desc(v) : '')).toLowerCase().indexOf(q) >= 0;
     });
+    var segs = f.seg ? '<div class="sp2-fp-seg">' + f.seg.map(function (t) {
+        return '<button class="sp2-seg-btn' + (t.k === sg ? ' on' : '') + '" ' +
+          'onclick="sp2FpSegPick(\'' + f.k + '\',\'' + t.k + '\')">' + t.label + '</button>';
+      }).join('') + '</div>' : '';
     var box = f.searchable
-      ? '<div class="sp2-fp-srch"><input placeholder="Search ' + f.label.toLowerCase() + '\u2026" ' +
+      ? '<div class="sp2-fp-srch"><input placeholder="' +
+        (f.ph || 'Search ' + f.label.toLowerCase() + '\u2026') + '" ' +
         'value="' + (sp2FpQ[f.k] || '') + '" aria-label="Search ' + f.label + '" ' +
         'oninput="sp2FpSearch(\'' + f.k + '\',this.value)"></div>' : '';
-    return head + box + (list.length
+    return head + segs + box + (list.length
       ? list.map(function (v) {
           var n = f.ord ? sp2OrderCountFor(f, v) : null;
           return '<button class="sp2-fp-o' + (on.indexOf(v) >= 0 ? ' on' : '') + '" ' +
             'onclick="sp2FpTick(\'' + f.k + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
             '<span class="sp2-fp-box"></span>' +
-            '<span><span class="sp2-fp-o-v">' + v + '</span>' +
+            '<span><span class="sp2-fp-o-v">' + v +
+              (f.pill && f.pill(v)
+                ? '<span class="sp2-pill sp2-pill-kind">' + f.pill(v) + '</span>' : '') +
+            '</span>' +
               (f.desc ? '<span class="sp2-fp-o-d">' + f.desc(v) + '</span>' : '') +
             '</span>' + (n === null ? '' : '<span class="sp2-fp-o-n">' + n + '</span>') +
             '</button>';

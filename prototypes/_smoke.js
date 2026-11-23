@@ -609,7 +609,7 @@
 
       // add one of your own and they come back, the whole set of them
       sp2FpToggle();
-      sp2FpPick('Location');
+      sp2FpPick('Hubs');
       sp2FpTick('hub', SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].hub);
       sp2FpApply();
       if (!sp2ViewDirty()) throw new Error('a filter on top of a preset did not change it');
@@ -1370,8 +1370,32 @@
       if (art && sg.getBoundingClientRect().top < art.getBoundingClientRect().bottom - 2)
         throw new Error('the suggestions are not under the drawing');
 
+      // the table and the drawing split the band in half, whatever the width
+      const band = open.querySelector('.sp2-two');
+      const lw = band.querySelector('.sp2-two-l').getBoundingClientRect().width;
+      const rw = band.querySelector('.sp2-two-r').getBoundingClientRect().width;
+      if (Math.abs(lw - rw) > 2)
+        throw new Error('the band is ' + Math.round(lw) + ' / ' + Math.round(rw) + ', not half each');
+
+      // the heading says which compartments are being filled, not "the rest"
+      const ttl = sg.querySelector('.sp2-sg-ttl').textContent;
+      if (/the rest/i.test(ttl)) throw new Error('the heading still says "the rest"');
+      if (!/compartments/i.test(ttl)) throw new Error('the heading does not name compartments: ' + ttl);
+      const anyEmpty = sp2Cells(k).some(c => !c.l.q);
+      const anyPart  = sp2Cells(k).some(c => c.l.q > 0 && c.l.q < c.cap);
+      if (anyEmpty && !anyPart && !/^Fill the empty compartments$/.test(ttl))
+        throw new Error('an all-empty rig is not headed as empty: ' + ttl);
+
       const picks = [...sg.querySelectorAll('.sp2-sg-item')];
       if (!picks.length) throw new Error('an emptied transport is offered nothing');
+      // each one says where the fuel lands before it is added
+      picks.forEach(it => {
+        const to = it.querySelector('.sp2-sg-to');
+        if (!to) throw new Error('a suggestion does not say where it goes');
+        if (!/Rig at \d+%/.test(to.textContent)) throw new Error('it does not say where the rig lands');
+        if (!/Into /.test(to.textContent)) throw new Error('it does not name the compartment');
+        if (!/compartment/i.test(to.title)) throw new Error('the hover does not spell it out');
+      });
       // a suggestion is an act, not a label — each one carries its own Add
       picks.forEach(it => {
         const add = it.querySelector('.sp2-sg-add');
@@ -1396,10 +1420,18 @@
           throw new Error(id + ' clashes with the shift and is still offered');
       });
 
-      // and taking one actually loads it
+      // and taking one actually loads it, into the compartments it named
       const firstId = picks[0].querySelector('.sp2-sg-id').textContent;
+      const said = picks[0].querySelector('.sp2-sg-to-c').textContent.replace(/^Into /, '');
+      const was = sp2Cells(k).map(c => c.l.q);
       const before = sp2RigFill(k).pct;
       picks[0].querySelector('.sp2-sg-add').click();
+      const grew = sp2Cells(k)
+        .map((c, i) => (c.l.q > was[i] ? sp2CompName(c.u, c.i) : null)).filter(Boolean);
+      const told = /^\d+ compartments$/.test(said)
+        ? String(grew.length) + ' compartments' : sp2CompList(grew);
+      if (told !== said)
+        throw new Error('it said ' + said + ' and filled ' + told);
       const o1 = SP2_ORDERS.filter(x => x.id === firstId)[0];
       if (o1.driver !== k) throw new Error(firstId + ' was offered but not planned');
       if (sp2RigFill(k).pct <= before) throw new Error('taking a suggestion did not load the rig');
@@ -1474,6 +1506,13 @@
       if (sum.querySelector('.sp2-lsum-q').textContent.trim() !== sp2Totals(o).join(' \u00b7 '))
         throw new Error('the summary and the table disagree on the total');
 
+      // the control draws what the press leaves behind: three list lines and
+      // arrows pushing apart to open it, one line and arrows meeting to close
+      const shutIco = sum.querySelector('.sp2-caret svg');
+      if (!shutIco) throw new Error('the summary has no expand icon');
+      if (shutIco.querySelectorAll('circle').length !== 3)
+        throw new Error('the expand icon is not three list lines');
+
       // opening it swaps the line for the table, and the total is the same
       const shutH = card.getBoundingClientRect().height;
       sum.click();
@@ -1485,6 +1524,12 @@
         throw new Error('the table does not draw every line');
       if (open.getBoundingClientRect().height <= shutH)
         throw new Error('an open card is no taller than a shut one');
+      const openIco = open.querySelector('.sp2-lt-tot .sp2-caret svg');
+      if (!openIco) throw new Error('the open table has no collapse icon');
+      if (openIco.querySelectorAll('circle').length !== 1)
+        throw new Error('the collapse icon is not one list line');
+      if (getComputedStyle(open.querySelector('.sp2-lt-tot .sp2-caret')).transform !== 'none')
+        throw new Error('the icon is being turned rather than swapped');
       if (!open.querySelector('.sp2-lt-tot .sp2-caret.open'))
         throw new Error('there is no way to shut it again');
       open.querySelector('.sp2-lt-tot .sp2-caret.open').click();
@@ -1654,7 +1699,7 @@
       });
       // driver and shift are their own groups, and every group's dimensions
       // are headed inside its pane
-      ['Driver', 'Shift', 'Location', 'Truck & trailer', 'Capacity', 'Planning'].forEach(g => {
+      ['Driver', 'Shift', 'Hubs', 'Truck & trailer', 'Truck capacity'].forEach(g => {
         if (SP2_GROUPS.indexOf(g) < 0) throw new Error(g + ' is not a group');
         if (!sp2GroupFacets(g).length) throw new Error(g + ' holds no dimension');
       });
@@ -1674,28 +1719,65 @@
       // a rig says what it is on its own line, and a long list can be searched
       sp2FpTabs('drivers');
       sp2FpPick('Truck & trailer');
-      const tk = SP2_FACETS.filter(f => f.k === 'truck')[0];
-      if (!tk.searchable) throw new Error('thirty trucks with no search');
+      const tk = SP2_FACETS.filter(f => f.k === 'rig')[0];
+      if (!tk) throw new Error('the truck and the trailer are not one list');
+      if (SP2_FACETS.some(f => f.k === 'truck' || f.k === 'trailer'))
+        throw new Error('the old truck or trailer facet is still here');
+      if (!tk.searchable) throw new Error('thirty rigs with no search');
       if (!fp.querySelector('.sp2-fp-srch input')) throw new Error('the search box is not drawn');
-      if (sp2FacetOpts(tk).length !== Object.keys(SP2_TRUCKS).length)
-        throw new Error('not every truck is listed');
+      if (!/number/.test(fp.querySelector('.sp2-fp-srch input').placeholder))
+        throw new Error('the search does not say it takes a number');
+      // every truck AND every trailer, each wearing which it is
+      Object.keys(SP2_TRUCKS).concat(Object.keys(SP2_TRAILERS)).forEach(n => {
+        if (sp2FacetOpts(tk).indexOf(n) < 0) throw new Error(n + ' is not listed');
+        if (!/compartments/.test(tk.desc(n))) throw new Error(n + ' does not say what it holds');
+      });
       const firstTruck = fp.querySelector('.sp2-fp-o');
       const desc = firstTruck.querySelector('.sp2-fp-o-d');
-      if (!desc) throw new Error('a truck does not say what it is');
+      if (!desc) throw new Error('a rig does not say what it is');
       if (!/compartments/.test(desc.textContent) || !/gal/.test(desc.textContent))
-        throw new Error('the truck line misses its compartments or gallons: ' + desc.textContent);
-      const tr = SP2_FACETS.filter(f => f.k === 'trailer')[0];
-      Object.keys(SP2_TRAILERS).forEach(n => {
-        if (sp2FacetOpts(tr).indexOf(n) < 0) throw new Error(n + ' is not listed');
-        if (!/compartments/.test(tr.desc(n))) throw new Error(n + ' does not say what it holds');
-      });
-      sp2FpSearch('truck', 'nothing-matches-this');
+        throw new Error('the rig line misses its compartments or gallons: ' + desc.textContent);
+      const kinds = [...fp.querySelectorAll('.sp2-fp-o .sp2-pill-kind')].map(e => e.textContent);
+      if (kinds.indexOf('Truck') < 0) throw new Error('a truck wears no Truck pill');
+
+      // the segment narrows the list to one kind, and All puts it back
+      if (!fp.querySelector('.sp2-fp-seg')) throw new Error('there is no all/trucks/trailers segment');
+      if (fp.querySelectorAll('.sp2-fp-seg .sp2-seg-btn.on').length !== 1)
+        throw new Error('the segment does not open on one choice');
+      if (fp.querySelector('.sp2-fp-seg .sp2-seg-btn.on').textContent !== 'All')
+        throw new Error('the segment does not open on All');
+      // the name is the text node; the pill is a span beside it
+      const shown = () => [...fp.querySelectorAll('.sp2-fp-o .sp2-fp-o-v')]
+        .map(e => e.firstChild.textContent.trim());
+      sp2FpSegPick('rig', 'trailer');
+      if (shown().some(v => SP2_TRUCKS[v])) throw new Error('a truck is listed under Trailers');
+      if (!Object.keys(SP2_TRAILERS).every(n => shown().indexOf(n) >= 0))
+        throw new Error('Trailers does not list every trailer');
+      sp2FpSegPick('rig', 'truck');
+      if (shown().some(v => SP2_TRAILERS[v])) throw new Error('a trailer is listed under Trucks');
+      if (!Object.keys(SP2_TRUCKS).every(n => shown().indexOf(n) >= 0))
+        throw new Error('Trucks does not list every truck');
+      sp2FpSegPick('rig', 'all');
+      // a trailer number picked on its own keeps the rigs pulling it
+      const someTrl = Object.keys(SP2_TRAILERS).find(n =>
+        Object.keys(SP2_DRIVERS).some(k2 => SP2_DRIVERS[k2].trailer === n));
+      if (someTrl) {
+        sp2FpTick('rig', someTrl); sp2FpApply();
+        const got = sp2DriverKeys();
+        if (!got.length) throw new Error('a trailer number matches no rig');
+        got.forEach(k2 => {
+          if (SP2_DRIVERS[k2].trailer !== someTrl)
+            throw new Error('a rig without ' + someTrl + ' is shown');
+        });
+        sp2FpClear(); sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Truck & trailer');
+      }
+      sp2FpSearch('rig', 'nothing-matches-this');
       if (!fp.querySelector('.sp2-fp-none')) throw new Error('a search with no hits says nothing');
-      sp2FpSearch('truck', '');
+      sp2FpSearch('rig', '');
 
       // ── capacity is a range you slide, and it takes itself off at full width
       sp2FpTabs('drivers');
-      sp2FpPick('Capacity');
+      sp2FpPick('Truck capacity');
       const cap = SP2_FACETS.filter(f => f.k === 'cap')[0];
       if (cap.kind !== 'range') throw new Error('capacity is not a range');
       if (fp.querySelectorAll('.sp2-rng-i').length !== 2) throw new Error('the range has no two ends');
@@ -1739,8 +1821,9 @@
         });
       }
       sp2FpClear();
-      // on leave is a word under Duty, and the rigs behind it are real
+      // on leave is a word under Hours of service, and the rigs behind it are real
       const duty = SP2_FACETS.filter(f => f.k === 'duty')[0];
+      if (duty.label.indexOf('HOS') < 0) throw new Error('duty is not headed as hours of service');
       if (duty.opts.indexOf('On leave') < 0) throw new Error('On leave is not a duty');
       if (!Object.keys(SP2_DRIVERS).some(k => sp2Duty(SP2_DRIVERS[k]) === 'On leave'))
         throw new Error('nobody is on leave, so the option is a dead control');
@@ -1749,7 +1832,7 @@
       if (getComputedStyle(fp).display === 'none') sp2FpToggle();
       const before = sp2DriverKeys().length;
       sp2FpTabs('drivers');
-      sp2FpPick('Location');
+      sp2FpPick('Hubs');
       const hub = SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].hub;
       sp2FpTick('hub', hub);
       if (sp2DriverKeys().length !== before)
@@ -1774,7 +1857,7 @@
       if (getComputedStyle(shelf).display !== 'none') throw new Error('the shelf stayed up with nothing on it');
 
       // ── a view saves the whole narrowing, and opens in it
-      sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Location'); sp2FpTick('hub', hub); sp2FpApply();
+      sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Hubs'); sp2FpTick('hub', hub); sp2FpApply();
       sp2VrNew();
       const sug = document.getElementById('sp2DlgI').placeholder;
       if (!sug || sug.indexOf(hub) < 0) throw new Error('the view does not name itself from the filters');
@@ -1793,6 +1876,7 @@
 
       // changing anything marks it, and one press updates it
       sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Truck & trailer');
+      sp2FpSegPick('rig', 'all');
       sp2FpTick('class', SP2_TRUCKS[SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].truck].type);
       sp2FpApply();
       if (!sp2ViewDirty()) throw new Error('a changed view does not read as changed');
@@ -1807,6 +1891,67 @@
 
       // put the column back
       sp2FpClear();
+      sp2SetDrvFilter('available');
+    });
+
+    if (V2) step('an order is filtered by what it carries and who it is for', () => {
+      const fp = document.getElementById('sp2Fp');
+      if (getComputedStyle(fp).display === 'none') sp2FpToggle();
+      sp2FpTabs('orders');
+
+      // ── the product list is the real catalogue, blends a small part of it
+      sp2FpPick('Products');
+      const pf = SP2_FACETS.filter(f => f.k === 'oprod')[0];
+      if (!pf) throw new Error('there is no product filter');
+      const opts = sp2FacetOpts(pf);
+      if (opts.length < 20) throw new Error('only ' + opts.length + ' products are listed');
+      const blends = opts.filter(v => SP2_BLENDS[v]);
+      if (!blends.length) throw new Error('no blend is listed as a product');
+      if (blends.length > opts.length / 4)
+        throw new Error('blends are ' + blends.length + ' of ' + opts.length + ' \u2014 not a small part');
+      // no ratio anywhere on the option \u2014 that belongs to the order
+      if (/%|\d+\s*:\s*\d+/.test(fp.querySelector('.sp2-fp-opts').textContent))
+        throw new Error('the product list names a ratio');
+      if (!pf.searchable) throw new Error('a list this long has no search');
+
+      // every product listed is one an order actually carries
+      const carried = {};
+      SP2_ORDERS.forEach(o => o.prods.forEach(pr => { carried[pr.p] = 1; }));
+      opts.forEach(v => { if (!carried[v]) throw new Error(v + ' is on no order'); });
+
+      // and ticking one leaves only the orders carrying it
+      const pick = opts.find(v => sp2OrderCountFor(pf, v) > 0);
+      sp2FpTick('oprod', pick);
+      sp2FpApply();
+      SP2_ORDERS.filter(o => sp2OrderMatch(o, sp2Facet)).forEach(o => {
+        if (!o.prods.some(pr => pr.p === pick))
+          throw new Error(o.id + ' does not carry ' + pick + ' and is shown');
+      });
+      sp2FpClear();
+
+      // ── customer and ship-to are two filters, not one
+      if (getComputedStyle(fp).display === 'none') sp2FpToggle();
+      sp2FpTabs('orders');
+      sp2FpPick('Order');
+      const cf = SP2_FACETS.filter(f => f.k === 'cust')[0];
+      const sf = SP2_FACETS.filter(f => f.k === 'shipto')[0];
+      if (!cf || !sf) throw new Error('customer and ship-to are not both filters');
+      if (sp2FacetOpts(cf).length >= sp2FacetOpts(sf).length)
+        throw new Error('a customer is not fewer than its ship-tos');
+      if (sp2FacetOpts(cf).some(v => /\u2014/.test(v)))
+        throw new Error('a customer still carries its site name');
+      const cust = sp2FacetOpts(cf)[0];
+      sp2FpTick('cust', cust);
+      sp2FpApply();
+      SP2_ORDERS.filter(o => sp2OrderMatch(o, sp2Facet)).forEach(o => {
+        if (sp2CustOf(o.ship) !== cust) throw new Error(o.id + ' is another customer\u2019s');
+      });
+      sp2FpClear();
+
+      // ── planning is gone from the rigs
+      if (SP2_GROUPS.indexOf('Planning') >= 0) throw new Error('Planning is still a group');
+      if (SP2_FACETS.some(f => f.k === 'plan' || f.k === 'risk'))
+        throw new Error('a planning filter is still here');
       sp2SetDrvFilter('available');
     });
 
