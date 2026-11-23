@@ -225,7 +225,12 @@
     });
     step('the shift filter narrows drivers, not orders', () => {
       if (document.getElementById('sp2Custom')) throw new Error('the custom range is still here');
-      if (document.querySelectorAll('[data-s]').length !== 3) throw new Error('expected All, AM and PM');
+      if (V2) {
+        const f = SP2_FACETS.filter(x => x.k === 'shift')[0];
+        if (!f || f.opts.join() !== 'AM,PM') throw new Error('shift is not a facet of AM and PM');
+      } else if (document.querySelectorAll('[data-s]').length !== 3) {
+        throw new Error('expected All, AM and PM');
+      }
       sp2SetShift('all');
       const orders = document.querySelectorAll('.sp2-card').length;
       const all = document.querySelectorAll('.sp2-ln').length;
@@ -312,7 +317,9 @@
       if (sp2Avail(d)) throw new Error('a full truck still counts as available');
       d.load = keep; if (hadTrl) sp2AddTrailer(hadTrl, k);
       sp2SetDrvFilter('available');
-      if (document.getElementById('sp2dAv').textContent !== String(avail.length))
+      if (V2 && +document.getElementById('sp2DrvCount').textContent !== avail.length)
+        throw new Error('the count does not match what Available leaves');
+      if (!V2 && document.getElementById('sp2dAv').textContent !== String(avail.length))
         throw new Error('the Available count does not match');
       if (document.querySelectorAll('.sp2-ln').length !== avail.length)
         throw new Error('the Available tab shows ' + document.querySelectorAll('.sp2-ln').length +
@@ -324,7 +331,13 @@
       const all = document.querySelectorAll('.sp2-ln').length;
       sp2SetDrvFilter('off-duty');
       const off = document.querySelectorAll('.sp2-ln').length;
-      if (off >= all || off < 10) throw new Error('state filter did nothing: ' + off + '/' + all);
+      if (off >= all || !off) throw new Error('state filter did nothing: ' + off + '/' + all);
+      // and what it leaves really is off duty — leave is its own word now
+      [...document.querySelectorAll('.sp2-ln')].forEach(l => {
+        const d = SP2_DRIVERS[l.dataset.k];
+        if (d.state !== 'off-duty' || (V2 && d.leave))
+          throw new Error(d.name + ' is showing under Off duty');
+      });
       sp2SetDrvFilter('all');
       const box = document.getElementById('sp2DrvSearch');
       box.value = SP2_DRIVERS.d0.name.split(' ')[0];
@@ -526,95 +539,129 @@
       });
     });
 
-    if (V2) step('both columns are headed the same way', () => {
+    if (V2) step('one head narrows both columns', () => {
       sp2ResetWidth();
-      // the DS list page: the name on its own line, then ONE control row —
-      // quick filters leading the left, the display tools on the right
+      // the presets and the filters sit ABOVE the columns, once
+      const head = document.querySelector('.sp2-head');
+      if (!head) throw new Error('there is no head above the columns');
+      const body = document.getElementById('sp2Body');
+      if (head.getBoundingClientRect().bottom > body.getBoundingClientRect().top + 1)
+        throw new Error('the head is not above the columns');
+      if (!head.querySelector('.sp2-vr')) throw new Error('the presets are not in the head');
+      if (!head.querySelector('#sp2DrvSearch')) throw new Error('the search is not in the head');
+      if (!head.querySelector('#sp2FpBtn')) throw new Error('Filters is not in the head');
+
+      // and no column keeps a filter unit of its own
       ['.sp2-col-orders', '.sp2-col-unit'].forEach(sel => {
         const hdr = document.querySelector(sel + ' .sp2-col-hdr');
-        const top = hdr.querySelector('.sp2-col-top');
-        const bar = hdr.querySelector('.sp2-tools');
-        if (!top || !bar) throw new Error(sel + ' is not built as name + toolbar');
-        if (hdr.querySelectorAll('.sp2-tools').length !== 1)
-          throw new Error(sel + ' has a second control row');
-        if (bar.getBoundingClientRect().top < top.getBoundingClientRect().bottom - 1)
-          throw new Error(sel + ': the toolbar is not under the name');
-        const id = top.querySelector('.sp2-col-id');
+        if (hdr.querySelector('.sp2-vr, #sp2DrvSearch, #sp2FpBtn, [data-q], [data-d], [data-s]'))
+          throw new Error(sel + ' still carries a filter of its own');
+        // it keeps its name, its count and how it shows itself
+        const id = hdr.querySelector('.sp2-col-id');
         const name = id.querySelector('.sp2-col-title').getBoundingClientRect();
         const n = id.querySelector('.sp2-count').getBoundingClientRect();
         if (n.left - name.right > 10)
-          throw new Error(sel + ': the count sits ' + Math.round(n.left - name.right) + 'px off the name');
-        if (top.querySelector('.sp2-seg')) throw new Error(sel + ': a filter is still on the naming line');
-
-        // quick filters lead the left, then search, then the rest — the row
-        // wraps on a narrow column, so the order is the DOM's, not the page's
-        const left = bar.querySelector('.sp2-tools-l');
-        const order = [...left.children].map(c => c.className);
-        if (order[0].indexOf('sp2-seg') < 0)
-          throw new Error(sel + ': the quick filters do not lead the row');
-        const si = order.findIndex(c => c.indexOf('sp2-search') >= 0);
-        const fi = order.findIndex(c => c.indexOf('sp2-fltwrap') >= 0);
-        if (si >= 0 && fi >= 0 && si > fi)
-          throw new Error(sel + ': Filters comes before search');
-
-        // every control in the row is the DS's 32px, and none of them stretch
-        [...bar.querySelectorAll('.sp2-seg,.sp2-tool-btn,.sp2-ico-tool,.sp2-search')].forEach(c => {
-          const h = c.getBoundingClientRect().height;
-          if (Math.abs(h - 32) > 2)
-            throw new Error(sel + ': a control is ' + Math.round(h) + 'px, not 32');
-        });
-        const tabs = bar.querySelector('.sp2-drv-tabs');
-        if (tabs && tabs.getBoundingClientRect().width > 380)
-          throw new Error('the availability tabs are ' + Math.round(tabs.getBoundingClientRect().width) + 'px wide');
+          throw new Error(sel + ': the count sits off the name');
+        if (!hdr.querySelector('.sp2-tools-r')) throw new Error(sel + ' lost its display tools');
+        if (!hdr.querySelector('.sp2-shelf')) throw new Error(sel + ' has no chip shelf');
       });
 
-      // and the two heads come out the same height, because they are the
-      // same unit holding the same number of rows
-      const a = document.querySelector('.sp2-col-orders .sp2-col-hdr').getBoundingClientRect().height;
-      const b = document.querySelector('.sp2-col-unit .sp2-col-hdr').getBoundingClientRect().height;
-      if (Math.abs(a - b) > 2)
-        throw new Error('the heads are ' + Math.round(a) + 'px and ' + Math.round(b) + 'px');
+      // every icon tool carries its own outline, and the timeline switch is
+      // one bordered pill of two segments with the live view filled
+      const sw = document.querySelector('.sp2-col-orders .sp2-vsw');
+      if (!sw) throw new Error('the timeline icons are not in one box');
+      if (parseFloat(getComputedStyle(sw).borderTopWidth) < 1)
+        throw new Error('the timeline switch has no outline');
+      if (sw.querySelectorAll('[data-v]').length !== 2)
+        throw new Error('the switch does not hold both views');
+      if (!sw.querySelector('[data-v].on')) throw new Error('neither view reads as the live one');
+      const all = document.getElementById('sp2AllBtn');
+      if (parseFloat(getComputedStyle(all).borderTopWidth) < 1)
+        throw new Error('expand-all has no outline');
 
-      // collapse and expand are gone, root and branch
-      if (document.getElementById('sp2DenseSeg')) throw new Error('the density switch is still here');
-      if (document.querySelector('[data-z]')) throw new Error('a density button is still here');
-      if (typeof sp2SetDense !== 'undefined') throw new Error('density left its handler behind');
-      if (document.querySelector('[data-dense]')) throw new Error('the lanes still carry a density');
+      // the orders column keeps only how it DRAWS itself: the timeline switch
+      // and the expand-all. Sort orders a list, so it went up with Filters.
+      const o = document.querySelector('.sp2-col-orders .sp2-col-hdr');
+      if (o.querySelector('#sp2SortBtn')) throw new Error('sort is still on the orders column');
+      if (!head.querySelector('#sp2SortBtn')) throw new Error('sort is not in the head');
+      const kept = [...o.querySelectorAll('.sp2-tools-r button')]
+        .map(b => b.id || b.getAttribute('data-v'));
+      if (kept.join() !== 'h,v,sp2AllBtn')
+        throw new Error('the orders column carries ' + kept.join(' ') +
+                        ', not the switch then expand-all');
+      // and the band over the lanes is gone: the column already names itself
+      if (document.querySelector('.sp2-ln-hdr'))
+        throw new Error('the lanes still carry a header band');
+      if (document.querySelector('.sp2-col-unit [data-v]'))
+        throw new Error('the rigs column grew a view switch');
+    });
 
-      // the shift unit names itself from the inside
-      const shift = document.querySelector('.sp2-shift-seg');
-      if (!shift) throw new Error('the shift filter is gone');
-      if (!shift.querySelector('.sp2-seg-ico svg')) throw new Error('the shift unit carries no icon');
-      if (document.querySelector('.sp2-flt-lbl')) throw new Error('a filter label is still outside its unit');
-      if (document.getElementById('sp2Vs')) throw new Error('"fit vs" is still on the column');
+    if (V2) step('a preset speaks for itself, and chips speak for you', () => {
+      // back on the preset, unchanged
+      sp2VrPick('vAvail');
+      if (sp2ViewDirty()) throw new Error('the preset reads as changed the moment it is picked');
+      const so = document.getElementById('sp2ShelfO'), sd = document.getElementById('sp2ShelfD');
+      if (getComputedStyle(so).display !== 'none' || getComputedStyle(sd).display !== 'none')
+        throw new Error('a preset showing unchanged still puts chips up');
+      // the narrowing is real even though nothing is on the shelf
+      if (!(sp2Facet.ostatus || []).length || !(sp2Facet.room || []).length)
+        throw new Error('the preset applied nothing');
+
+      // add one of your own and they come back, the whole set of them
+      sp2FpToggle();
+      sp2FpPick('Location');
+      sp2FpTick('hub', SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].hub);
+      sp2FpApply();
+      if (!sp2ViewDirty()) throw new Error('a filter on top of a preset did not change it');
+      if (getComputedStyle(sd).display === 'none')
+        throw new Error('a filter you applied yourself shows no chip');
+      if (sd.textContent.indexOf('Hub') < 0) throw new Error('the chip does not name what you added');
+      if (sd.textContent.indexOf('Available') < 0)
+        throw new Error('the chips show only the change, not the whole narrowing');
+
+      // and putting the preset back takes them away again
+      sp2VrPick('vAvail');
+      if (getComputedStyle(sd).display !== 'none') throw new Error('the chips stayed after the reset');
+    });
+
+    if (V2) step('each column wears its own chips', () => {
+      // off the presets, so the chips answer only to what is applied — a
+      // preset showing unchanged speaks for itself and puts none up
+      sp2VrAll();
+      sp2FpClear();
+      sp2SetQuick('unplanned');                    // an order narrowing
+      const shelfO = document.getElementById('sp2ShelfO');
+      const shelfD = document.getElementById('sp2ShelfD');
+      if (getComputedStyle(shelfO).display === 'none')
+        throw new Error('the orders column shows no chip for its own filter');
+      if (getComputedStyle(shelfD).display !== 'none')
+        throw new Error('an order filter put a chip on the rigs column');
+      if (shelfO.textContent.indexOf('Unplanned') < 0)
+        throw new Error('the chip does not name the value');
+
+      sp2SetDrvFilter('available');                // a rig narrowing
+      if (getComputedStyle(shelfD).display === 'none')
+        throw new Error('the rigs column shows no chip for its own filter');
+      if (shelfD.textContent.indexOf('Available') < 0)
+        throw new Error('the rig chip does not name the value');
+
+      // and each shelf's Clear all clears only its own column
+      shelfO.querySelector('.sp2-shelf-clr').click();
+      if ((sp2Facet.ostatus || []).length) throw new Error('the orders chips did not clear');
+      if (!(sp2Facet.room || []).length) throw new Error('clearing orders cleared the rigs too');
+      sp2FpClear();
     });
 
     if (V2) step('sort and the rest of the filters live behind their own icons', () => {
-      const quick = [...document.querySelectorAll('#sp2Quick .sp2-seg-btn')].map(b => b.dataset.q);
-      ['unplanned', 'planned', 'outside', 'all'].forEach(q => {
-        if (quick.indexOf(q) < 0) throw new Error(q + ' is not a quick filter');
+      // the order narrowings are facets in the common panel now
+      const st = SP2_FACETS.filter(f => f.k === 'ostatus')[0];
+      if (!st || st.c !== 'orders') throw new Error('status is not an order facet');
+      ['Unplanned', 'Planned', 'Outside'].forEach(v => {
+        if (st.opts.indexOf(v) < 0) throw new Error(v + ' is not a status');
       });
-
-      // Blend went behind the funnel, and the funnel says when it is on
-      const pop = document.getElementById('sp2FltPop');
-      const btn = document.getElementById('sp2FltBtn');
-      if (!pop || !btn) throw new Error('there is no filter icon');
-      if (getComputedStyle(pop).display !== 'none') throw new Error('the filters are open at rest');
-      if (!pop.contains(document.getElementById('sp2BlendBtn'))) throw new Error('Blend is not behind the funnel');
-      sp2FltToggle();
-      if (getComputedStyle(pop).display === 'none') throw new Error('the funnel does not open');
-      // a menu opened from the toolbar drops onto the LIST, not onto the
-      // controls — which is the whole reason the row is one row
-      const hdr = document.querySelector('.sp2-col-orders .sp2-col-hdr');
-      if (pop.getBoundingClientRect().top < hdr.getBoundingClientRect().bottom - 1)
-        throw new Error('the menu opens on top of the toolbar');
-      sp2ToggleBlend();
-      if (!btn.classList.contains('on')) throw new Error('a narrowed list does not show on Filters');
-      if (document.getElementById('sp2FltN').textContent !== '1')
-        throw new Error('Filters does not count what is applied');
-      sp2ToggleBlend();
-      if (btn.classList.contains('on')) throw new Error('Filters still reads as narrowed');
-      sp2FltClose();
+      if (!SP2_FACETS.some(f => f.k === 'oblend' && f.c === 'orders'))
+        throw new Error('Blend is not an order facet');
+      if (document.getElementById('sp2Quick')) throw new Error('the quick filters are still here');
 
       // sorting is its own icon, and the two never stand open together
       const spop = document.getElementById('sp2SortPop');
@@ -624,7 +671,7 @@
       });
       sp2SortToggle();
       if (getComputedStyle(spop).display === 'none') throw new Error('the sort does not open');
-      sp2FltToggle();
+      sp2FpToggle();                              // the head's Filters
       if (getComputedStyle(spop).display !== 'none') throw new Error('both menus stand open');
       sp2FltClose();
 
@@ -692,12 +739,14 @@
       Object.keys(late).forEach(id => {
         if (!shown.some(o => o.id === id)) throw new Error(id + ' misses its window and is not shown');
       });
-      if (+document.getElementById('sp2nOut').textContent !== Object.keys(late).length)
+      const stf = SP2_FACETS.filter(f => f.k === 'ostatus')[0];
+      if (sp2OrderCountFor(stf, 'Outside') !== Object.keys(late).length)
         throw new Error('the count does not match the list');
       sp2SetQuick('unplanned');
     });
 
     step('a lane takes the drop, whoever is selected', () => {
+      if (V2) sp2SetQuick('all');        // the head opens narrowed to unplanned
       sp2SetDrvFilter('all');
       const lanes = [...document.querySelectorAll('.sp2-ln')];
       const target = lanes.find(l => l.dataset.k !== sp2Driver);
@@ -728,19 +777,6 @@
         throw new Error('the lane does not name its trailer');
       sp2DropTrailer(k);
       if (SP2_DRIVERS[k].trailer) throw new Error('trailer would not come off');
-    });
-    step('each column carries its own filters, and only its own', () => {
-      if (document.getElementById('sp2Flt')) throw new Error('the old filter popover is still here');
-      const c1 = document.querySelector('.sp2-col-orders .sp2-col-hdr');
-      if (!c1.querySelector('[data-q]')) throw new Error('planned/unplanned is not in the orders header');
-      if (!c1.querySelector('[data-v]')) throw new Error('the view switch left the orders header');
-      if (c1.querySelector('[data-s]')) throw new Error('the shift filter is still on the orders column');
-      const c2 = document.querySelector('.sp2-col-unit .sp2-col-hdr');
-      if (!c2.querySelector('[data-s]')) throw new Error('the shift filter did not move to driver & truck');
-      if (!c2.querySelector('[data-d]')) throw new Error('the driver tabs left their header');
-      if (c2.querySelector('[data-q]')) throw new Error('the order filters are on the driver column');
-      if (document.getElementById('sp2LayoutSeg')) throw new Error('the V1/V2 switch is still here');
-      if (typeof sp2Layout !== 'undefined') throw new Error('V1 left its state behind');
     });
     step('the rig faces left and leaves air either side', () => {
       sp2ResetWidth();
@@ -1285,32 +1321,7 @@
       if (byKey.join() !== Object.keys(SP2_DRIVERS).filter(k => byKey.indexOf(k) >= 0).join())
         throw new Error('All is no longer in roster order');
     });
-    step('the driver header sits on its two lines', () => {
-      sp2ResetWidth();
-      const hdr = document.querySelector('.sp2-col-unit .sp2-col-hdr');
-      const mid = el => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
-      const tabs = hdr.querySelector('.sp2-drv-tabs');
-      const search = hdr.querySelector('#sp2DrvSearch');
-      if (V2) {
-        // the name on its own line, everything that narrows on the one below
-        const title = hdr.querySelector('.sp2-col-title');
-        if (tabs.getBoundingClientRect().top < title.getBoundingClientRect().bottom - 1)
-          throw new Error('the tabs are still up on the naming line');
-        const sh = hdr.querySelector('.sp2-shift-seg');
-        if (Math.abs(mid(tabs) - mid(sh)) > 2)
-          throw new Error('the shift unit is off the filter line');
-        if (sh.getBoundingClientRect().right > hdr.getBoundingClientRect().right)
-          throw new Error('the shift unit spills past the column');
-      } else {
-        const title = hdr.querySelector('.sp2-col-title');
-        if (Math.abs(mid(tabs) - mid(title)) > 2)
-          throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(title)) + 'px off the title');
-        if (Math.abs(mid(tabs) - mid(search)) > 2)
-          throw new Error('the tabs sit ' + Math.round(mid(tabs) - mid(search)) + 'px off the search');
-      }
-      if (parseFloat(getComputedStyle(tabs).marginBottom) > 0)
-        throw new Error('the tabs still carry the margin from when they were in a panel');
-    });
+;
     if (V2) step('the day has work small enough to try on most of the fleet', () => {
       // The orders are cut to fill whole rigs, so without re-cutting a few of
       // them "Fill the rest" would only ever fire on an empty truck. The pool
@@ -1566,6 +1577,239 @@
       sp2Render();
     });
 
+    if (V2) step('the driver column is headed by the unified view', () => {
+      sp2ResetWidth();
+      const hdr = document.querySelector('.sp2-head');
+
+      // the presets, then a control row under them
+      const vr = hdr.querySelector('.sp2-vr');
+      const tb = hdr.querySelector('.sp2-tools');
+      const shelf = document.getElementById('sp2ShelfD');
+      if (!vr || !tb || !shelf) throw new Error('a unit of the head is missing');
+      if (vr.textContent.trim().indexOf('All') !== 0) throw new Error('the first tab is not All');
+      if (!vr.querySelector('.sp2-vr-add')) throw new Error('there is no + View');
+      if (vr.querySelector('.sp2-vr-end')) throw new Error('Export is still on the row');
+      if (tb.getBoundingClientRect().top < vr.getBoundingClientRect().bottom - 1)
+        throw new Error('the controls are not under the presets');
+      // the planner has no header of its own any more; the date is on the row
+      if (document.querySelector('.sp2-hdr')) throw new Error('the planner header is still here');
+      const date = tb.querySelector('.sp2-date');
+      if (!date) throw new Error('the date control is not on the row');
+      const mid = e => { const r = e.getBoundingClientRect(); return r.top + r.height / 2; };
+      const leftC = tb.querySelector('.sp2-tools-l');
+      if (Math.abs(mid(date) - mid(leftC)) > 4) throw new Error('the date is off the control row');
+      if (date.getBoundingClientRect().left < leftC.getBoundingClientRect().right)
+        throw new Error('the date is not to the right of the filters');
+      if (tb.getBoundingClientRect().right - date.getBoundingClientRect().right > 4)
+        throw new Error('the date is not against the right edge');
+      // and a preset narrows BOTH columns at once
+      const both = sp2Views.filter(v => /Available orders and drivers/.test(v.name))[0];
+      if (!both) throw new Error('the preset that opens the planner is gone');
+      if (!(both.state.facet.ostatus || []).length || !(both.state.facet.room || []).length)
+        throw new Error('the preset narrows only one column');
+
+      // search, then Filters, then Sort — narrowing before ordering
+      const ctl = [...leftC.children].map(c => c.className);
+      if (ctl.length !== 3) throw new Error('the controls are ' + ctl.length + ', not three');
+      if (ctl[0].indexOf('sp2-srch') < 0) throw new Error('search does not lead the controls');
+      const fb = leftC.querySelector('#sp2FpBtn'), sb = leftC.querySelector('#sp2SortBtn');
+      if (!fb || !sb) throw new Error('Filters and sort are not on the row');
+      if (fb.getBoundingClientRect().left > sb.getBoundingClientRect().left)
+        throw new Error('sort comes before Filters');
+      if (tb.querySelector('[data-d],[data-s],[data-q]')) throw new Error('a quick filter is still on the row');
+      if (document.getElementById('sp2GbBtn')) throw new Error('Group by is still here');
+      if (typeof sp2Group !== 'undefined') throw new Error('grouping left its state behind');
+      if (ctl.some(c => c.indexOf('sp2-seg') >= 0)) throw new Error('a segment is still on the row');
+
+      // ── the filter panel narrows, and says how far before you commit
+      sp2SetDrvFilter('all');
+      sp2FpClear();                 // start from nothing, whatever ran before
+      sp2FpToggle();
+      const fp = document.getElementById('sp2Fp');
+      if (getComputedStyle(fp).display === 'none') throw new Error('Filters does not open');
+      // two tabs, one per list, so there is no doubt what a tick narrows
+      const tabs = [...fp.querySelectorAll('.sp2-fp-tab')].map(b => b.textContent.replace(/\d+$/, '').trim());
+      if (tabs.join('|') !== 'Orders|Drivers and trucks')
+        throw new Error('the panel is not two tabs: ' + tabs.join('|'));
+      SP2_FACETS.forEach(f => {
+        const tab = (SP2_GROUP_COL[f.g] || 'drivers');
+        if (tab !== (f.c || 'drivers')) throw new Error(f.label + ' is under the wrong tab');
+      });
+      // each tab's menu lists only its own groups
+      sp2FpTabs('orders');
+      if (fp.querySelectorAll('.sp2-fp-f').length !== sp2TabGroups('orders').length)
+        throw new Error('the Orders tab lists the wrong groups');
+      if (!/order/.test(fp.querySelector('.sp2-fp-n').textContent))
+        throw new Error('the Orders tab counts rigs');
+      sp2FpTabs('drivers');
+      if (fp.querySelectorAll('.sp2-fp-f').length !== sp2TabGroups('drivers').length)
+        throw new Error('the Drivers tab lists the wrong groups');
+      if (!/rig/.test(fp.querySelector('.sp2-fp-n').textContent))
+        throw new Error('the Drivers tab counts orders');
+      // the menu lists the GROUPS; each group's dimensions are headed sections
+      if (fp.querySelectorAll('.sp2-fp-f').length === SP2_GROUPS.length)
+        throw new Error('the tabs are not splitting the groups');
+      SP2_FACETS.forEach(f => {
+        if (SP2_GROUPS.indexOf(f.g) < 0) throw new Error(f.label + ' is in no group');
+      });
+      // driver and shift are their own groups, and every group's dimensions
+      // are headed inside its pane
+      ['Driver', 'Shift', 'Location', 'Truck & trailer', 'Capacity', 'Planning'].forEach(g => {
+        if (SP2_GROUPS.indexOf(g) < 0) throw new Error(g + ' is not a group');
+        if (!sp2GroupFacets(g).length) throw new Error(g + ' holds no dimension');
+      });
+      if (sp2GroupFacets('Driver').some(f => f.k === 'shift'))
+        throw new Error('shift is still mixed in with the driver');
+      SP2_GROUPS.forEach(g => {
+        sp2FpTabs(SP2_GROUP_COL[g] || 'drivers');
+        sp2FpPick(g);
+        const fs = sp2GroupFacets(g);
+        if (fs.length < 2) return;                     // one dimension needs no heading
+        const secs = [...fp.querySelectorAll('.sp2-fp-sec')].map(e => e.textContent.trim());
+        fs.forEach(f => {
+          if (secs.indexOf(f.label) < 0) throw new Error(f.label + ' has no heading in ' + g);
+        });
+      });
+
+      // a rig says what it is on its own line, and a long list can be searched
+      sp2FpTabs('drivers');
+      sp2FpPick('Truck & trailer');
+      const tk = SP2_FACETS.filter(f => f.k === 'truck')[0];
+      if (!tk.searchable) throw new Error('thirty trucks with no search');
+      if (!fp.querySelector('.sp2-fp-srch input')) throw new Error('the search box is not drawn');
+      if (sp2FacetOpts(tk).length !== Object.keys(SP2_TRUCKS).length)
+        throw new Error('not every truck is listed');
+      const firstTruck = fp.querySelector('.sp2-fp-o');
+      const desc = firstTruck.querySelector('.sp2-fp-o-d');
+      if (!desc) throw new Error('a truck does not say what it is');
+      if (!/compartments/.test(desc.textContent) || !/gal/.test(desc.textContent))
+        throw new Error('the truck line misses its compartments or gallons: ' + desc.textContent);
+      const tr = SP2_FACETS.filter(f => f.k === 'trailer')[0];
+      Object.keys(SP2_TRAILERS).forEach(n => {
+        if (sp2FacetOpts(tr).indexOf(n) < 0) throw new Error(n + ' is not listed');
+        if (!/compartments/.test(tr.desc(n))) throw new Error(n + ' does not say what it holds');
+      });
+      sp2FpSearch('truck', 'nothing-matches-this');
+      if (!fp.querySelector('.sp2-fp-none')) throw new Error('a search with no hits says nothing');
+      sp2FpSearch('truck', '');
+
+      // ── capacity is a range you slide, and it takes itself off at full width
+      sp2FpTabs('drivers');
+      sp2FpPick('Capacity');
+      const cap = SP2_FACETS.filter(f => f.k === 'cap')[0];
+      if (cap.kind !== 'range') throw new Error('capacity is not a range');
+      if (fp.querySelectorAll('.sp2-rng-i').length !== 2) throw new Error('the range has no two ends');
+      sp2FpRange('cap', 'lo', 2000);
+      sp2FpRange('cap', 'hi', 8000);
+      if ((sp2FpStage.cap || [])[0] !== '2000-8000') throw new Error('the range did not take');
+      const want = Object.keys(SP2_DRIVERS).filter(k2 => {
+        const free = sp2RigFill(k2).free; return free >= 2000 && free <= 8000; });
+      sp2FpApply();
+      if (sp2DriverKeys().length !== want.length)
+        throw new Error('the range left ' + sp2DriverKeys().length + ' of ' + want.length);
+      if (!document.querySelector('.sp2-chipf').textContent.indexOf('2,000'))
+        throw new Error('the chip does not read the range');
+      sp2FpToggle();
+      sp2FpRange('cap', 'lo', cap.lo);
+      sp2FpRange('cap', 'hi', cap.hi);
+      if ((sp2FpStage.cap || []).length) throw new Error('a full-width range is still a filter');
+      sp2FpApply();
+
+      // ── a product shows the rigs that can actually take it
+      const takes = SP2_FACETS.filter(f => f.k === 'takes')[0];
+      sp2FpToggle();
+      sp2FpTick('takes', 'Kerosene');
+      sp2FpApply();
+      const canTake = sp2DriverKeys();
+      if (!canTake.length) throw new Error('no rig can take Kerosene');
+      if (canTake.length === Object.keys(SP2_DRIVERS).length)
+        throw new Error('every rig takes it — the filter says nothing');
+      canTake.forEach(k2 => {
+        if (takes.of(SP2_DRIVERS[k2], k2).indexOf('Kerosene') < 0)
+          throw new Error(SP2_DRIVERS[k2].truck + ' cannot take Kerosene and is shown');
+      });
+      // a rig with no empty compartment only takes what it already carries
+      const shut = Object.keys(SP2_DRIVERS).find(k2 =>
+        !sp2Cells(k2).some(c => !c.l.q && c.cap > 0));
+      if (shut) {
+        const can = takes.of(SP2_DRIVERS[shut], shut);
+        can.forEach(pr => {
+          if (!sp2Cells(shut).some(c => c.l.p === pr && c.l.q < c.cap))
+            throw new Error(SP2_DRIVERS[shut].truck + ' is full and still offers ' + pr);
+        });
+      }
+      sp2FpClear();
+      // on leave is a word under Duty, and the rigs behind it are real
+      const duty = SP2_FACETS.filter(f => f.k === 'duty')[0];
+      if (duty.opts.indexOf('On leave') < 0) throw new Error('On leave is not a duty');
+      if (!Object.keys(SP2_DRIVERS).some(k => sp2Duty(SP2_DRIVERS[k]) === 'On leave'))
+        throw new Error('nobody is on leave, so the option is a dead control');
+      // the blocks above close the panel on Apply; the footer only redraws
+      // while it is open, so reopen before reading it
+      if (getComputedStyle(fp).display === 'none') sp2FpToggle();
+      const before = sp2DriverKeys().length;
+      sp2FpTabs('drivers');
+      sp2FpPick('Location');
+      const hub = SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].hub;
+      sp2FpTick('hub', hub);
+      if (sp2DriverKeys().length !== before)
+        throw new Error('a staged tick changed the list before Apply');
+      const said = +fp.querySelector('.sp2-fp-n b').textContent;
+      sp2FpApply();
+      const after = sp2DriverKeys();
+      if (after.length !== said)
+        throw new Error('the footer promised ' + said + ' and gave ' + after.length);
+      after.forEach(k => {
+        if (SP2_DRIVERS[k].hub !== hub) throw new Error('a rig from another hub is still shown');
+      });
+      if (document.getElementById('sp2FpN').textContent !== '1')
+        throw new Error('Filters does not count what is applied');
+
+      // ── the chip shelf shows it on the column it narrows
+      if (getComputedStyle(shelf).display === 'none') throw new Error('a narrowed list has no chips');
+      const chip = shelf.querySelector('.sp2-chipf');
+      if (!chip || chip.textContent.indexOf(hub) < 0) throw new Error('the chip does not name the value');
+      chip.querySelector('.sp2-chipf-x').click();
+      if (sp2DriverKeys().length !== before) throw new Error('dropping the chip did not widen the list');
+      if (getComputedStyle(shelf).display !== 'none') throw new Error('the shelf stayed up with nothing on it');
+
+      // ── a view saves the whole narrowing, and opens in it
+      sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Location'); sp2FpTick('hub', hub); sp2FpApply();
+      sp2VrNew();
+      const sug = document.getElementById('sp2DlgI').placeholder;
+      if (!sug || sug.indexOf(hub) < 0) throw new Error('the view does not name itself from the filters');
+      sp2DlgSave();
+      if (!sp2ViewOn) throw new Error('the view was not made active');
+      if (sp2ViewDirty()) throw new Error('a just-saved view reads as changed');
+      const made = sp2Views.filter(v => v.id === sp2ViewOn)[0];
+      if (made.name !== sug) throw new Error('saving with an empty box did not take the suggestion');
+
+      // All puts it back; the view tab brings it all back
+      sp2VrAll();
+      if (sp2ViewOn) throw new Error('All did not leave the view');
+      if ((sp2Facet.hub || []).length) throw new Error('All kept the view\'s filters');
+      sp2VrPick(made.id);
+      if ((sp2Facet.hub || [])[0] !== hub) throw new Error('the view did not restore its filters');
+
+      // changing anything marks it, and one press updates it
+      sp2FpToggle(); sp2FpTabs('drivers'); sp2FpPick('Truck & trailer');
+      sp2FpTick('class', SP2_TRUCKS[SP2_DRIVERS[Object.keys(SP2_DRIVERS)[0]].truck].type);
+      sp2FpApply();
+      if (!sp2ViewDirty()) throw new Error('a changed view does not read as changed');
+      if (!document.querySelector('.sp2-vr-wrap .sp2-vr-ico[title="Update changes"]'))
+        throw new Error('a changed view offers no update');
+      sp2VrUpdate(made.id);
+      if (sp2ViewDirty()) throw new Error('updating did not clean the view');
+      sp2VrDelete(made.id);
+      if (sp2Views.some(v => v.id === made.id)) throw new Error('the view was not deleted');
+      if (!sp2Views.some(v => /Available orders and drivers/.test(v.name)))
+        throw new Error('deleting a view took the preset with it');
+
+      // put the column back
+      sp2FpClear();
+      sp2SetDrvFilter('available');
+    });
+
     if (V2) step('a loaded driver card runs the day down a rail', () => {
       sp2SetDrvFilter('all');
       const k = Object.keys(SP2_DRIVERS)
@@ -1709,9 +1953,8 @@
       if (!/^\d{1,2}:\d{2} (AM|PM) – \d{1,2}:\d{2} (AM|PM)$/.test(w))
         throw new Error('the window does not read as a clock time: ' + w);
 
-      // the table sits in a card of its own, 4–6px off the order card's left,
-      // right and bottom edges; that inner rim is what divides the two units,
-      // so no second rule is drawn above it
+      // the products are a SECTION of the card, not a card inside it: one rule
+      // divides them from the head, and the table runs to the card's edges
       // the table is a click away at rest, so open it to read it
       if (c.querySelector('.sp2-lsum')) {
         c.querySelector('.sp2-lsum').click();
@@ -1720,15 +1963,18 @@
       const lt0 = c.querySelector('.sp2-lt');
       if (!lt0) throw new Error('the two units are not divided');
       const cs = getComputedStyle(lt0);
-      if (parseFloat(cs.borderTopWidth) < 1) throw new Error('the inner card has no rim');
-      if (parseFloat(cs.borderRadius) < 6) throw new Error('the inner card is not a card');
-      if (c.querySelector('.sp2-rule')) throw new Error('a second rule stacks on the inner card');
+      if (parseFloat(cs.borderTopWidth) < 1) throw new Error('nothing divides the two units');
+      ['borderLeftWidth', 'borderRightWidth', 'borderBottomWidth'].forEach(side => {
+        if (parseFloat(cs[side]) > 0) throw new Error('the products are still boxed in a card');
+      });
+      if (parseFloat(cs.borderRadius) > 0) throw new Error('the products still read as a card');
+      if (c.querySelector('.sp2-rule')) throw new Error('a second rule stacks on the divider');
       const cb = c.getBoundingClientRect(), tb = lt0.getBoundingClientRect();
       const inset = { left: tb.left - cb.left, right: cb.right - tb.right, bottom: cb.bottom - tb.bottom };
       Object.keys(inset).forEach(side => {
-        if (inset[side] < 4 || inset[side] > 6)
-          throw new Error('the inner card sits ' + Math.round(inset[side]) + 'px off the ' +
-                          side + ' edge, not 4–6');
+        if (inset[side] > 4)
+          throw new Error('the products sit ' + Math.round(inset[side]) + 'px off the ' +
+                          side + ' edge — they should run to it');
       });
 
       // the blend ratio is a column only when a line carries a blend
@@ -1737,7 +1983,7 @@
       const heads = [...lt.querySelectorAll('.sp2-lt-head>span')].map(e => e.textContent);
       const racked = sp2Lines(o);
       const wantsRatio = racked.some(pr => pr.blend);
-      if (wantsRatio !== (heads.indexOf('Blend ratio') >= 0))
+      if (wantsRatio !== (heads.indexOf('Ratio') >= 0))
         throw new Error(wantsRatio ? 'a blended order has no ratio column'
                                    : 'an order with no blend still has a ratio column');
 
@@ -1753,9 +1999,15 @@
         if (!lt.classList.contains('blended')) throw new Error('the table is not in its blended shape');
         const cells = [...lt.querySelectorAll('.sp2-lt-ratio')];
         racked.forEach((pr, i) => {
-          const want = pr.blend ? pr.blend + ' · ' + pr.pct + '%' : '—';
+          // a constituent carries its SHARE, never the blend's name — UNL87 is
+          // not "E10", it is one of the two products an E10 is made from
+          const want = pr.blend ? pr.pct + '%' : '—';
           if (cells[i].textContent.trim() !== want)
             throw new Error(pr.p + ' reads ' + cells[i].textContent.trim() + ', not ' + want);
+          if (pr.blend && cells[i].textContent.indexOf(pr.blend) >= 0)
+            throw new Error(pr.p + ' is still labelled ' + pr.blend);
+          if (pr.blend && !/Blended with/.test(cells[i].title || ''))
+            throw new Error(pr.p + ' does not say what it is blended with');
           // the rows of one blend are bracketed together; a straight product is not
           const bracketed = cells[i].classList.contains('g');
           if (!!pr.blend !== bracketed)

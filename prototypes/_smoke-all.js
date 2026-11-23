@@ -5,7 +5,7 @@
   const screens = [
     ['create', 'create-order.html'],
     ['edit',   'load-order-unassigned.html'],
-    ['plan',   'shift-planner.html'],
+    ['plan',   'shift-planner-ui2.html'],
   ];
   const results = [];
   for (const [key, as] of screens) {

@@ -16,7 +16,7 @@ It is generated from the three sources, which still open on their own:
 |--------|-----|------|
 | `prototypes/create-order.html` | Create order | 3 steps: customer, order planning, best buy |
 | `prototypes/load-order-unassigned.html` | Edit order | Delivery order, load order and sourcing on one screen |
-| `prototypes/shift-planner-v2.html` | Shift planner | Orders on a timeline, beside the driver and their truck |
+| `prototypes/shift-planner-ui2.html` | Shift planner | Orders on a timeline, beside the driver and their truck |
 
 Rebuild the combined file after editing any source:
 
@@ -24,9 +24,19 @@ Rebuild the combined file after editing any source:
 python3 .claude/merge.py
 ```
 
-`prototypes/shift-planner.html` is the earlier planner — selecting orders and
-grouping them into load orders by driver. Kept because that flow has no home in
-the new design yet.
+### Archived
+
+`prototypes/archive/` holds the planners that came before and are no longer
+worked on or built into the combined file:
+
+| File | What it was |
+|---|---|
+| `shift-planner-v1.html` | The first full planner — the design V2 replaced. Archived 2026-11-23. |
+| `shift-planner-v0.html` | The earliest one: selecting orders and grouping them into load orders by driver. That flow still has no home in the new design. |
+
+They open and run on their own. The smoke suite still carries their checks —
+every branch guarded by `!V2` — so an archived file can be opened and tested
+without reviving it.
 
 ## The shift planner
 
@@ -128,7 +138,7 @@ how many still need sourcing before they can be created.
 
 ## Compartment planning
 
-Both `create-order.html` and `shift-planner.html` share the same rules:
+Both `create-order.html` and `shift-planner-ui2.html` share the same rules:
 
 - A compartment holds **one product**. Products only share a compartment when the
   product is itself a blend (`BLEND_PRODUCTS` — empty until blends are defined).

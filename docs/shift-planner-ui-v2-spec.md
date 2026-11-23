@@ -623,3 +623,553 @@ the column a question of their own.
 - *The counts on the availability tabs still describe the fleet*, not the one
   rig shown. They are what you would get if you pressed them, which is the
   useful reading.
+
+---
+
+## The Unified View's list head, on the driver column (round 14)
+
+The orders column is untouched. The driver column is now headed by the units
+the Unified View uses, in the DS list page's order:
+
+```
+Driver & truck 30                                          [↗]
+All · Denver Hub ⟳ ⋯            + View                     [Export]   ← unit.view-row
+[All·Available·Driving·On duty·Off duty] [🕐 All AM PM] [search] [Filters 1] [Group ▾]
+Hub Denver Hub ×   Clear all                                          ← unit.chip-shelf
+```
+
+**unit.view-row.** All first, never "Default". Saved views after it, each with
+a gray `RefreshCw` **update icon** while it has unsaved changes and a ⋯ menu
+(Update view · Rename · Delete) that fades in on hover. `+ View` opens *Save
+current view*; the box is empty with a **suggested name** read from what is
+narrowing the list, and → or Tab takes the suggestion. Export is rightmost and
+goes through a sheet that states the narrowing — never a silent export.
+
+Each tab keeps its own unsaved changes: leaving a view parks them, coming back
+finds it as it was left, and **pressing the tab you are on is the reset**. A
+view stores the whole state — availability, shift, search, facets and the
+grouping — and opens in it.
+
+**unit.toolbar.** Left narrows, in the order somebody actually narrows: quick
+filters (availability, shift), then the 320px search with its glyph and clear
+X, then Filters, then Group by.
+
+**unit.filter-panel.** 600px, the facets down a 200px menu with their ticked
+counts, options to the right, and a footer that counts the rows **before** you
+commit — ticks stage until Apply, and Esc discards them. Four facets: Hub ·
+Truck class · Trailer · Planning. Clear All empties and applies at once.
+
+**Group by** puts the lanes in headed sections — Hub · Truck class · Shift ·
+Planning — with a count per section; pressing the same dimension again ungroups.
+
+**unit.chip-shelf** appears only while something narrows the list, one removable
+pill per value, with Clear all.
+
+**Said out loud.**
+
+- *Availability and shift stayed out as quick filters* rather than becoming
+  facets. They are short, exhaustive and flipped many times a session, which is
+  the DS's own test for a quick filter.
+- *The head is 186px* — a view row, a toolbar that wraps its Filters and Group
+  onto a second line at this column width, and a chip shelf. The orders column
+  stays at 95px, which is what you asked for, so the two no longer match.
+- *Hub and truck class move together in the sample fleet* — both are assigned
+  off the same index, so filtering to one hub leaves one class. The facets are
+  right; the data behind them is correlated. Decorrelating it needs more
+  ship-tos per region, since the run builder reserves five per rig.
+- *Views live for the session only.* The DS keeps them in localStorage per
+  list; this is a prototype in one file.
+
+---
+
+## Nothing narrows from the row (round 15)
+
+The driver column's control row is now **search and Filters, and nothing else**.
+
+- **Available is a saved view**, not a tab — the one the planner opens on. Its
+  state is the single facet `Availability: Has room`, and arriving at it still
+  freezes the ordering so the rig you are loading does not slide out from under
+  you.
+- **Every other narrowing is a facet**: Availability · Duty · Shift · Hub ·
+  Truck class · Trailer · Planning. The availability tabs and the AM/PM segment
+  are gone from the row.
+- **Group by is gone.** The lanes are a working surface, not a report.
+
+`sp2SetDrvFilter()` and `sp2SetShift()` survive as the way to set those facets
+in one call — the controls moved, the narrowings did not.
+
+A bug fixed on the way: a wrapping flex box asks for its widest child, not the
+sum, so the left cluster shrank to the search box's 320px and sent Filters onto
+a second line. It takes the row's width now.
+
+---
+
+## Filters worth adding — for review
+
+Built, and on the row before this round:
+
+| Facet | Values | What it answers |
+|---|---|---|
+| Availability | Has room · Full | Can this rig take anything at all? |
+| Duty | Driving · On duty · Off duty | Is the driver out, in, or off today? |
+| Shift | AM · PM | Which half of the day is this rig working? |
+| Hub | the five hubs | Which region's rigs am I planning? |
+| Truck class | Bobtail · Tank wagon · Transport | Is the rig the right size for this order? |
+| Trailer | Hitched · None | Is there pup capacity behind it? |
+| Planning | Planned · Not started | Which rigs still have no day on them? |
+
+**Proposed — none of these are built.**
+
+| Facet | Values | What it answers | Worth it? |
+|---|---|---|---|
+| **Room left** | Empty · under ¼ · ¼–½ · over ½ | "I have a 2,000 gal order — who can take it whole?" Availability says yes/no; this says how much. | **Yes** |
+| **Compartments free** | 0 · 1 · 2 · 3+ | One product cannot share a compartment, so free gallons are not placeable gallons. This is the number that decides whether a NEW product can go on. | **Yes** |
+| **Product on board** | UNL87 · CLR DSL · … | Topping up a compartment needs no empty one. "Who already has CLR DSL?" is the fastest way to place a diesel order. | **Yes** |
+| **Hours left** | over 4h · 2–4h · under 2h · out | The binding Samsara clock. A rig with room is no use if the driver cannot legally finish the run. | **Yes** |
+| **Run risk** | misses a window · ends past the shift · clean | The exceptions list — the rigs that need a decision today. Pairs with Outside on the orders side. | **Yes** |
+| **Shift state** | not started · mid-shift · ended | A yard rig not yet started is the one to load first; one whose shift ended cannot take anything today. | Maybe |
+| **Stops planned** | none · 1–3 · 4–5 | Find the under-used rigs against the 3–4 a shift the field reports. | Maybe |
+| **Line of service** | Tank wagon · Transport · Lubes & packaged · Propane | The packing rules change per line — splitting, one-full-compartment, warehouse loading. | **Needs the data model first** — trucks carry no line of service yet; truck class is standing in for it |
+| **Region / state** | CO · AZ · OR · FL · CA | Redundant while a hub serves exactly one state, which is how the sample data is built. | Skip |
+| **Meter rate** | under 300 gpm · 300–500 · over 500 | Dispensing is gallons ÷ meter, and a slow meter on a big drop is what pushes a run past the shift. Too thin to filter on by itself. | Skip |
+
+The first five are the ones a dispatcher asks while planning. Say which you
+want and they go in behind Filters.
+
+---
+
+## The five filters, built (round 16)
+
+Added behind Filters, in the order a dispatcher reaches for them:
+
+| Facet | Values | Why |
+|---|---|---|
+| **Room left** | Empty · Over half · Quarter to half · Under a quarter · None | Availability says whether; this says how much. |
+| **Compartments free** | None · 1 · 2 · 3 or more | One product cannot share a compartment, so free gallons are not placeable gallons. |
+| **Product on board** | the products carried, or Nothing | Topping up needs no empty compartment. A rig answers with a LIST, and a tick matches if any of them is on it. |
+| **Hours left** | Over 4h · 2–4h · Under 2h · Out | The binding Samsara clock. Room is no use if the driver cannot finish. |
+| **Run risk** | Misses a window · Ends past the shift · Clean · Not planned | The exceptions. A run can both miss a window and finish late, so this one is a list too. |
+
+Facets can now answer with a list, not just a value — `sp2FacetMatch` takes an
+overlap where it gets an array.
+
+**A contradiction fixed on the way.** Availability read *Has room / Full*, but
+`sp2Avail` also excludes off-duty drivers — so ten rigs that are completely
+empty read as "Full" while Room left called them Empty. The values are now
+**Available / Not available**, which is what the test actually asks: can this
+rig take work, on duty and with space. How much space is the facet underneath.
+
+Not built, and why:
+
+- **Shift state** and **Stops planned** — useful, not asked for yet.
+- **Line of service** — the one worth most, since the packing rules change per
+  line. Trucks carry no line of service in the model; truck class stands in.
+- **Region / state** and **Meter rate** — redundant and too thin.
+
+---
+
+## The environment's servers (round 16)
+
+`FP DS 2026/.claude/launch.json` now lists three, down from five:
+
+| Kept | What it runs |
+|---|---|
+| `unified-view` | `dev:unified` — the Unified View prototype |
+| `service-work` | `dev:service` — the Unified View locked to Service Work (`SERVICE=1 vite`; the script was added to `FP-DS-2026/package.json`, which only had `build:service`) |
+| `shift-planner` | the static server on 4810 that serves the planner prototypes |
+
+Removed: `fp-ds-gallery`, `customer-portal`, `design-reference`.
+
+**Pricing has no server to keep.** It is not an entry point — there is no
+`PRICING` flag in `vite.config.ts` and no pricing module; it is the
+`pricing-handoff` **branch** of FP-DS-2026, which runs as the Unified View once
+checked out. Wiring a launch entry would mean switching branches on start,
+which is not something a server config should do.
+
+The copy inside `FP-DS-2026/.claude/launch.json` still lists all five. It is a
+tracked file in that repo with its own push and sync drill, so it was left
+alone.
+
+---
+
+## Cross-checked against the design system (round 17)
+
+Checked the driver column's head against `unit.view-row`, `unit.toolbar`,
+`unit.filter-panel`, `unit.chip-shelf`, `template.list-page`, UX-36, UX-167 and
+IX-12.
+
+**Three real deviations, all fixed.**
+
+1. **The chip shelf had the wrong anatomy.** I built one chip per *value* with
+   the label in bold. The unit is one chip per **facet**: one value reads
+   `Label: value ✕`; several collapse to `Label` + a count bubble + ✕, with a
+   hover card listing each value and its own ✕. The label is muted and the
+   value is ink, and the pill is 28px. Rebuilt.
+2. **"Clear All" and "Apply Filters" carried capitals.** `unit.filter-panel`
+   and IX-12 spell them that way, but **UX-167** (2026-11-13, later, and
+   eval-enforced by `copy-case`) says sentence case for every button. Later
+   wins: **Clear all** and **Apply filters**. *The DS contradicts itself here —
+   worth settling in the DS rather than per prototype.*
+3. **Two facets disagreed about the same rigs.** Availability read *Has room /
+   Full* while `sp2Avail` also excludes off-duty drivers, so ten rigs that are
+   completely empty read "Full" under one facet and "Empty" under another. The
+   values are now **Available / Not available**.
+
+**Already right:** All first and never "Default"; no preset view tabs; the gray
+`RefreshCw` update icon on a changed view; ⋯ with Update view · Rename ·
+Delete; the suggested view name with → / Tab, and Save with an empty box taking
+it; Export rightmost and always through a sheet; each tab keeping its own
+unsaved changes and the tab you are on being its reset; one control row, left
+narrows and right presents; the 320px search with its glyph and clear X;
+Filters carrying its applied count; the 600px panel with a 200px facet menu,
+ticks that stage until Apply, Esc discarding them, a live "N results" on the
+left and Clear all beside Apply on the right; the shelf only while something is
+applied, with Clear all directly after the last chip.
+
+**Deviations kept, and why:**
+
+- The orders column's display switch is two icon tools on the chip fill, not
+  the DS's bordered segment (2026-10-23). You asked for that column untouched.
+- No per-facet search in the panel. The DS marks facets `searchable`; the
+  longest list here is eight products.
+- No Create CTA on the view row — rule 8, no create handler means no button.
+  Drivers are not created from the planner.
+- Views live for the session. The DS keeps them in localStorage per list; this
+  is one HTML file.
+- Recent history in the filter panel is not built.
+
+---
+
+## The filters, regrouped (round 17)
+
+The panel's left menu now lists **groups**, and each group's dimensions are
+headed sections inside its options pane — the DS's own `sections`, used for
+what a dispatcher actually asks about a rig:
+
+| Group | Dimensions |
+|---|---|
+| **Driver & shift** | Availability · Duty · Shift |
+| **Location** | Hub |
+| **Truck & trailer** | Truck · Trailer |
+| **Load** | Room left · Compartments free · Product on board |
+| **Planning** | Planning · Hours left · Run risk |
+
+The **dimension** is still the DS facet: ticks inside one are OR, every
+dimension with ticks must match, and the chip says the dimension, not the
+group. The group is a menu heading, not a filter.
+
+**On leave** joins Duty. It is a word, not a fourth state — everything that
+asks whether a rig can work today already answers no for off duty, and leave is
+the same answer. Three of the ten off-duty drivers are on leave.
+
+---
+
+## Six groups, the rigs themselves, and a capacity slider (round 18)
+
+**Driver and shift are their own groups.** They were one, and they are two
+questions: who is on, and when are they on.
+
+| Group | Dimensions |
+|---|---|
+| **Driver** | Availability · Duty |
+| **Shift** | Band (AM/PM) · Shift window · Hours left |
+| **Location** | Hub |
+| **Truck & trailer** | Truck · Class · Trailer |
+| **Capacity** | Room left (slider) · Compartments free · Takes product |
+| **Planning** | Planning · Run risk |
+
+Hours left moved under Shift — it is a fact about the driver's clock, not about
+the plan.
+
+**The rigs list themselves.** Truck and Trailer no longer offer class names;
+they offer the actual rigs, each saying what it is on a second line:
+
+```
+☐  BT-4          ☐  TR-410
+   Bobtail · 3 compartments · 2,800 gal      Tandem pup · 3 compartments · 5,000 gal
+```
+
+Thirty trucks is more than you can scan, so that facet is **searchable** — the
+DS's per-facet search field, which matches the name and the description, so a
+rig is found by "transport" or by "10,500" as well as by its number.
+
+**Capacity is a range you slide**, not a set of buckets: two thumbs over
+0–17,500 gal of room left, reading out as you drag. At its full width it is not
+a filter, so it takes itself off rather than sitting on the shelf saying
+"0–17,500". The chip reads `Room left: 2,000–8,000 gal`.
+
+**Takes product** replaces "Product on board", because the useful question is
+not what a rig is carrying but what it could take: a product it already has
+with room left in that compartment, or **anything at all if a compartment is
+empty**. Tick Kerosene and only the rigs that can actually place it remain.
+
+**Said out loud.**
+
+- *A facet can now be a range.* It is held as one value, `"2000-8000"`, so the
+  chips, the saved views and the suggested name all keep working unchanged.
+- *"Compatible" means placeable, not permitted.* The model has no rule about
+  which products a truck may legally carry — every compartment takes anything —
+  so a rig with an empty compartment takes all eight products. If some trucks
+  cannot carry some products, that rule has to exist in the data first.
+- *Class stayed* beside Truck. The thirty rigs answer "which one"; the class
+  answers "what size", which is the coarser cut you usually want first.
+
+---
+
+## V1 archived, and V2 is the one that ships (round 19)
+
+`prototypes/archive/` now holds the planners that came before:
+
+| File | Was |
+|---|---|
+| `shift-planner-v1.html` | the design V2 replaced |
+| `shift-planner-v0.html` | the earliest planner — orders grouped into load orders by driver |
+
+Both still open and run on their own, and the smoke suite keeps their checks
+(every branch guarded by `!V2`), so an archived file can be opened and tested
+without reviving it. Nothing builds them.
+
+**And the combined file now carries V2.** This was the standing Pending every
+round — "V2 is not in `fleetpanda.html`" — and the reason given was wrong. The
+merge renames the **18 globals that collide between screens**; V2's are all
+`sp2`-prefixed and collide with nothing, and its CSS is scoped per screen like
+everything else. Pointing `merge.py` at `shift-planner-ui2.html` was the whole
+job.
+
+The bundle is 515 KB (from 377) and runs **89 of 89**: create-order 16,
+load-order 10, shift planner 63.
+
+---
+
+## One head for the whole planner (round 20)
+
+The filter unit came out of both columns and went above them. There is one of
+it now, because a preset like *"available orders and drivers"* narrows the
+whole planner, not one half of it.
+
+```
+Shift Planner V2                                     ‹ Thu 19 Nov 2026 › Today
+─────────────────────────────────────────────────────────────────────────────
+All · Available orders and drivers        + View                      [Export]
+[search orders, ship-tos, drivers or trucks]   [Filters 2]
+─────────────────────────────────────────────────────────────────────────────
+Orders 54          [sort][⇕][≡ ⋮][↗] │ Driver & truck 20                  [↗]
+Status: Unplanned ✕  Clear all        │ Availability: Available ✕  Clear all
+─────────────────────────────────────────────────────────────────────────────
+```
+
+- **Every facet knows its column.** The panel's menu runs Orders first, then
+  the six rig groups. An Orders group counts orders in its footer ("54
+  orders"), a rig group counts rigs.
+- **The chips land in the column they narrow**, right under its name, and each
+  shelf's *Clear all* clears only that column.
+- **The search runs over both** — an order answers to its number, its ship-to
+  and its address; a rig to its driver, truck and hub.
+- **A preset is a narrowing of the whole planner.** The one the planner opens
+  on is `Available orders and drivers` = Status *Unplanned* + Availability
+  *Available*. Pressing All widens both columns at once; pressing the preset
+  brings both back.
+- **Each column keeps how it shows itself**, not what it shows: the orders
+  column still has Sort, expand-all, the timeline switch and pop-out; the rigs
+  column has its pop-out.
+
+The status quick filters and the Blend toggle became facets (`ostatus`,
+`oblend`). `sp2SetQuick()` and `sp2ToggleBlend()` stay as the way to set them
+in one call — the controls moved, the narrowings did not.
+
+**Said out loud.**
+
+- *The per-value counts left the row with the quick filters.* They are in the
+  panel now, against the values they count, which is where the DS puts them.
+- *The rigs column's head is now just a name and a pop-out.* That is what is
+  left once filtering is common — it will fill up again when you add to it.
+
+---
+
+## The orders column draws, the head narrows (round 21)
+
+The orders column's head is down to three things: **the timeline switch, the
+expand-all, and its chips.** Everything that narrows or orders a list is in the
+common head.
+
+- **Sort went up** beside Filters. It orders a list, which is the head's job
+  now; the column is left with how it draws itself.
+- **The pop-out came off the orders column.** The rigs column still has one.
+
+**A preset speaks for itself.** While one is showing unchanged, neither column
+puts chips up — the tab already says what is on, and a row of chips repeating
+it is the same fact twice. The moment the narrowing stops matching the preset —
+because you applied a filter yourself, on top of it or from All — the chips
+come back, and they show the **whole** applied set, not just what you changed.
+Putting the preset back takes them away again.
+
+**Said out loud.**
+
+- *Sort sits in a common head but only orders the orders column.* There is
+  nothing to sort on the rigs side yet, so its tooltip says "Sort orders".
+- *The two columns' heads are no longer alike* — one carries display tools, the
+  other a pop-out. That followed from the instruction, not from a rule.
+
+---
+
+## Two tabs in the panel, one row in the head (round 22)
+
+**The filter panel is two tabs**, because a tick narrows one list or the other
+and the reader should never have to work out which:
+
+```
+┌ Orders 1 │ Drivers and trucks 1 ───────────────────────────┐
+│ Order 1  │ ☑ Unplanned                                54   │
+│ Products │ ☐ Planned                                  45   │
+│          │ ☐ Outside                                   3   │
+├──────────┴──────────────────────────────────────────────── │
+│ 54 orders                        Clear all   Apply filters │
+└────────────────────────────────────────────────────────────┘
+```
+
+Each tab carries a count of how many of its own dimensions are ticked, lists
+only its own groups in the menu, and counts its own list in the footer —
+"54 orders" under Orders, "20 rigs" under Drivers and trucks. The order
+dimensions were split into two groups, **Order** (Status) and **Products**
+(Blend), so the menu has something to list and there is somewhere obvious to
+put the order filters that come next.
+
+**The head is one row.** Search, Sort and Filters moved onto the right of the
+presets row:
+
+```
+All · Available orders and drivers · + View    [search] [⇅] [Filters 2]
+```
+
+**Export is gone**, and its handler with it.
+
+The head went from 180px to **37px** — the whole saving goes to the lanes.
+
+**Said out loud.**
+
+- *A tab is not a filter.* Switching tabs shows a different set of dimensions;
+  it does not narrow anything by itself, and the ticks on the other tab stay
+  staged while you are away from it.
+- *Export was the only way the DS's view row offered to get data out.* It is
+  not in the way of anything now, but the rule it obeyed — never export
+  silently — goes with it.
+
+---
+
+## The head, settled (round 23)
+
+```
+All · Available orders and drivers · + View
+[search]  [Filters 2]  [⇅]                        ‹  Thu 19 Nov 2026  ›  Today
+──────────────────────────────────────────────────────────────────────────────
+Orders 54                      [⇕][≡ ⋮] │ Driver & truck 20              [↗]
+```
+
+- **Search, Filters and Sort went back to their own row** under the presets.
+- **Sort comes after Filters** — you narrow a list before you order it.
+- **The date control joined that row, at the right.** What narrows and orders
+  is on the left; what day you are looking at is on the right.
+- **The planner's own header is gone** — title, V2 badge and all. The date was
+  the only thing in it that did anything, and it has a better home.
+
+The whole head is 94px: the presets row, the control row, and nothing else.
+The page now opens straight onto the planner.
+
+**Said out loud.**
+
+- *The V2 badge went with the header.* The browser tab still reads "Shift
+  Planner V2" and the file is still `shift-planner-ui2.html`, but nothing on
+  the screen says which version you are looking at.
+
+---
+
+## Outlines, and a divider instead of a card (round 24)
+
+**Every icon tool carries its own box now** — an outline and a surface — so it
+reads as a control at rest rather than only when you hover it. The two timeline
+icons are **one bordered pill of two segments** with the live view filled grey,
+which is the DS's own shape for a display switch (2026-10-23). Expand-all sits
+beside it in a box of its own.
+
+**The products are a section of the order card, not a card inside it.** The
+inner rim is gone; a single hairline divides the head from the products, and
+the table runs to the card's edges — which the card's own radius and
+`overflow:hidden` round off. Collapsed, the summary line sits under the same
+rule. Expanding and collapsing are unchanged.
+
+```
+┌─────────────────────────────────┐   ┌─────────────────────────────────┐
+│ ☐ D-5157100  D      Unplanned › │   │ ☐ D-5157076  D      Unplanned › │
+│ 📍 Aguilar and Sons — Tampa HQ  │   │ 📍 Valley Co-op — Silo Row      │
+│ 🕐 5:00 AM – 7:00 AM            │   │ 🕐 5:17 AM – 8:17 AM            │
+├─────────────────────────────────┤   ├─────────────────────────────────┤
+│ Product   Blend   Qty    Type   │   │ ›  1 product         9,000 gal  │
+│ UNL87     E10·90% 3,150  gal    │   └─────────────────────────────────┘
+│ …                               │
+│ ⌄ Total           5,700 gal     │
+└─────────────────────────────────┘
+```
+
+**Said out loud.**
+
+- *The table lost its own rounded corners* and now takes the card's. At the
+  card's bottom that reads as intended; at the divider it is a straight rule,
+  which is what a divider should be.
+
+---
+
+## Three fixes (round 25)
+
+**Expand-all moved right** of the timeline switch: `[↔│↕] [⤢]`.
+
+**The band over the lanes is gone** — "Driver · availability | All shifts | 45
+planned · 54 unplanned". The column already names itself, the count sits beside
+the name, and the chips say what is narrowing it; the band was all three again
+in small capitals.
+
+**The compartment table was cropping its own head.** It had 300px and four
+columns of 40 / 1fr / 76 / 66, which left the product name about 118px and the
+word "Comp" short of its box. Now:
+
+| | Was | Is |
+|---|---|---|
+| Band width | 300px | **348px** |
+| Comp | 40px | **46px** — its head fits |
+| Product | the rest (~118px) | the rest (~194px) |
+| Gallons | 76px | **62px** |
+| Full → **TM** | 66px | **46px** — the tank monitor, named as it is elsewhere |
+
+The drawing beside it takes what is left (269px) and redraws itself to the
+column, so the rig moved right rather than shrinking the table. Nothing in the
+open lane clips.
+
+---
+
+## A constituent carries its share, not the blend's name (round 26)
+
+The Blend ratio column read `E10 · 90%` on the UNL87 row and `E10 · 10%` on the
+Ethanol row. **That was wrong.** UNL87 is not an E10 — it is one of the two
+products an E10 is made *from*. Naming a constituent after the blend says the
+truck is carrying E10 in that compartment, which is the thing splash blending
+is not.
+
+The cell now carries **the share alone**: `90%`, `10%`. The bracket down the
+left already says which rows go together, and the column head is **Ratio**.
+Hovering a row says the true thing — *"Blended with Ethanol · 90 : 10"*.
+
+The order sheet's "What the truck carries" table had the same mislabel in its
+first column; it carries the share now too. The blend's name stays where it
+belongs: on the **ordered** line, which is what the customer actually bought.
+
+A two-blend order reads without ambiguity on the brackets alone:
+
+```
+Product    Ratio   Quantity
+● UNL87   ⌐ 90%     1,800
+● Ethanol ⌙ 10%       200
+● UNL87   ⌐ 30%       600
+● Ethanol ⌙ 70%     1,400
+● UNL93     —         400
+```
+
+The column lost 28px with the name — the product name took them.

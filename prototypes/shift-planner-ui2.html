@@ -87,15 +87,28 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-body[data-view="v"] .sp2-tl-wrap{overflow-x:hidden;}
 .sp2-col-unit{flex:1 1 60%;background:var(--fp-surface-1b);}
 
+/* ── One head for the whole planner ────────────────────────
+   The presets and the filters narrow both columns, so they sit above them —
+   the DS list page's view row and toolbar, once, not once per column. */
+.sp2-head{display:flex;flex-direction:column;align-items:stretch;gap:10px;
+  padding:0 16px 10px;border-bottom:1px solid var(--fp-stroke-hairline);
+  flex-shrink:0;background:var(--fp-surface-1b);position:relative;}
+.sp2-head .sp2-vr{margin:0 -16px;}
+.sp2-head .sp2-tools{align-items:center;}
+.sp2-head .sp2-tools-r{align-self:center;}
+
 /* ── The head of a column ──────────────────────────────────
    Built as the design system's list page is: the name on its own line, then
    ONE control row — unit.toolbar. Left narrows (quick filters, then search,
    then Filters), right scopes and presents. Never a second control row: a
    menu dropped from the toolbar then lands on the list, which is where a menu
    belongs, and not on top of the filters.  (FPDS unit.toolbar, template.list-page) */
-.sp2-col-hdr{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:10px;
+.sp2-col-hdr{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:8px;
   padding:10px 16px;border-bottom:1px solid var(--fp-stroke-hairline);
   flex-shrink:0;background:var(--fp-surface-1b);}
+.sp2-col-hdr .sp2-tools-r{margin-left:auto;}
+/* the chips sit directly under the name they narrow */
+.sp2-col-hdr .sp2-shelf{padding-top:2px;}
 .sp2-col-top{display:flex;align-items:center;gap:12px;min-width:0;}
 /* the count belongs to the name, not to the row */
 .sp2-col-id{display:flex;align-items:center;gap:6px;min-width:0;}
@@ -103,7 +116,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 
 .sp2-tools{display:flex;flex-wrap:wrap;align-items:flex-start;
   justify-content:space-between;gap:12px;min-width:0;}
-.sp2-tools-l{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+/* The left cluster takes the row's width rather than shrinking to its widest
+   control — a wrapping flex box asks for its biggest child, which would send
+   everything after the search onto a second line. */
+.sp2-tools-l{flex:1 1 auto;display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
 .sp2-pop-out{margin-left:auto;}
 .sp2-tools-r{display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;}
 /* every control in the row is 32px tall, as the DS has it */
@@ -132,13 +148,24 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-tool-btn.on .sp2-bubble{display:inline-flex;}
 
 /* the display switch: icon tools, the current one on the chip fill */
+/* An icon tool carries its own box, so it reads as a control at rest rather
+   than only when you hover it. */
 .sp2-ico-tool{display:inline-flex;align-items:center;justify-content:center;
-  width:32px;height:32px;border:none;border-radius:var(--r-md);background:none;
-  color:var(--fp-ink-3);cursor:pointer;flex-shrink:0;}
+  width:32px;height:32px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);
+  background:var(--fp-surface-1b);color:var(--fp-ink-3);cursor:pointer;flex-shrink:0;}
 .sp2-ico-tool:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
 .sp2-ico-tool.on{background:var(--chip);color:var(--fp-ink-1);}
 .sp2-ico-tool:disabled{opacity:.4;cursor:not-allowed;}
-.sp2-ico-tool:disabled:hover{background:none;color:var(--fp-ink-3);}
+.sp2-ico-tool:disabled:hover{background:var(--fp-surface-1b);color:var(--fp-ink-3);}
+
+/* The display switch is ONE bordered pill of segments, the view you are on
+   filled grey — the DS's shape for it (2026-10-23). */
+.sp2-vsw{display:inline-flex;height:32px;flex-shrink:0;overflow:hidden;
+  border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);
+  background:var(--fp-surface-1b);}
+.sp2-vsw .sp2-ico-tool{border:none;border-radius:0;height:30px;width:32px;background:none;}
+.sp2-vsw .sp2-ico-tool + .sp2-ico-tool{border-left:1px solid var(--fp-outline-1);}
+.sp2-vsw .sp2-ico-tool.on{background:var(--chip);}
 
 /* ── More filters ──────────────────────────────────────────
    The rest of the filters live behind a funnel, which carries a dot while any
@@ -172,6 +199,191 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-custom.on{display:flex;}
 .sp2-time{height:32px;width:72px;background:var(--fp-surface-1b);border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);color:var(--fp-ink-1);font-family:inherit;font-size:13px;padding:0 8px;outline:none;text-align:center;font-variant-numeric:tabular-nums;}
 .sp2-time:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+
+
+/* ══════════════════════════════════════════════════════════
+   Unified View's list head, on the driver column
+   ──────────────────────────────────────────────────────────
+   The same units the DS list page uses, in the same order:
+   unit.view-row, then unit.toolbar, then unit.chip-shelf.
+   Scoped to .sp2-col-unit — the orders column keeps its own head.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── unit.view-row ────────────────────────────────────────
+   All · the views you made · + View · Export. The active tab's
+   2px underline lands ON the hairline, so it reads as a tab. */
+.sp2-vr{display:flex;align-items:stretch;gap:4px;margin:0 -16px;padding:2px 12px 0;
+  border-bottom:1px solid var(--fp-stroke-hairline);}
+.sp2-vr-tab{display:inline-flex;align-items:center;gap:6px;align-self:flex-end;
+  padding:8px 12px;border:none;border-bottom:2px solid transparent;background:none;
+  font-family:inherit;font-size:12px;color:var(--fp-ink-3);cursor:pointer;}
+.sp2-vr-tab:hover{color:var(--fp-ink-1);}
+.sp2-vr-tab.on{font-weight:500;color:var(--fp-ink-1);border-bottom-color:var(--fp-ink-1);}
+.sp2-vr-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-violet,#7c5cff);}
+.sp2-vr-ico{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border:none;border-radius:var(--r-md);background:none;
+  color:var(--fp-ink-3);cursor:pointer;flex-shrink:0;}
+.sp2-vr-ico:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+.sp2-vr-more{opacity:0;}
+.sp2-vr-wrap:hover .sp2-vr-more,.sp2-vr-more.on{opacity:1;}
+.sp2-vr-wrap{display:inline-flex;align-items:center;align-self:flex-end;position:relative;}
+.sp2-vr-add{display:inline-flex;align-items:center;gap:4px;align-self:flex-end;
+  margin-bottom:4px;padding:4px 8px;border:none;border-radius:var(--r-md);background:none;
+  font-family:inherit;font-size:12px;color:var(--fp-ink-3);cursor:pointer;}
+.sp2-vr-add:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+.sp2-vr-end{margin-left:auto;display:flex;align-items:center;align-self:flex-end;
+  gap:6px;margin-bottom:12px;}
+.sp2-vr-menu{display:none;position:absolute;right:0;top:100%;z-index:80;min-width:150px;
+  padding:5px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-lg);box-shadow:0 8px 20px -6px rgba(3,4,5,.18);}
+.sp2-vr-menu.on{display:block;}
+.sp2-vr-mi{display:block;width:100%;height:30px;padding:0 8px;border:none;border-radius:var(--r-sm,6px);
+  background:none;font-family:inherit;font-size:13px;color:var(--fp-ink-1);text-align:left;cursor:pointer;}
+.sp2-vr-mi:hover{background:var(--fp-emphasis-hover);}
+.sp2-vr-mi.bad{color:var(--status-failed);}
+
+/* ── unit.toolbar · search ────────────────────────────────
+   The DS's 320px box with its leading glyph and a clear X. */
+.sp2-srch{position:relative;flex:0 1 320px;min-width:150px;}
+.sp2-srch>svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  color:var(--fp-ink-3);pointer-events:none;}
+.sp2-srch .sp2-search{width:100%;max-width:none;padding-left:30px;}
+.sp2-srch-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;
+  padding:2px;border:none;background:none;color:var(--fp-ink-3);cursor:pointer;line-height:0;}
+.sp2-srch.has .sp2-srch-x{display:block;}
+.sp2-srch-x:hover{color:var(--fp-ink-1);}
+
+/* ── unit.filter-panel ────────────────────────────────────
+   600px, the facets down the left in 200px, their options to the
+   right, and a footer that counts the rows before you commit. */
+/* the panel's two lists, as tabs */
+.sp2-fp-tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--fp-outline-1);}
+.sp2-fp-tab{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:none;
+  border-bottom:2px solid transparent;background:none;font-family:inherit;font-size:13px;
+  color:var(--fp-ink-3);cursor:pointer;}
+.sp2-fp-tab:hover{color:var(--fp-ink-1);}
+.sp2-fp-tab.on{font-weight:500;color:var(--fp-ink-1);border-bottom-color:var(--fp-ink-1);}
+.sp2-fp-tab-n{min-width:17px;height:17px;padding:0 5px;border-radius:9999px;background:var(--chip);
+  font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;
+  display:inline-flex;align-items:center;justify-content:center;}
+
+.sp2-fp{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:90;width:600px;
+  background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-lg);box-shadow:0 10px 28px -8px rgba(3,4,5,.2),0 2px 8px -2px rgba(3,4,5,.1);
+  overflow:hidden;}
+.sp2-fp.on{display:block;}
+.sp2-fp-body{display:flex;height:264px;}
+.sp2-fp-menu{width:200px;flex-shrink:0;padding:8px;display:flex;flex-direction:column;gap:4px;
+  border-right:1px solid var(--fp-outline-1);overflow:auto;}
+.sp2-fp-f{display:flex;align-items:center;height:32px;padding:0 8px;border:none;
+  border-radius:var(--r-md);background:none;font-family:inherit;font-size:13px;
+  color:var(--fp-ink-3);text-align:left;cursor:pointer;}
+.sp2-fp-f:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+.sp2-fp-f.on{background:var(--chip);color:var(--fp-ink-1);}
+.sp2-fp-f-n{margin-left:auto;font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+.sp2-fp-opts{flex:1;min-width:0;padding:8px 12px;overflow:auto;}
+.sp2-fp-o{display:flex;align-items:flex-start;gap:8px;width:100%;min-height:32px;padding:4px 0;
+  border:none;background:none;font-family:inherit;text-align:left;cursor:pointer;}
+.sp2-fp-o-v{display:block;font-size:13px;color:var(--fp-ink-1);}
+.sp2-fp-o-d{display:block;font-size:11px;color:var(--fp-ink-3);}
+.sp2-fp-box{width:15px;height:15px;margin-top:2px;flex-shrink:0;position:relative;
+  border:1px solid var(--fp-stroke-field);border-radius:4px;background:var(--fp-surface-1b);}
+.sp2-fp-o.on .sp2-fp-box{background:var(--fp-ink-1);border-color:var(--fp-ink-1);}
+.sp2-fp-o.on .sp2-fp-box::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;
+  border:solid var(--fp-surface-1b);border-width:0 2px 2px 0;transform:rotate(42deg);}
+.sp2-fp-foot{display:flex;align-items:center;gap:8px;height:64px;padding:0 16px;
+  border-top:1px solid var(--fp-outline-1);}
+.sp2-fp-n{font-size:13px;color:var(--fp-ink-3);}
+.sp2-fp-n b{font-weight:500;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
+.sp2-fp-btns{margin-left:auto;display:flex;gap:8px;}
+
+/* ── unit.filter-panel · a group's dimensions, headed ─────── */
+.sp2-fp-sec{margin:10px 0 4px;font-size:11px;font-weight:500;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--fp-ink-3);}
+.sp2-fp-sec.first{margin-top:2px;}
+.sp2-fp-none{padding:6px 0;font-size:12px;color:var(--fp-ink-3);}
+.sp2-fp-o-n{margin-left:auto;font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+/* a facet with more options than you can scan gets its own search */
+.sp2-fp-srch{margin:2px 0 6px;}
+.sp2-fp-srch input{width:100%;height:32px;padding:0 10px;border:1px solid var(--fp-stroke-field);
+  border-radius:var(--r-md);background:var(--fp-surface-1b);font-family:inherit;
+  font-size:13px;color:var(--fp-ink-1);outline:none;}
+.sp2-fp-srch input:focus{border-color:var(--ring);
+  box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+
+/* ── the capacity range ───────────────────────────────────
+   Two thumbs on one track: how much room a rig has to have. At its full
+   width it is not a filter, so it takes itself off. */
+.sp2-rng{padding:6px 2px 2px;}
+.sp2-rng-read{font-size:13px;font-weight:500;color:var(--fp-ink-1);
+  font-variant-numeric:tabular-nums;margin-bottom:10px;}
+.sp2-rng-track{position:relative;height:20px;}
+.sp2-rng-track::before{content:'';position:absolute;left:0;right:0;top:9px;height:4px;
+  border-radius:2px;background:var(--fp-outline-1);}
+.sp2-rng-fill{position:absolute;top:9px;height:4px;border-radius:2px;background:var(--fp-ink-1);}
+.sp2-rng-i{position:absolute;left:0;width:100%;top:0;height:20px;margin:0;
+  background:none;-webkit-appearance:none;appearance:none;pointer-events:none;}
+.sp2-rng-i::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;
+  width:16px;height:16px;border-radius:50%;background:var(--fp-surface-1b);
+  border:2px solid var(--fp-ink-1);box-shadow:0 1px 2px rgba(3,4,5,.2);cursor:pointer;}
+.sp2-rng-i::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;
+  background:var(--fp-surface-1b);border:2px solid var(--fp-ink-1);cursor:pointer;}
+.sp2-rng-i:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px color-mix(in oklab,var(--ring) 50%,transparent);}
+.sp2-rng-ends{display:flex;justify-content:space-between;margin-top:6px;
+  font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+
+/* ── unit.chip-shelf ──────────────────────────────────────────
+   One pill per facet: the label muted, the value in ink. Several values
+   collapse to a count, and the values themselves are a hover away. */
+.sp2-shelf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sp2-chipf{position:relative;display:inline-flex;align-items:center;gap:4px;height:28px;
+  padding:0 4px 0 12px;border-radius:9999px;background:var(--muted);
+  font-size:12px;color:var(--fp-ink-1);max-width:260px;}
+.sp2-chipf-l{color:var(--fp-ink-3);white-space:nowrap;}
+.sp2-chipf-n{padding:0 6px;border-radius:9999px;background:var(--fp-surface-1b);
+  font-size:11px;font-variant-numeric:tabular-nums;}
+.sp2-chipf-x{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border:none;border-radius:50%;background:none;padding:0;color:var(--fp-ink-3);cursor:pointer;}
+.sp2-chipf-x:hover{background:rgba(3,4,5,.08);color:var(--fp-ink-1);}
+.sp2-chipf-card{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:95;
+  min-width:180px;max-width:280px;padding:6px;background:var(--fp-surface-1b);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);
+  box-shadow:0 8px 20px -6px rgba(3,4,5,.18);}
+.sp2-chipf.has-card:hover .sp2-chipf-card{display:block;}
+.sp2-chipf-card-h{display:block;padding:2px 6px 4px;font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--fp-ink-3);}
+.sp2-chipf-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:3px 4px 3px 6px;border-radius:var(--r-sm,6px);font-size:12px;color:var(--fp-ink-1);}
+.sp2-chipf-row:hover{background:var(--fp-emphasis-hover);}
+.sp2-shelf-clr{border:none;background:none;font-family:inherit;font-size:13px;
+  color:var(--fp-ink-3);cursor:pointer;}
+.sp2-shelf-clr:hover{color:var(--fp-ink-1);text-decoration:underline;text-underline-offset:2px;}
+
+/* a small primary / outline button, the DS's size="sm" */
+.sp2-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;
+  border-radius:var(--r-md);border:1px solid transparent;font-family:inherit;
+  font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.sp2-btn.pri{background:var(--primary);color:var(--primary-foreground);}
+.sp2-btn.pri:hover{filter:brightness(1.08);}
+.sp2-btn.ghost{background:none;color:var(--fp-ink-1);}
+.sp2-btn.ghost:hover{background:var(--fp-emphasis-hover);}
+.sp2-btn.out{background:var(--fp-surface-1b);border-color:var(--fp-stroke-field);color:var(--fp-ink-1);}
+.sp2-btn.out:hover{background:var(--fp-emphasis-hover);}
+.sp2-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* the dialog the view row saves through */
+.sp2-dlg-scrim{display:none;position:fixed;inset:0;z-index:200;background:rgba(3,4,5,.35);}
+.sp2-dlg-scrim.on{display:block;}
+.sp2-dlg{position:absolute;left:50%;top:22%;transform:translateX(-50%);width:384px;
+  padding:20px;background:var(--fp-surface-1b);border-radius:var(--r-lg);
+  box-shadow:0 20px 50px -12px rgba(3,4,5,.3);}
+.sp2-dlg-t{font-size:16px;font-weight:600;color:var(--fp-ink-1);}
+.sp2-dlg-l{display:block;margin:16px 0 6px;font-size:12px;color:var(--fp-ink-3);}
+.sp2-dlg-i{width:100%;height:36px;padding:0 10px;border:1px solid var(--fp-stroke-field);
+  border-radius:var(--r-md);background:var(--fp-surface-1b);font-family:inherit;
+  font-size:13px;color:var(--fp-ink-1);outline:none;}
+.sp2-dlg-i:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+.sp2-dlg-f{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
 
 /* ── Timeline ─────────────────────────────────────────────── */
 .sp2-tl-wrap{flex:1;overflow:auto;min-height:0;position:relative;}
@@ -768,9 +980,11 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* The band is as tall as the table; the drawing sits on its baseline, so the
    bottom of the truck lines up with the bottom of the compartment card. */
 .sp2-two{display:flex;gap:12px;align-items:stretch;margin-top:10px;}
-.sp2-two-l{flex:0 0 300px;min-width:0;}
+.sp2-two-l{flex:0 0 348px;min-width:0;}
 .sp2-two-r{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
-.sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:40px minmax(0,1fr) 76px 66px;}
+/* Comp and the readouts take what they need; the product name gets the rest.
+   TM is the tank monitor, and the head has to fit at this width. */
+.sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 62px 46px;}
 .sp2-two-l .sp2-ct-head>span,.sp2-two-l .sp2-ct-n,.sp2-two-l .sp2-ct-p,
 .sp2-two-l .sp2-ct-f,.sp2-two-l .sp2-cell{padding-left:9px;padding-right:9px;}
 .sp2-two-l .sp2-ct-head>span{height:32px;font-size:12px;}
@@ -887,9 +1101,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* The card at rest: one line for the whole load, in the frame the table would
    have filled, so opening it changes the contents and not the shape. */
 .sp2-lsum{display:flex;align-items:center;gap:8px;height:44px;
-  margin:12px -9px -7px;width:calc(100% + 18px);padding:0 12px;
-  background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
-  border-radius:var(--r-md);font-family:inherit;cursor:pointer;text-align:left;}
+  margin:10px -12px -10px;width:calc(100% + 24px);padding:0 12px;
+  background:none;border:none;border-top:1px solid var(--fp-stroke-hairline);
+  font-family:inherit;cursor:pointer;text-align:left;}
 .sp2-lsum:hover{background:var(--fp-emphasis-hover);}
 .sp2-lsum-n{font-size:14px;color:var(--fp-ink-1);white-space:nowrap;}
 .sp2-lsum-q{margin-left:auto;font-size:14px;font-weight:600;color:var(--fp-ink-1);
@@ -900,9 +1114,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-lt-tot>span:first-child{display:flex;align-items:center;}
 
 .sp2-lt{display:grid;grid-template-columns:minmax(0,1fr) 110px 64px;
-  margin:12px -9px -7px;background:var(--fp-surface-1b);
-  border:1px solid var(--fp-outline-1);border-radius:var(--r-md);overflow:hidden;}
-.sp2-lt.blended{grid-template-columns:minmax(0,1fr) 104px 110px 64px;}
+  margin:10px -12px -10px;background:none;
+  border-top:1px solid var(--fp-stroke-hairline);overflow:hidden;}
+.sp2-lt.blended{grid-template-columns:minmax(0,1fr) 76px 110px 64px;}
 .sp2-lt-head{display:contents;}
 .sp2-lt-head>span{min-height:40px;display:flex;align-items:center;padding:9px 12px;
   background:var(--fp-table-header);border-bottom:1px solid var(--fp-stroke-hairline);
@@ -990,21 +1204,70 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 <div class="sp2">
 
   <!-- Header -->
-  <div class="sp2-hdr">
-    <div class="sp2-title">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6fd4ff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <h1>Shift Planner</h1>
-      <span class="sp2-ver">V2</span>
-    </div>
-    <div class="sp2-date">
-      <button class="sp2-nav-btn" onclick="sp2Shift(-1)" title="Previous day">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <input class="sp2-date-inp" id="sp2Date" value="Wed 19 Nov 2026" onchange="sp2Render()">
-      <button class="sp2-nav-btn" onclick="sp2Shift(1)" title="Next day">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <button class="sp2-today" onclick="sp2Today()">Today</button>
+  <!-- ══ One head for both columns ══════════════════════════
+       The presets and the filters narrow the whole planner, so they sit above
+       it rather than once per column. Each column keeps only how it shows
+       itself, and wears its own chips under its name. -->
+  <div class="sp2-head">
+    <div class="sp2-vr" id="sp2Vr"></div>
+
+    <!-- what narrows and orders on the left; what the day is on the right -->
+    <div class="sp2-tools">
+      <div class="sp2-tools-l">
+        <div class="sp2-srch" id="sp2SrchWrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input class="sp2-search" id="sp2DrvSearch" type="search"
+            placeholder="Search orders, ship-tos, drivers or trucks" aria-label="Search all columns"
+            oninput="sp2DrvSearchIn()">
+          <button class="sp2-srch-x" aria-label="Clear search" onclick="sp2DrvSearchClear()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="sp2-fltwrap">
+          <button class="sp2-tool-btn" id="sp2FpBtn" onclick="sp2FpToggle(event)" title="Filters">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/>
+              <line x1="10" y1="18" x2="14" y2="18"/></svg>
+            Filters <span class="sp2-bubble" id="sp2FpN"></span>
+          </button>
+          <div class="sp2-fp" id="sp2Fp" onclick="event.stopPropagation()"></div>
+        </div>
+
+        <div class="sp2-fltwrap">
+          <button class="sp2-tool-btn" id="sp2SortBtn" onclick="sp2SortToggle(event)" title="Sort orders">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg><span class="sp2-bubble" id="sp2SortN"></span>
+          </button>
+          <div class="sp2-fltpop" id="sp2SortPop" onclick="event.stopPropagation()">
+            <div class="sp2-fltpop-h">Sort orders by</div>
+            <button class="sp2-fltrow on" data-o="time" onclick="sp2SetSort('time')"
+              title="In the order the day runs them"><span class="sp2-tick">\u2713</span>Time</button>
+            <button class="sp2-fltrow" data-o="fit" onclick="sp2SetSort('fit')"
+              title="Best fit for the chosen rig first"><span class="sp2-tick">\u2713</span>Fit
+              <span class="sp2-fltrow-n" id="sp2SortFitVs"></span></button>
+            <button class="sp2-fltrow" data-o="driver" onclick="sp2SetSort('driver')"
+              title="Every driver\u2019s orders together"><span class="sp2-tick">\u2713</span>Driver</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sp2-tools-r">
+        <div class="sp2-date">
+          <button class="sp2-nav-btn" onclick="sp2Shift(-1)" title="Previous day">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <input class="sp2-date-inp" id="sp2Date" value="Wed 19 Nov 2026" onchange="sp2Render()">
+          <button class="sp2-nav-btn" onclick="sp2Shift(1)" title="Next day">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="sp2-today" onclick="sp2Today()">Today</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1022,64 +1285,23 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <b id="sp2PickN">0</b> picked
             <button class="sp2-link" onclick="sp2ClearPicks()">Clear</button>
           </span>
-          <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('orders')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
-        </div>
 
-        <!-- unit.toolbar — left narrows, right scopes and presents -->
-        <div class="sp2-tools">
-          <div class="sp2-tools-l">
-            <div class="sp2-seg" id="sp2Quick">
-              <button class="sp2-seg-btn on" data-q="unplanned" onclick="sp2SetQuick('unplanned')">Unplanned <span class="sp2-seg-n" id="sp2nUn"></span></button>
-              <button class="sp2-seg-btn"    data-q="planned"   onclick="sp2SetQuick('planned')">Planned <span class="sp2-seg-n" id="sp2nPl"></span></button>
-              <button class="sp2-seg-btn"    data-q="outside"   onclick="sp2SetQuick('outside')" title="Planned orders the run does not reach inside their window">Outside <span class="sp2-seg-n" id="sp2nOut"></span></button>
-              <button class="sp2-seg-btn"    data-q="all"       onclick="sp2SetQuick('all')">All <span class="sp2-seg-n" id="sp2nAll"></span></button>
-            </div>
-
-            <div class="sp2-fltwrap">
-              <button class="sp2-tool-btn" id="sp2FltBtn" onclick="sp2FltToggle(event)" title="Filters">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><span class="sp2-bubble" id="sp2FltN">1</span>
-              </button>
-              <div class="sp2-fltpop" id="sp2FltPop" onclick="event.stopPropagation()">
-                <div class="sp2-fltpop-h">Narrow the list</div>
-                <button class="sp2-fltrow" id="sp2BlendBtn" onclick="sp2ToggleBlend()"
-                  title="Only orders carrying a blended product">
-                  <span class="sp2-tick">\u2713</span>Blend
-                  <span class="sp2-fltrow-n" id="sp2nBl"></span>
-                </button>
-              </div>
-            </div>
-
-            <div class="sp2-fltwrap">
-              <button class="sp2-tool-btn" id="sp2SortBtn" onclick="sp2SortToggle(event)" title="Sort">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg><span class="sp2-bubble" id="sp2SortN"></span>
-              </button>
-              <div class="sp2-fltpop" id="sp2SortPop" onclick="event.stopPropagation()">
-                <div class="sp2-fltpop-h">Sort by</div>
-                <button class="sp2-fltrow on" data-o="time" onclick="sp2SetSort('time')"
-                  title="In the order the day runs them"><span class="sp2-tick">\u2713</span>Time</button>
-                <button class="sp2-fltrow" data-o="fit" onclick="sp2SetSort('fit')"
-                  title="Best fit for the chosen rig first"><span class="sp2-tick">\u2713</span>Fit
-                  <span class="sp2-fltrow-n" id="sp2SortFitVs"></span></button>
-                <button class="sp2-fltrow" data-o="driver" onclick="sp2SetSort('driver')"
-                  title="Every driver\u2019s orders together"><span class="sp2-tick">\u2713</span>Driver</button>
-              </div>
-            </div>
-          </div>
-
+          <!-- how this column DRAWS itself — nothing that narrows it -->
           <div class="sp2-tools-r">
+            <div class="sp2-vsw" role="group" aria-label="Timeline">
+              <button class="sp2-ico-tool" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
+              </button>
+              <button class="sp2-ico-tool on" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+              </button>
+            </div>
             <button class="sp2-ico-tool" id="sp2AllBtn" onclick="sp2CardsAll()" title="Expand every order"></button>
-            <button class="sp2-ico-tool" data-v="h" onclick="sp2SetView('h')" title="Horizontal timeline">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/></svg>
-            </button>
-            <button class="sp2-ico-tool on" data-v="v" onclick="sp2SetView('v')" title="Vertical timeline">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
-            </button>
           </div>
         </div>
+
+        <!-- unit.chip-shelf — this column's share of what the head applied -->
+        <div class="sp2-shelf" id="sp2ShelfO" style="display:none;"></div>
       </div>
 
       <div class="sp2-tl-wrap" id="sp2TlWrap">
@@ -1097,34 +1319,12 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <span class="sp2-col-title">Driver &amp; truck</span>
             <span class="sp2-count" id="sp2DrvCount">0</span>
           </span>
-          <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
-        </div>
-
-        <!-- the same unit, the same order -->
-        <div class="sp2-tools">
-          <div class="sp2-tools-l">
-            <div class="sp2-seg sp2-drv-tabs" id="sp2DrvTabs">
-              <button class="sp2-seg-btn"    data-d="all"      onclick="sp2SetDrvFilter('all')">All <span class="sp2-seg-n" id="sp2dAll"></span></button>
-              <button class="sp2-seg-btn on" data-d="available" onclick="sp2SetDrvFilter('available')">Available <span class="sp2-seg-n" id="sp2dAv"></span></button>
-              <button class="sp2-seg-btn"    data-d="driving"  onclick="sp2SetDrvFilter('driving')">Driving <span class="sp2-seg-n" id="sp2dDr"></span></button>
-              <button class="sp2-seg-btn"    data-d="on-duty"  onclick="sp2SetDrvFilter('on-duty')">On duty <span class="sp2-seg-n" id="sp2dOn"></span></button>
-              <button class="sp2-seg-btn"    data-d="off-duty" onclick="sp2SetDrvFilter('off-duty')">Off duty <span class="sp2-seg-n" id="sp2dOff"></span></button>
-            </div>
-            <div class="sp2-seg sp2-shift-seg">
-              <span class="sp2-seg-ico" title="Shift">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
-              </span>
-              <button class="sp2-seg-btn on" data-s="all" onclick="sp2SetShift('all')">All</button>
-              <button class="sp2-seg-btn"    data-s="am"  onclick="sp2SetShift('am')">AM</button>
-              <button class="sp2-seg-btn"    data-s="pm"  onclick="sp2SetShift('pm')">PM</button>
-            </div>
-            <input class="sp2-search" id="sp2DrvSearch" placeholder="Search driver, truck or hub" oninput="sp2OnlyDriver=null;sp2RenderUnit()">
-          </div>
-
           <div class="sp2-tools-r">
+            <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
           </div>
         </div>
+
+        <div class="sp2-shelf" id="sp2ShelfD" style="display:none;"></div>
       </div>
 
       <div class="sp2-lanes-wrap" id="sp2V2"></div>
@@ -1145,6 +1345,18 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
   </div>
   <div id="sp2HosBody"></div>
 </aside>
+
+<div class="sp2-dlg-scrim" id="sp2DlgScrim" onclick="sp2DlgClose()">
+  <div class="sp2-dlg" onclick="event.stopPropagation()">
+    <div class="sp2-dlg-t" id="sp2DlgT">Save current view</div>
+    <label class="sp2-dlg-l" for="sp2DlgI">View name</label>
+    <input class="sp2-dlg-i" id="sp2DlgI" onkeydown="sp2DlgKey(event)">
+    <div class="sp2-dlg-f">
+      <button class="sp2-btn out" onclick="sp2DlgClose()">Cancel</button>
+      <button class="sp2-btn pri" id="sp2DlgOk" onclick="sp2DlgSave()">Save view</button>
+    </div>
+  </div>
+</div>
 
 <div id="sp2Toast"></div>
 
@@ -1294,6 +1506,9 @@ var SP2_DRIVERS = {};
       name:name, state:state, truck:truck, shift:SP2_SHIFTK[i % 4],
       hub:SP2_HUBS[i % SP2_HUBS.length],
       synced: state === 'off-duty' ? 90 + i * 7 : state === 'driving' ? 1 + (i % 9) : 4 + (i % 26),
+      // on leave is off duty with a reason: nothing that asks whether this rig
+      // can work today behaves differently, so it is a word, not a fourth state
+      leave: state === 'off-duty' && i % 4 === 1,
       load:load,
       hos:hos,
       trailer:trl,
@@ -1645,12 +1860,10 @@ var SP2_ORDERS = (function buildOrders() {
 // ══════════════════════════════════════════════════════════
 var sp2Quick = 'unplanned';    // unplanned · planned · outside · all — the column is the
                                // still-to-plan list, so an assigned order leaves it
-var sp2Shift_ = 'all';         // all · am · pm — which drivers' shifts, not which orders
 var sp2Driver = 'd0';
 var sp2Picked = {};            // orders ticked for a single drag — id → true
 // The planner opens on the work that still needs doing: the orders nobody has
 // taken, against the trucks that still have room. Both columns start narrowed.
-var sp2DrvFilter = 'available';
 var sp2Drag = null;          // the order ids being dragged, or null
 var sp2MoveFrom = null;      // a compartment picked up, waiting for somewhere to go
 // The planner has no clock of its own — the day is fixed — so 'now' is a
@@ -1721,10 +1934,11 @@ function sp2Visible() {
   var w = sp2Window();
   var list = SP2_ORDERS.filter(function(o) {
     if (o.t < w.from || o.t > w.to) return false;
-    if (sp2BlendOnly && !sp2HasBlend(o)) return false;
-    if (sp2Quick === 'planned')   return sp2Planned(o);
-    if (sp2Quick === 'unplanned') return !sp2Planned(o);
-    if (sp2Quick === 'outside')   return sp2Outside(o);
+    if (!sp2OrderMatch(o, sp2Facet)) return false;
+    // the head's search runs over both columns; an order answers to its own
+    // number, its ship-to and its address
+    var q = sp2SearchQ();
+    if (q && (o.id + ' ' + o.ship + ' ' + o.addr).toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
   if (sp2Sort === 'fit')
@@ -2119,6 +2333,17 @@ function sp2Totals(o) {
   }).map(function (u) { return by[u].toLocaleString() + ' ' + u; });
 }
 
+// What this constituent is blended WITH, and in what ratio — the true
+// statement about the row, where naming it after the blend was not.
+function sp2BlendWith(pr) {
+  var b = SP2_BLENDS[pr.blend];
+  if (!b) return pr.pct + '%';
+  var others = b.parts.filter(function (x) { return x.p !== pr.p; })
+                      .map(function (x) { return x.p; });
+  return 'Blended with ' + others.join(' and ') + ' \u00b7 ' +
+         b.parts.map(function (x) { return x.pct; }).join(' : ');
+}
+
 function sp2CardV3(o, style) {
   var planned = sp2Planned(o);
   var picked  = sp2Picked[o.id] ? ' picked' : '';
@@ -2139,14 +2364,18 @@ function sp2CardV3(o, style) {
       var first = pr.n === 0, last = pr.n === pr.of - 1;
       grp = ' g' + (first ? ' g-first' : last ? ' g-last' : ' g-mid');
     }
+    // UNL87 is not "E10" — it is one of the two products an E10 is made from.
+    // So the cell carries that product's SHARE, and the bracket beside it says
+    // which rows go together. The blend's own name belongs to the order line,
+    // not to a constituent.
     var ratio = pr.blend
-      ? '<b>' + pr.blend + '</b> \u00b7 ' + pr.pct + '%'
+      ? '<b>' + pr.pct + '%</b>'
       : '<span class="sp2-lt-none">\u2014</span>';
     return '<div class="sp2-lt-row">' +
         '<span class="sp2-lt-c sp2-lt-p"><i class="sp2-dot" style="background:' + col + ';"></i>' +
           '<span>' + pr.p + '</span></span>' +
         (anyBlend ? '<span class="sp2-lt-c sp2-lt-ratio' + grp + '"' +
-          (pr.blend ? ' title="' + pr.pct + '% of a ' + pr.blend + ' splash blend"' : '') +
+          (pr.blend ? ' title="' + sp2BlendWith(pr) + '"' : '') +
           '>' + ratio + '</span>' : '') +
         '<span class="sp2-lt-c sp2-lt-edit">' +
           '<input class="sp2-cell" type="text" inputmode="numeric" value="' + pr.q.toLocaleString() + '" ' +
@@ -2211,7 +2440,7 @@ function sp2CardV3(o, style) {
       ? '<div class="sp2-lt' + (anyBlend ? ' blended' : '') + '">' +
           '<div class="sp2-lt-head">' +
             '<span>Product</span>' +
-            (anyBlend ? '<span>Blend ratio</span>' : '') +
+            (anyBlend ? '<span title="Each product\u2019s share of the blend it is part of">Ratio</span>' : '') +
             '<span>Quantity</span><span>Type</span>' +
           '</div>' +
           rows +
@@ -2457,28 +2686,22 @@ function sp2RenderTimeline() {
   sp2Counts();
 }
 
+// The per-value counts moved into the filter panel, where the values are.
 function sp2Counts() {
-  var w = sp2Window();
-  var inWindow = SP2_ORDERS.filter(function(o){ return o.t >= w.from && o.t <= w.to; });
-  var pl = inWindow.filter(sp2Planned).length;
-  document.getElementById('sp2nAll').textContent = inWindow.length;
-  document.getElementById('sp2nUn').textContent  = inWindow.length - pl;
-  document.getElementById('sp2nPl').textContent  = pl;
-  document.getElementById('sp2nBl').textContent  = inWindow.filter(sp2HasBlend).length;
-  document.getElementById('sp2nOut').textContent = inWindow.filter(sp2Outside).length;
   sp2CardsAllBtn();
   document.getElementById('sp2OrdCount').textContent = sp2Visible().length;
   var n = Object.keys(sp2Picked).length, bar = document.getElementById('sp2PickBar');
   if (bar) { bar.classList.toggle('on', n > 0); document.getElementById('sp2PickN').textContent = n; }
 }
 
+// Status is a facet now. This stays as the way to set it in one call — the
+// control that used to do it has moved into the head's panel.
 function sp2SetQuick(q) {
   sp2Quick = q;
   sp2OnlyDriver = null;
-  document.querySelectorAll('#sp2Quick .sp2-seg-btn').forEach(function(b) {
-    b.classList.toggle('on', b.dataset.q === q);
-  });
-  sp2RenderTimeline();
+  sp2Facet.ostatus = q === 'all' ? []
+    : [q === 'unplanned' ? 'Unplanned' : q === 'planned' ? 'Planned' : 'Outside'];
+  sp2Render();
 }
 // A time axis cannot be re-sorted, so ranking by fit means the vertical list.
 // Fit ranks against a rig, so it is offered only while one is chosen; letting
@@ -2526,39 +2749,30 @@ function sp2SetSort(o) {
 function sp2PopUnder(popId, btnId) {
   var pop = document.getElementById(popId), btn = document.getElementById(btnId);
   if (!pop || !btn) return;
-  var hdr = btn.closest('.sp2-col-hdr');
+  var hdr = btn.closest('.sp2-col-hdr') || btn.closest('.sp2-head');
+  if (!hdr) return;
   var x = btn.getBoundingClientRect().left - hdr.getBoundingClientRect().left;
   pop.style.left = Math.max(8, Math.min(x, hdr.clientWidth - pop.offsetWidth - 8)) + 'px';
 }
-function sp2FltToggle(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('sp2SortPop').classList.remove('on');
-  document.getElementById('sp2FltPop').classList.toggle('on');
-  sp2PopUnder('sp2FltPop', 'sp2FltBtn');
-}
+// Sort is the one menu the orders column still owns; the filters moved to the
+// head. Opening either shuts the other, and a click anywhere shuts both.
 function sp2SortToggle(e) {
   if (e) e.stopPropagation();
-  document.getElementById('sp2FltPop').classList.remove('on');
+  if (typeof sp2FpClose === 'function') sp2FpClose();
   document.getElementById('sp2SortPop').classList.toggle('on');
   sp2PopUnder('sp2SortPop', 'sp2SortBtn');
 }
 function sp2FltClose() {
-  ['sp2FltPop', 'sp2SortPop'].forEach(function (id) {
-    var p = document.getElementById(id);
-    if (p) p.classList.remove('on');
-  });
+  var p = document.getElementById('sp2SortPop');
+  if (p) p.classList.remove('on');
+  if (typeof sp2FpClose === 'function') { sp2FpClose(); sp2VrCloseMenus(); }
 }
 document.addEventListener('click', sp2FltClose);
 
 function sp2ToggleBlend() {
   sp2BlendOnly = !sp2BlendOnly;
-  document.getElementById('sp2BlendBtn').classList.toggle('on', sp2BlendOnly);
-  // Filters carries how many of them are applied, so a narrowed list never
-  // passes for the whole list
-  var n = (sp2BlendOnly ? 1 : 0);
-  document.getElementById('sp2FltBtn').classList.toggle('on', n > 0);
-  document.getElementById('sp2FltN').textContent = n;
-  sp2RenderTimeline();
+  sp2Facet.oblend = sp2BlendOnly ? ['Carrying a blend'] : [];
+  sp2Render();
 }
 
 function sp2SetView(v) {
@@ -2573,10 +2787,8 @@ function sp2SetView(v) {
 }
 
 function sp2SetShift(s) {
-  sp2Shift_ = s;
-  document.querySelectorAll('[data-s]').forEach(function(b) {
-    b.classList.toggle('on', b.dataset.s === s);
-  });
+  sp2OnlyDriver = null;
+  sp2Facet.shift = s === 'am' ? ['AM'] : s === 'pm' ? ['PM'] : [];
   sp2RenderUnit();
 }
 
@@ -2617,7 +2829,7 @@ function sp2PickOrder(id) {
 // ══════════════════════════════════════════════════════════
 //  Column 2 · Section 1 — the roster
 // ══════════════════════════════════════════════════════════
-var SP2_STATES = [['driving','Driving'], ['on-duty','On duty'], ['off-duty','Off duty']];
+var SP2_STATES = [['driving','Driving'], ['on-duty','On duty'], ['off-duty','Off duty'], ['on-leave','On leave']];
 
 function sp2StateWord(s) {
   for (var i = 0; i < SP2_STATES.length; i++) if (SP2_STATES[i][0] === s) return SP2_STATES[i][1];
@@ -2630,11 +2842,662 @@ function sp2Synced(m) {
 }
 // Available is not a fourth duty state — it crosses them. A driver is
 // available when they are on the roster today and the rig still has room.
+// What this driver's day IS, in words. Leave is off duty with a reason.
+function sp2Duty(d) {
+  return d.leave ? 'On leave'
+    : d.state === 'driving' ? 'Driving'
+    : d.state === 'on-duty' ? 'On duty' : 'Off duty';
+}
+
 function sp2Avail(d) {
   if (d.state === 'off-duty') return false;
   var a = sp2Sum(SP2_TRUCKS[d.truck].comps.map(function (c) { return c.cap; }), d.load);
   var b = d.trailer ? sp2Sum(SP2_TRAILERS[d.trailer].caps, d.tload) : { cap:0, q:0 };
   return (a.q + b.q) < (a.cap + b.cap);
+}
+
+// ══════════════════════════════════════════════════════════
+//  Unified View's list head, on the driver column
+//  ────────────────────────────────────────────────────────
+//  unit.view-row · unit.toolbar · unit.filter-panel ·
+//  Group by · unit.chip-shelf — the same units the DS list
+//  page uses, in the same order. The orders column keeps the
+//  head it already had.
+// ══════════════════════════════════════════════════════════
+
+// The facets a rig can be narrowed by. Availability and shift stay out on the
+// row as quick filters: they are short, exhaustive and flipped many times a
+// session, which is the DS's test for a quick filter rather than a facet.
+// Nothing narrows the list from the row any more — every facet lives behind
+// Filters, and the narrowings worth keeping are saved views.
+// The dimensions a rig can be narrowed by. Each is a DS facet — ticks inside
+// one are OR, and every one with ticks must match — and each belongs to a
+// GROUP, which is what the panel's left menu lists. The group is how a
+// dispatcher thinks about a rig; the dimension is what the chip says.
+// The head narrows BOTH columns, so a group says which one it acts on and a
+// facet carries the column its chip belongs in.
+var SP2_GROUPS = ['Order', 'Products', 'Driver', 'Shift', 'Location', 'Truck & trailer', 'Capacity', 'Planning'];
+var SP2_GROUP_COL = { 'Order':'orders', 'Products':'orders' };
+// The panel is two tabs, because a filter narrows one list or the other and
+// the reader should never have to work out which.
+var SP2_FP_TABS = [{ k:'orders', label:'Orders' }, { k:'drivers', label:'Drivers and trucks' }];
+
+// The widest rig on the fleet, which is what the capacity slider runs to.
+var SP2_MAX_CAP = (function () {
+  var t = Math.max.apply(null, Object.keys(SP2_TRUCKS).map(function (n) {
+    return SP2_TRUCKS[n].comps.reduce(function (a, c) { return a + c.cap; }, 0); }));
+  var r = Math.max.apply(null, Object.keys(SP2_TRAILERS).map(function (n) {
+    return SP2_TRAILERS[n].caps.reduce(function (a, c) { return a + c; }, 0); }));
+  return Math.ceil((t + r) / 500) * 500;
+})();
+
+function sp2TruckDesc(n) {
+  var t = SP2_TRUCKS[n];
+  if (!t) return '';
+  var cap = t.comps.reduce(function (a, c) { return a + c.cap; }, 0);
+  return t.type + ' \u00b7 ' + t.comps.length + ' compartments \u00b7 ' + cap.toLocaleString() + ' gal';
+}
+function sp2TrailerDesc(n) {
+  var r = SP2_TRAILERS[n];
+  if (!r) return 'No trailer hitched';
+  var cap = r.caps.reduce(function (a, c) { return a + c; }, 0);
+  return r.type + ' \u00b7 ' + r.caps.length + ' compartments \u00b7 ' + cap.toLocaleString() + ' gal';
+}
+
+var SP2_FACETS = [
+  // ── Orders ──
+  // What the order's own day looks like: nobody has taken it, somebody has,
+  // or somebody has and the run does not reach it inside its window.
+  { c:'orders', g:'Order', k:'ostatus', label:'Status',
+    opts:['Unplanned','Planned','Outside'],
+    ord:function (o) {
+      return !sp2Planned(o) ? ['Unplanned']
+        : sp2Outside(o) ? ['Planned','Outside'] : ['Planned'];
+    } },
+  { c:'orders', g:'Products', k:'oblend', label:'Products', opts:['Carrying a blend'],
+    ord:function (o) { return sp2HasBlend(o) ? ['Carrying a blend'] : []; } },
+
+  // ── Driver ──
+  // Available means "can take work": on duty AND with space. How much space is
+  // under Capacity — an off-duty rig can be empty and still take nothing.
+  { c:'drivers', g:'Driver', k:'room', label:'Availability', opts:['Available','Not available'],
+    of:function (d) { return sp2Avail(d) ? 'Available' : 'Not available'; } },
+  { c:'drivers', g:'Driver', k:'duty', label:'Duty', opts:['Driving','On duty','Off duty','On leave'],
+    of:function (d) { return sp2Duty(d); } },
+
+  // ── Shift ──
+  { c:'drivers', g:'Shift', k:'shift', label:'Band', opts:['AM','PM'],
+    of:function (d) { return sp2ShiftBand(d.shift) === 'am' ? 'AM' : 'PM'; } },
+  { c:'drivers', g:'Shift', k:'window', label:'Shift window',
+    of:function (d) { return sp2ShiftLabel(d.shift); } },
+  // The binding Samsara clock. Room is no use if the driver cannot legally
+  // finish the run, which is a fact about the shift, not about the plan.
+  { c:'drivers', g:'Shift', k:'hours', label:'Hours left', opts:['Over 4h','2\u20134h','Under 2h','Out'],
+    of:function (d, k) {
+      var t = sp2TimeLeft(k).left;
+      return t > 240 ? 'Over 4h' : t > 120 ? '2\u20134h' : t > 0 ? 'Under 2h' : 'Out';
+    } },
+
+  // ── Location ──
+  { c:'drivers', g:'Location', k:'hub', label:'Hub', of:function (d) { return d.hub; } },
+
+  // ── Truck & trailer ──
+  // The rigs themselves, each saying what it is and what it holds — thirty of
+  // them, so this one is searchable.
+  { c:'drivers', g:'Truck & trailer', k:'truck', label:'Truck', searchable:true,
+    opts:Object.keys(SP2_TRUCKS).sort(), desc:sp2TruckDesc,
+    of:function (d) { return d.truck; } },
+  { c:'drivers', g:'Truck & trailer', k:'class', label:'Class',
+    of:function (d) { return SP2_TRUCKS[d.truck].type; } },
+  { c:'drivers', g:'Truck & trailer', k:'trailer', label:'Trailer',
+    opts:Object.keys(SP2_TRAILERS).sort().concat(['None']), desc:sp2TrailerDesc,
+    of:function (d) { return d.trailer || 'None'; } },
+
+  // ── Capacity ──
+  // Room left in gallons, as a range you slide — the question is "who can take
+  // 2,000 gal", and a bucket does not answer it.
+  { c:'drivers', g:'Capacity', k:'cap', label:'Room left', kind:'range', step:250,
+    lo:0, hi:SP2_MAX_CAP, unit:'gal',
+    val:function (d, k) { return sp2RigFill(k).free; } },
+  // Free gallons are not PLACEABLE gallons: one product cannot share a
+  // compartment, so this is what decides whether a NEW product can go on.
+  { c:'drivers', g:'Capacity', k:'comps', label:'Compartments free', opts:['None','1','2','3 or more'],
+    of:function (d, k) {
+      var n = sp2Cells(k).filter(function (c) { return !c.l.q; }).length;
+      return n === 0 ? 'None' : n >= 3 ? '3 or more' : String(n);
+    } },
+  // Which products this rig could actually take: one it is already carrying
+  // with room left in that compartment, or anything at all if a compartment
+  // is empty. Tick a product and only the rigs that can take it remain.
+  { c:'drivers', g:'Capacity', k:'takes', label:'Takes product', searchable:true,
+    opts:SP2_PRODS.concat(['Ethanol','Biodiesel']).sort(),
+    of:function (d, k) {
+      var cells = sp2Cells(k), empty = false, top = {};
+      cells.forEach(function (c) {
+        if (!c.l.q) { if (c.cap > 0) empty = true; return; }
+        if (c.l.q < c.cap && c.l.p) top[c.l.p] = 1;
+      });
+      if (empty) return SP2_PRODS.concat(['Ethanol','Biodiesel']);
+      return Object.keys(top);
+    } },
+
+  // ── Planning ──
+  { c:'drivers', g:'Planning', k:'plan', label:'Planning', opts:['Planned','Not started'],
+    of:function (d, k) {
+      return SP2_ORDERS.some(function (o) { return o.driver === k; }) ? 'Planned' : 'Not started'; } },
+  // The exceptions list — the rigs that need a decision today. A run can both
+  // miss a window and finish late, so this one matches on any.
+  { c:'drivers', g:'Planning', k:'risk', label:'Run risk',
+    opts:['Misses a window','Ends past the shift','Clean','Not planned'],
+    of:function (d, k) {
+      var r = sp2Route(k);
+      if (!r.length) return ['Not planned'];
+      var out = [];
+      if (r.some(function (x) { return x.kind === 'late'; })) out.push('Misses a window');
+      var e = sp2RunEnd(k);
+      if (e && e.over) out.push('Ends past the shift');
+      return out.length ? out : ['Clean'];
+    } },
+];
+function sp2GroupFacets(g) {
+  return SP2_FACETS.filter(function (f) { return f.g === g; });
+}
+function sp2ColFacets(c) {
+  return SP2_FACETS.filter(function (f) { return (f.c || 'drivers') === c; });
+}
+// An order facet answers about an order, not a rig, so it has its own reader.
+function sp2OrderMatch(o, set) {
+  return sp2ColFacets('orders').every(function (f) {
+    var v = set[f.k];
+    if (!v || !v.length) return true;
+    var got = f.ord(o);
+    return got.some(function (x) { return v.indexOf(x) >= 0; });
+  });
+}
+function sp2OrderCountFor(f, v) {
+  var w = sp2Window();
+  return SP2_ORDERS.filter(function (o) {
+    return o.t >= w.from && o.t <= w.to && f.ord(o).indexOf(v) >= 0;
+  }).length;
+}
+
+var sp2Facet   = { ostatus:['Unplanned'], room:['Available'] };   // applied — facet key → values
+var sp2FpStage = null;   // staged while the panel is open; Apply commits it
+var sp2FpOn    = 'Order';    // which group's options are showing
+var sp2FpTab   = 'orders';   // which list the panel is narrowing
+var sp2FpQ     = {};        // per-facet search text, cleared when the group changes
+// "Available" is not a tab on the row any more; it is the view the planner
+// opens on — the rigs that still have room, held in the order they had when
+// you arrived. Every other narrowing is a facet behind Filters.
+// A preset is a narrowing of the WHOLE planner, both columns at once. The one
+// the planner opens on is the day's work: the orders nobody has taken, against
+// the rigs that can still take them.
+var sp2Views   = [{ id:'vAvail', name:'Available orders and drivers',
+                    state:{ q:'', facet:{ ostatus:['Unplanned'], room:['Available'] } } }];
+var sp2ViewOn  = 'vAvail';
+
+function sp2FacetOpts(f) {
+  if (f.opts) return f.opts.slice();      // a fixed order where one reads better
+  if (f.ord) return [];
+  var seen = {}, out = [];
+  Object.keys(SP2_DRIVERS).forEach(function (k) {
+    var v = f.of(SP2_DRIVERS[k], k);
+    (Array.isArray(v) ? v : [v]).forEach(function (x) {
+      if (x && !seen[x]) { seen[x] = 1; out.push(x); }
+    });
+  });
+  return out.sort();
+}
+// A rig has one hub but several products on board, so a facet may answer with
+// a list — and then a tick matches if ANY of them is in it.
+// A range is held as one value, "lo-hi", so everything that reads a facet —
+// the chips, the views, the suggested name — keeps working unchanged.
+function sp2Range(v) {
+  var m = String(v || '').split('-');
+  return { lo:+m[0] || 0, hi:+m[1] || 0 };
+}
+function sp2FacetMatch(k, set) {
+  var d = SP2_DRIVERS[k];
+  return sp2ColFacets('drivers').every(function (f) {
+    var v = set[f.k];
+    if (!v || !v.length) return true;
+    if (f.kind === 'range') {
+      var r = sp2Range(v[0]), x = f.val(d, k);
+      return x >= r.lo && x <= r.hi;
+    }
+    var got = f.of(d, k);
+    return Array.isArray(got)
+      ? got.some(function (x) { return v.indexOf(x) >= 0; })
+      : v.indexOf(got) >= 0;
+  });
+}
+function sp2FacetN(set) {
+  return SP2_FACETS.reduce(function (a, f) { return a + ((set[f.k] || []).length ? 1 : 0); }, 0);
+}
+// How many rigs a set would leave — the whole head's narrowing, not just the
+// facets, so the footer counts what you would actually get.
+function sp2OrdCountFor(set) {
+  var w = sp2Window(), q = sp2SearchQ();
+  return SP2_ORDERS.filter(function (o) {
+    if (o.t < w.from || o.t > w.to) return false;
+    if (q && (o.id + ' ' + o.ship + ' ' + o.addr).toLowerCase().indexOf(q) < 0) return false;
+    return sp2OrderMatch(o, set);
+  }).length;
+}
+function sp2DrvCountFor(set) {
+  var keepF = sp2Facet, keepP = sp2OnlyDriver;
+  sp2Facet = set; sp2OnlyDriver = null;
+  var n = sp2DriverKeys().length;
+  sp2Facet = keepF; sp2OnlyDriver = keepP;
+  return n;
+}
+
+// ── unit.filter-panel ─────────────────────────────────────
+function sp2FpToggle(e) {
+  if (e) e.stopPropagation();
+  var sp = document.getElementById('sp2SortPop');
+  if (sp) sp.classList.remove('on');
+  var p = document.getElementById('sp2Fp');
+  if (p.classList.contains('on')) { p.classList.remove('on'); return; }
+  // ticks start from what is applied, every time it opens
+  sp2FpStage = JSON.parse(JSON.stringify(sp2Facet));
+  p.classList.add('on');
+  if (sp2TabGroups(sp2FpTab).indexOf(sp2FpOn) < 0) sp2FpOn = sp2TabGroups(sp2FpTab)[0];
+  sp2FpDraw();
+}
+function sp2FpClose() {
+  var p = document.getElementById('sp2Fp');
+  if (p) p.classList.remove('on');     // staged ticks are discarded
+}
+function sp2FpPick(k) { sp2FpOn = k; sp2FpQ = {}; sp2FpDraw(); }
+function sp2FpTabs(k) {
+  sp2FpTab = k;
+  sp2FpQ = {};
+  sp2FpOn = sp2TabGroups(k)[0];
+  sp2FpDraw();
+}
+function sp2TabGroups(k) {
+  return SP2_GROUPS.filter(function (g) { return (SP2_GROUP_COL[g] || 'drivers') === k; });
+}
+function sp2TabTicks(k) {
+  return sp2ColFacets(k).reduce(function (a, f) {
+    return a + ((sp2FpStage[f.k] || []).length ? 1 : 0); }, 0);
+}
+function sp2FpSearch(fk, v) { sp2FpQ[fk] = v; sp2FpDraw(); }
+// A range is one value; dragging either end replaces it. At its full width it
+// is no filter at all, so it comes off rather than sitting there saying 0–16,000.
+function sp2FpRange(fk, which, v) {
+  var f = SP2_FACETS.filter(function (x) { return x.k === fk; })[0];
+  var cur = (sp2FpStage[fk] || [])[0];
+  var r = cur ? sp2Range(cur) : { lo:f.lo, hi:f.hi };
+  if (which === 'lo') r.lo = Math.min(+v, r.hi);
+  else r.hi = Math.max(+v, r.lo);
+  sp2FpStage[fk] = (r.lo <= f.lo && r.hi >= f.hi) ? [] : [r.lo + '-' + r.hi];
+  sp2FpDraw();
+}
+function sp2FpTick(fk, v) {
+  var cur = sp2FpStage[fk] || [];
+  var i = cur.indexOf(v);
+  if (i >= 0) cur.splice(i, 1); else cur.push(v);
+  sp2FpStage[fk] = cur;
+  sp2FpDraw();
+}
+function sp2FpApply() {
+  sp2Facet = JSON.parse(JSON.stringify(sp2FpStage));
+  sp2OnlyDriver = null;
+  sp2FpClose();
+  sp2Render();
+}
+function sp2FpClear() {
+  sp2FpStage = {};
+  sp2Facet = {};
+  sp2OnlyDriver = null;
+  sp2FpDraw();
+  sp2Render();
+}
+function sp2FpDraw() {
+  var p = document.getElementById('sp2Fp');
+  if (!p || !p.classList.contains('on')) return;
+  if (sp2TabGroups(sp2FpTab).indexOf(sp2FpOn) < 0) sp2FpOn = sp2TabGroups(sp2FpTab)[0];
+  var tabs = SP2_FP_TABS.map(function (t) {
+    var n = sp2TabTicks(t.k);
+    return '<button class="sp2-fp-tab' + (t.k === sp2FpTab ? ' on' : '') + '" ' +
+      'onclick="sp2FpTabs(\'' + t.k + '\')">' + t.label +
+      (n ? '<span class="sp2-fp-tab-n">' + n + '</span>' : '') + '</button>';
+  }).join('');
+  var menu = sp2TabGroups(sp2FpTab).map(function (g) {
+    var n = sp2GroupFacets(g).reduce(function (a, f) {
+      return a + (sp2FpStage[f.k] || []).length;
+    }, 0);
+    return '<button class="sp2-fp-f' + (g === sp2FpOn ? ' on' : '') + '" ' +
+        'onclick="sp2FpPick(\'' + g + '\')">' + g +
+        (n ? '<span class="sp2-fp-f-n">' + n + '</span>' : '') + '</button>';
+  }).join('');
+
+  var fs = sp2GroupFacets(sp2FpOn);
+  if (!fs.length) fs = sp2GroupFacets(SP2_GROUPS[0]);
+  var isOrders = sp2FpTab === 'orders';
+  // one headed section per dimension — a group holds several, and they are
+  // ANDed across, ORed within, which is the DS's rule read correctly
+  var opts = fs.map(function (f, i) {
+    var head = fs.length > 1
+      ? '<div class="sp2-fp-sec' + (i ? '' : ' first') + '">' + f.label + '</div>' : '';
+
+    if (f.kind === 'range') {
+      var cur = (sp2FpStage[f.k] || [])[0];
+      var r = cur ? sp2Range(cur) : { lo:f.lo, hi:f.hi };
+      return head +
+        '<div class="sp2-rng">' +
+          '<div class="sp2-rng-read">' + r.lo.toLocaleString() + ' \u2013 ' +
+            r.hi.toLocaleString() + ' ' + f.unit + '</div>' +
+          '<div class="sp2-rng-track">' +
+            '<span class="sp2-rng-fill" style="left:' + (r.lo / f.hi * 100) + '%;' +
+              'right:' + (100 - r.hi / f.hi * 100) + '%;"></span>' +
+            '<input type="range" class="sp2-rng-i lo" min="' + f.lo + '" max="' + f.hi +
+              '" step="' + f.step + '" value="' + r.lo + '" aria-label="Least ' + f.label + '" ' +
+              'oninput="sp2FpRange(\'' + f.k + '\',\'lo\',this.value)">' +
+            '<input type="range" class="sp2-rng-i hi" min="' + f.lo + '" max="' + f.hi +
+              '" step="' + f.step + '" value="' + r.hi + '" aria-label="Most ' + f.label + '" ' +
+              'oninput="sp2FpRange(\'' + f.k + '\',\'hi\',this.value)">' +
+          '</div>' +
+          '<div class="sp2-rng-ends"><span>' + f.lo.toLocaleString() + '</span>' +
+            '<span>' + f.hi.toLocaleString() + ' ' + f.unit + '</span></div>' +
+        '</div>';
+    }
+
+    var on = sp2FpStage[f.k] || [];
+    var q = (sp2FpQ[f.k] || '').toLowerCase().trim();
+    var list = sp2FacetOpts(f).filter(function (v) {
+      if (!q) return true;
+      return (v + ' ' + (f.desc ? f.desc(v) : '')).toLowerCase().indexOf(q) >= 0;
+    });
+    var box = f.searchable
+      ? '<div class="sp2-fp-srch"><input placeholder="Search ' + f.label.toLowerCase() + '\u2026" ' +
+        'value="' + (sp2FpQ[f.k] || '') + '" aria-label="Search ' + f.label + '" ' +
+        'oninput="sp2FpSearch(\'' + f.k + '\',this.value)"></div>' : '';
+    return head + box + (list.length
+      ? list.map(function (v) {
+          var n = f.ord ? sp2OrderCountFor(f, v) : null;
+          return '<button class="sp2-fp-o' + (on.indexOf(v) >= 0 ? ' on' : '') + '" ' +
+            'onclick="sp2FpTick(\'' + f.k + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
+            '<span class="sp2-fp-box"></span>' +
+            '<span><span class="sp2-fp-o-v">' + v + '</span>' +
+              (f.desc ? '<span class="sp2-fp-o-d">' + f.desc(v) + '</span>' : '') +
+            '</span>' + (n === null ? '' : '<span class="sp2-fp-o-n">' + n + '</span>') +
+            '</button>';
+        }).join('')
+      : '<div class="sp2-fp-none">No matches.</div>');
+  }).join('') || '<div class="sp2-fp-none">No matches.</div>';
+
+  var n = isOrders ? sp2OrdCountFor(sp2FpStage) : sp2DrvCountFor(sp2FpStage);
+  p.innerHTML =
+    '<div class="sp2-fp-tabs">' + tabs + '</div>' +
+    '<div class="sp2-fp-body">' +
+      '<div class="sp2-fp-menu">' + menu + '</div>' +
+      '<div class="sp2-fp-opts">' + opts + '</div>' +
+    '</div>' +
+    '<div class="sp2-fp-foot">' +
+      '<span class="sp2-fp-n"><b>' + n + '</b> ' +
+        (isOrders ? 'order' : 'rig') + (n === 1 ? '' : 's') + '</span>' +
+      '<span class="sp2-fp-btns">' +
+        '<button class="sp2-btn ghost" onclick="sp2FpClear()">Clear all</button>' +
+        '<button class="sp2-btn pri" onclick="sp2FpApply()">Apply filters</button>' +
+      '</span>' +
+    '</div>';
+}
+
+// ── search ────────────────────────────────────────────────
+function sp2SearchQ() {
+  var el = document.getElementById('sp2DrvSearch');
+  return el ? el.value.toLowerCase().trim() : '';
+}
+function sp2DrvSearchIn() {
+  sp2OnlyDriver = null;
+  sp2Render();
+}
+function sp2DrvSearchClear() {
+  document.getElementById('sp2DrvSearch').value = '';
+  sp2DrvSearchIn();
+}
+
+// ── unit.chip-shelf ───────────────────────────────────────
+function sp2ShelfDraw() {
+  sp2ShelfFor('orders',  document.getElementById('sp2ShelfO'));
+  sp2ShelfFor('drivers', document.getElementById('sp2ShelfD'));
+}
+function sp2ShelfFor(col, el) {
+  if (!el) return;
+  // A preset showing unchanged already says what is on, on its own tab. The
+  // chips are for a narrowing the reader applied themselves — which includes
+  // anything added on top of a preset, the moment it stops matching.
+  if (sp2ViewOn && !sp2ViewDirty()) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  var X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var chips = [];
+  sp2ColFacets(col).forEach(function (f) {
+    var v = sp2Facet[f.k] || [];
+    if (!v.length) return;
+    if (v.length === 1) {
+      var read = f.kind === 'range'
+        ? (function (r) { return r.lo.toLocaleString() + '\u2013' + r.hi.toLocaleString() +
+            ' ' + f.unit; })(sp2Range(v[0]))
+        : v[0];
+      chips.push('<span class="sp2-chipf"><span class="sp2-chipf-l">' + f.label + ':</span> ' +
+        read + '<button class="sp2-chipf-x" aria-label="Remove ' + f.label + '" ' +
+        'onclick="sp2ChipOff(\'' + f.k + '\',\'' + v[0].replace(/'/g, "\\'") + '\')">' + X + '</button></span>');
+      return;
+    }
+    // several values: the count, with the values a hover away
+    chips.push('<span class="sp2-chipf has-card"><span class="sp2-chipf-l">' + f.label + '</span>' +
+      '<span class="sp2-chipf-n">' + v.length + '</span>' +
+      '<button class="sp2-chipf-x" aria-label="Remove ' + f.label + '" ' +
+      'onclick="sp2ChipOff(\'' + f.k + '\',null)">' + X + '</button>' +
+      '<span class="sp2-chipf-card"><span class="sp2-chipf-card-h">' + f.label + '</span>' +
+        v.map(function (x) {
+          return '<span class="sp2-chipf-row">' + x +
+            '<button class="sp2-chipf-x" aria-label="Remove ' + x + '" ' +
+            'onclick="sp2ChipOff(\'' + f.k + '\',\'' + x.replace(/'/g, "\\'") + '\')">' + X + '</button></span>';
+        }).join('') +
+      '</span></span>');
+  });
+  el.style.display = chips.length ? 'flex' : 'none';
+  el.innerHTML = chips.join('') +
+    (chips.length ? '<button class="sp2-shelf-clr" onclick="sp2FpClearCol(\'' + col + '\')">Clear all</button>' : '');
+}
+// Clear all on a column's shelf clears that column's narrowing, not the other's.
+function sp2FpClearCol(col) {
+  sp2ColFacets(col).forEach(function (f) { sp2Facet[f.k] = []; });
+  sp2OnlyDriver = null;
+  sp2AvailFreeze();
+  sp2Render();
+}
+// null takes the whole facet off, which is what the ✕ on a multi-value chip does
+function sp2ChipOff(fk, v) {
+  sp2Facet[fk] = v === null ? [] : (sp2Facet[fk] || []).filter(function (x) { return x !== v; });
+  sp2OnlyDriver = null;
+  sp2AvailFreeze();
+  sp2Render();
+}
+
+// ── unit.view-row ─────────────────────────────────────────
+// A view stores the whole narrowing AND the arrangement, and opens in it.
+function sp2ViewState() {
+  return {
+    q:     (document.getElementById('sp2DrvSearch') || {}).value || '',
+    facet: JSON.parse(JSON.stringify(sp2Facet)),
+  };
+}
+function sp2ViewKey(st) {
+  return [st.q,
+    SP2_FACETS.map(function (f) { return f.k + ':' + (st.facet[f.k] || []).slice().sort().join(','); }).join('|'),
+  ].join('~');
+}
+function sp2ViewDefault() { return { q:'', facet:{} }; }
+function sp2ViewApply(st) {
+  sp2Facet = JSON.parse(JSON.stringify(st.facet));
+  sp2OnlyDriver = null;
+  document.getElementById('sp2DrvSearch').value = st.q;
+  sp2AvailFreeze();
+  sp2RenderUnit();
+}
+function sp2ViewDirty() {
+  var v = sp2Views.filter(function (x) { return x.id === sp2ViewOn; })[0];
+  return sp2ViewKey(sp2ViewState()) !== sp2ViewKey(v ? v.state : sp2ViewDefault());
+}
+function sp2VrDraw() {
+  var el = document.getElementById('sp2Vr');
+  if (!el) return;
+  var dirty = sp2ViewDirty();
+  var html = '<button class="sp2-vr-tab' + (sp2ViewOn ? '' : ' on') + '" onclick="sp2VrAll()">All' +
+    (!sp2ViewOn && dirty ? '<span class="sp2-vr-dot" title="All has unsaved changes"></span>' : '') + '</button>';
+
+  sp2Views.forEach(function (v) {
+    var act = v.id === sp2ViewOn;
+    html += '<span class="sp2-vr-wrap">' +
+      '<button class="sp2-vr-tab' + (act ? ' on' : '') + '" onclick="sp2VrPick(\'' + v.id + '\')">' + v.name + '</button>' +
+      (act && dirty
+        ? '<button class="sp2-vr-ico" title="Update changes" onclick="sp2VrUpdate(\'' + v.id + '\')">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><polyline points="21 4 21 9 16 9"/></svg></button>'
+        : '') +
+      '<button class="sp2-vr-ico sp2-vr-more" title="More" onclick="sp2VrMenu(event,\'' + v.id + '\')">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">' +
+        '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>' +
+      '<span class="sp2-vr-menu" id="sp2VrM' + v.id + '" onclick="event.stopPropagation()">' +
+        (act && dirty ? '<button class="sp2-vr-mi" onclick="sp2VrUpdate(\'' + v.id + '\')">Update view</button>' : '') +
+        '<button class="sp2-vr-mi" onclick="sp2VrRename(\'' + v.id + '\')">Rename</button>' +
+        '<button class="sp2-vr-mi bad" onclick="sp2VrDelete(\'' + v.id + '\')">Delete</button>' +
+      '</span>' +
+    '</span>';
+  });
+
+  html += '<button class="sp2-vr-add" onclick="sp2VrNew()">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/>' +
+      '<line x1="5" y1="12" x2="19" y2="12"/></svg>View</button>';
+  el.innerHTML = html;
+}
+// Each tab keeps its own unsaved changes, so leaving a view and coming back
+// finds it as it was left — and pressing the tab you are already on is the
+// one way to drop them.
+var sp2Park = {};
+function sp2TabId() { return sp2ViewOn || 'all'; }
+
+function sp2VrAll() {
+  if (!sp2ViewOn) {                      // already on All: this is its reset
+    delete sp2Park.all;
+    sp2ViewApply(sp2ViewDefault());
+    return;
+  }
+  sp2Park[sp2ViewOn] = sp2ViewState();   // park the view's changes where it is
+  sp2ViewOn = null;
+  sp2ViewApply(sp2Park.all || sp2ViewDefault());
+}
+function sp2VrPick(id) {
+  var v = sp2Views.filter(function (x) { return x.id === id; })[0];
+  if (!v) return;
+  if (sp2ViewOn === id) {                // the one you are on: back to saved
+    delete sp2Park[id];
+    sp2ViewApply(v.state);
+    return;
+  }
+  sp2Park[sp2TabId()] = sp2ViewState();
+  sp2ViewOn = id;
+  sp2ViewApply(sp2Park[id] || v.state);
+}
+function sp2VrUpdate(id) {
+  var v = sp2Views.filter(function (x) { return x.id === id; })[0];
+  if (!v) return;
+  v.state = sp2ViewState();
+  delete sp2Park[id];
+  sp2VrCloseMenus();
+  sp2RenderUnit();
+  sp2Toast('“' + v.name + '” updated');
+}
+function sp2VrDelete(id) {
+  sp2Views = sp2Views.filter(function (x) { return x.id !== id; });
+  delete sp2Park[id];
+  if (sp2ViewOn === id) sp2ViewOn = null;
+  sp2VrCloseMenus();
+  sp2RenderUnit();
+}
+function sp2VrMenu(e, id) {
+  e.stopPropagation();
+  var m = document.getElementById('sp2VrM' + id);
+  var was = m.classList.contains('on');
+  sp2VrCloseMenus();
+  if (!was) { m.classList.add('on'); m.previousElementSibling.classList.add('on'); }
+}
+function sp2VrCloseMenus() {
+  document.querySelectorAll('.sp2-vr-menu.on').forEach(function (m) { m.classList.remove('on'); });
+  document.querySelectorAll('.sp2-vr-more.on').forEach(function (b) { b.classList.remove('on'); });
+}
+
+// the Save / Rename dialog
+var sp2DlgMode = 'save', sp2DlgId = null;
+// Naming is the friction that stops people saving views, so the box opens with
+// a name made from what is narrowing the list.
+function sp2VrSuggest() {
+  var parts = [];
+  SP2_FACETS.forEach(function (f) {
+    var v = sp2Facet[f.k] || [];
+    if (!v.length) return;
+    if (f.kind === 'range') {
+      var rr = sp2Range(v[0]);
+      parts.push(rr.lo.toLocaleString() + '\u2013' + rr.hi.toLocaleString() + ' ' + f.unit);
+      return;
+    }
+    parts.push(v.length === 1 ? v[0] : v.length === 2 ? v[0] + ' & ' + v[1] : v.length + ' ' + f.label.toLowerCase());
+  });
+  return parts.slice(0, 3).join(' · ');
+}
+function sp2VrNew() {
+  sp2DlgMode = 'save'; sp2DlgId = null;
+  var i = document.getElementById('sp2DlgI');
+  document.getElementById('sp2DlgT').textContent = 'Save current view';
+  document.getElementById('sp2DlgOk').textContent = 'Save view';
+  i.value = '';
+  i.placeholder = sp2VrSuggest() || 'e.g. Denver, mid-shift';
+  document.getElementById('sp2DlgScrim').classList.add('on');
+  i.focus();
+}
+function sp2VrRename(id) {
+  var v = sp2Views.filter(function (x) { return x.id === id; })[0];
+  if (!v) return;
+  sp2DlgMode = 'rename'; sp2DlgId = id;
+  sp2VrCloseMenus();
+  var i = document.getElementById('sp2DlgI');
+  document.getElementById('sp2DlgT').textContent = 'Rename view';
+  document.getElementById('sp2DlgOk').textContent = 'Rename';
+  i.value = v.name; i.placeholder = '';
+  document.getElementById('sp2DlgScrim').classList.add('on');
+  i.focus(); i.select();
+}
+function sp2DlgClose() { document.getElementById('sp2DlgScrim').classList.remove('on'); }
+function sp2DlgKey(e) {
+  if (e.key === 'Enter') sp2DlgSave();
+  else if (e.key === 'Escape') sp2DlgClose();
+  else if ((e.key === 'ArrowRight' || e.key === 'Tab') && sp2DlgMode === 'save' && !e.target.value) {
+    var sug = sp2VrSuggest();
+    if (sug) { e.preventDefault(); e.target.value = sug + ' '; }
+  }
+}
+function sp2DlgSave() {
+  var i = document.getElementById('sp2DlgI');
+  var name = (i.value || (sp2DlgMode === 'save' ? sp2VrSuggest() : '')).trim();
+  if (!name) return;
+  if (sp2DlgMode === 'rename') {
+    var v = sp2Views.filter(function (x) { return x.id === sp2DlgId; })[0];
+    if (v) v.name = name;
+  } else {
+    var id = 'v' + (Date.now() % 100000);
+    sp2Views.push({ id:id, name:name, state:sp2ViewState() });
+    delete sp2Park[sp2TabId()];       // the changes moved into the new view
+    sp2ViewOn = id;
+  }
+  sp2DlgClose();
+  sp2RenderUnit();
 }
 
 function sp2DriverKeys() {
@@ -2646,24 +3509,23 @@ function sp2DriverKeys() {
     sp2OnlyDriver = null;
   }
   var q = (document.getElementById('sp2DrvSearch').value || '').toLowerCase().trim();
-  if (sp2DrvFilter === 'available' && !sp2AvailOrder) sp2FreezeAvail();
+  var room = (sp2Facet.room || []).indexOf('Available') >= 0;
+  if (room && !sp2AvailOrder) sp2FreezeAvail();
   var keys = Object.keys(SP2_DRIVERS).filter(function (k) {
     var d = SP2_DRIVERS[k];
-    if (sp2Shift_ !== 'all' && sp2ShiftBand(d.shift) !== sp2Shift_) return false;
+    if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
     // A rig that had room when you arrived keeps its place even once you have
     // filled it — otherwise the card you just loaded disappears from under you.
-    // It drops off the next time you ask Available for a fresh order.
-    if (sp2DrvFilter === 'available') {
-      if (!sp2Avail(d) && sp2AvailOrder.indexOf(k) < 0) return false;
-    } else if (sp2DrvFilter !== 'all' && d.state !== sp2DrvFilter) return false;
-    if (q && (d.name + ' ' + d.truck + ' ' + d.hub).toLowerCase().indexOf(q) < 0) return false;
+    // It drops off the next time the filter is asked for a fresh order.
+    if (room && !sp2Avail(d) && sp2AvailOrder.indexOf(k) >= 0) return true;
+    if (!sp2FacetMatch(k, sp2Facet)) return false;
     return true;
   });
   // Available leads with the rigs that have most room — but it is taken ONCE,
   // when you arrive at the tab, and then held. Loading a truck fills it, and a
   // list that re-sorted on every drop would slide the card you are working on
   // out from under you. Clicking Available again is how you ask for a fresh one.
-  if (sp2DrvFilter === 'available') {
+  if (room) {
     var at = {};
     sp2AvailOrder.forEach(function (k, n) { at[k] = n; });
     keys.sort(function (a, b) {
@@ -2967,9 +3829,9 @@ function sp2OrderOpen(e, id) {
   var racked = lines.map(function (pr) {
     var col = SP2_PROD_COLORS[pr.p] || 'var(--fp-ink-3)';
     return '<div class="sp2-sh-row">' +
-        '<span class="sp2-sh-c">' + (pr.blend ? pr.blend : '\u2014') + '</span>' +
-        '<span class="sp2-sh-p"><i class="sp2-dot" style="background:' + col + ';"></i>' + pr.p +
-          (pr.blend ? '<span class="sp2-sh-empty">' + pr.pct + '%</span>' : '') + '</span>' +
+        '<span class="sp2-sh-c"' + (pr.blend ? ' title="' + sp2BlendWith(pr) + '"' : '') + '>' +
+          (pr.blend ? pr.pct + '%' : '\u2014') + '</span>' +
+        '<span class="sp2-sh-p"><i class="sp2-dot" style="background:' + col + ';"></i>' + pr.p + '</span>' +
         '<span class="sp2-sh-q">' + pr.q.toLocaleString() + ' gal</span>' +
       '</div>';
   }).join('');
@@ -3107,25 +3969,24 @@ function sp2CrewOpen(e, k) {
 function sp2DrvCounts(shown) {
   var all = Object.keys(SP2_DRIVERS);
   var n = function (s) { return all.filter(function (k) { return SP2_DRIVERS[k].state === s; }).length; };
-  document.getElementById('sp2dAll').textContent = all.length;
-  document.getElementById('sp2dAv').textContent =
-    all.filter(function (k) { return sp2Avail(SP2_DRIVERS[k]); }).length;
-  document.getElementById('sp2dDr').textContent  = n('driving');
-  document.getElementById('sp2dOn').textContent  = n('on-duty');
-  document.getElementById('sp2dOff').textContent = n('off-duty');
   document.getElementById('sp2DrvCount').textContent = shown;
 }
 
+// Availability and duty are facets now. This stays as the way to set them in
+// one call — the control that used to do it has moved into the panel.
 function sp2SetDrvFilter(f) {
-  sp2DrvFilter = f;
-  sp2OnlyDriver = null;       // asking the column for a set is leaving the one rig
-  // arriving at Available — including clicking it again — is the ask for a
-  // fresh ordering; nothing else re-sorts it
-  if (f === 'available') sp2FreezeAvail(); else sp2AvailOrder = null;
-  document.querySelectorAll('[data-d]').forEach(function (b) {
-    b.classList.toggle('on', b.dataset.d === f);
-  });
+  sp2OnlyDriver = null;
+  sp2Facet.room = f === 'available' ? ['Available'] : [];
+  sp2Facet.duty = f === 'driving' ? ['Driving']
+    : f === 'on-duty' ? ['On duty'] : f === 'off-duty' ? ['Off duty'] : [];
+  sp2AvailFreeze();
   sp2RenderUnit();
+}
+// Arriving at "has room" is the ask for a fresh ordering; nothing else
+// re-sorts it, or the card you are loading slides out from under you.
+function sp2AvailFreeze() {
+  if ((sp2Facet.room || []).indexOf('Available') >= 0) sp2FreezeAvail();
+  else sp2AvailOrder = null;
 }
 
 // Compact is only a density, not a different render: the chosen lane stays
@@ -3329,7 +4190,8 @@ function sp2CompTable(k) {
     : '<span class="sp2-ct-ok">Balanced \u00b7 ' + placed.toLocaleString() + ' gal placed</span>';
 
   return '<div class="sp2-ct' + (loose ? ' loose' : '') + '">' +
-      '<div class="sp2-ct-head"><span>Comp</span><span>Product</span><span>Gallons</span><span>Full</span></div>' +
+      '<div class="sp2-ct-head"><span>Comp</span><span>Product</span><span>Gallons</span>' +
+        '<span title="Tank monitor">TM</span></div>' +
       rows +
       '<div class="sp2-ct-foot">' + foot +
         (sp2Undo && sp2Undo.k === k
@@ -4267,20 +5129,28 @@ function sp2RenderLanes() {
   sp2DrvCounts(keys.length);
   if (!keys.length) { host.innerHTML = '<div class="sp2-empty">No driver matches that.</div>'; return; }
   var w = sp2Window();
-  host.innerHTML =
-    '<div class="sp2-ln-hdr">' +
-      '<span class="sp2-ln-hdr-drv">Driver · availability</span>' +
-      '<span class="sp2-ln-hdr-day">' + (sp2Shift_ === 'all' ? 'All shifts'
-          : sp2Shift_ === 'am' ? 'AM · early shifts' : 'PM · late shifts') + '</span>' +
-      '<span class="sp2-ln-hdr-sum">' + SP2_ORDERS.filter(sp2Planned).length + ' planned · ' +
-        SP2_ORDERS.filter(function (o) { return !sp2Planned(o); }).length + ' unplanned</span>' +
-    '</div>' +
-    keys.map(sp2LaneHtml).join('');
+  var body = keys.map(sp2LaneHtml).join('');
+
+  // The column names itself, the chips say what is narrowing it and the count
+  // sits beside the name — a band repeating all three said nothing new.
+  host.innerHTML = body;
   sp2FitRig();
 }
 
 function sp2RenderUnit() {
   sp2RenderLanes();
+  sp2VrDraw();
+  sp2ShelfDraw();
+  var b = document.getElementById('sp2FpBtn');
+  if (b) {
+    var n = sp2FacetN(sp2Facet);
+    b.classList.toggle('on', n > 0);
+    document.getElementById('sp2FpN').textContent = n;
+  }
+  sp2CardsAllBtn();
+  var w = document.getElementById('sp2SrchWrap');
+  if (w) w.classList.toggle('has', !!document.getElementById('sp2DrvSearch').value);
+  sp2FpDraw();
 }
 
 // loading, unloading and hitching all change what would fit

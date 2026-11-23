@@ -16,7 +16,7 @@ OUT = SRC / 'fleetpanda.html'
 SCREENS = [
     ('create', 'Create order',  'create-order.html'),
     ('edit',   'Edit order',    'load-order-unassigned.html'),
-    ('plan',   'Shift planner', 'shift-planner-v2.html'),
+    ('plan',   'Shift planner', 'shift-planner-ui2.html'),
 ]
 
 # these exist in more than one screen and would otherwise overwrite each other
