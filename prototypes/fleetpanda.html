@@ -1249,6 +1249,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
   border-radius:var(--r-md);background:var(--fp-surface-1b);font-family:inherit;
   font-size:13px;color:var(--fp-ink-1);outline:none;}
 #scr-plan .sp2-dlg-i:focus{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 50%,transparent);}
+#scr-plan .sp2-dlg-p{margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--fp-ink-3);}
 #scr-plan .sp2-dlg-f{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
 
 /* ── Timeline ─────────────────────────────────────────────── */
@@ -1282,6 +1283,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-pill{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:400;white-space:nowrap;}
 #scr-plan .sp2-pill-planned{background:color-mix(in oklab,var(--status-success) 10%,transparent);color:var(--status-success);}
 #scr-plan .sp2-pill-unplanned{background:color-mix(in oklab,var(--status-caution) 10%,transparent);color:var(--status-caution);}
+/* an order that came out of a split, or had one taken out of it */
+#scr-plan .sp2-pill-split{background:var(--chip);color:var(--fp-ink-2);}
 #scr-plan .sp2-type{font-size:10px;font-weight:600;color:var(--fp-ink-3);text-transform:uppercase;letter-spacing:0.12em;white-space:nowrap;}
 
 #scr-plan .sp2-empty{padding:44px 16px;text-align:center;font-size:14px;color:var(--fp-ink-3);}
@@ -1456,6 +1459,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-duty.big{margin-left:auto;height:22px;line-height:22px;font-size:11px;padding:0 9px;}
 #scr-plan .sp2-hos-none{padding:10px;font-size:11px;color:var(--fp-ink-3);}
 #scr-plan #sp2Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--r-md);font-size:14px;font-weight:500;z-index:200;display:none;white-space:nowrap;background:var(--primary);color:var(--primary-foreground);box-shadow:0 8px 24px rgba(3,4,5,.18);}
+/* A refusal cannot look like a receipt: it keeps the failed colour on its
+   edge, runs to two lines, and stays up twice as long. */
+#scr-plan #sp2Toast.warn{white-space:pre-line;text-align:left;line-height:1.45;
+  border-left:3px solid var(--status-failed);}
 
 
 /* ── Header tools: the view switch, and everything else behind one icon ── */
@@ -1592,13 +1599,25 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-rt{margin-top:10px;padding-top:9px;border-top:1px solid var(--fp-outline-1);}
 #scr-plan .sp2-rt-hd{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--fp-ink-3);margin-bottom:5px;}
 #scr-plan .sp2-rt-n{margin-left:auto;font-variant-numeric:tabular-nums;}
+/* Point to point: the dot and the thread between them carry the run, so a row
+   needs no box of its own. Hovering underlines where it is going; the stop
+   that is selected fills its point. */
 #scr-plan .sp2-rt-row{position:relative;display:block;width:100%;text-align:left;
   padding:5px 6px 5px 19px;border:none;background:none;font-family:inherit;
-  border-radius:var(--r-sm,6px);cursor:pointer;}
+  cursor:pointer;}
 #scr-plan .sp2-rt-row::before{content:'';position:absolute;left:4.5px;top:17px;bottom:-5px;width:1px;background:var(--fp-outline-1);}
 #scr-plan .sp2-rt-row:last-child::before{display:none;}
-#scr-plan .sp2-rt-row:hover{background:var(--fp-emphasis-hover);}
-#scr-plan .sp2-rt-row.sel{background:var(--fp-selected);box-shadow:inset 0 0 0 1px var(--fp-selected-border);}
+#scr-plan .sp2-rt-row:hover .sp2-rt-ship{text-decoration:underline;text-underline-offset:2px;}
+#scr-plan .sp2-rt-row.sel .sp2-rt-dot{background:var(--fp-selected-border);border-color:var(--fp-selected-border);}
+#scr-plan .sp2-rt-row.sel .sp2-rt-ship{color:var(--fp-ink-1);}
+/* every stop can be taken off the rig, from the stop itself */
+#scr-plan .sp2-rt-x{flex-shrink:0;width:20px;height:20px;margin:-2px -4px -2px 0;display:inline-flex;
+  align-items:center;justify-content:center;border:none;border-radius:var(--r-sm,6px);
+  background:transparent;color:var(--fp-ink-3);opacity:0;
+  transition:opacity .12s linear,background .12s,color .12s;}
+#scr-plan .sp2-rt-row:hover .sp2-rt-x,#scr-plan .sp2-rt-x:focus-visible{opacity:1;}
+#scr-plan .sp2-rt-x:hover{background:color-mix(in oklab,var(--status-failed) 14%,transparent);
+  color:var(--status-failed);}
 #scr-plan .sp2-rt-dot{position:absolute;left:0;top:8px;width:10px;height:10px;border-radius:50%;
   background:var(--fp-surface-1b);border:2px solid var(--status-neutral);}
 #scr-plan .sp2-rt-row.ok .sp2-rt-dot{border-color:var(--status-success);}
@@ -1615,6 +1634,12 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-rt-more{display:block;width:100%;margin-left:19px;padding:3px 0;border:none;background:none;
   font-family:inherit;font-size:11px;color:var(--fp-ink-3);text-align:left;cursor:pointer;}
 #scr-plan .sp2-rt-more:hover{color:var(--fp-ink-1);}
+/* the line across the run where the rig stops having room */
+#scr-plan .sp2-rt-cap{display:flex;align-items:center;gap:7px;margin:5px 0 5px 19px;
+  font-size:11px;font-weight:500;color:var(--status-failed);}
+#scr-plan .sp2-rt-cap::before{content:'';flex:0 0 14px;height:2px;border-radius:2px;
+  background:var(--status-failed);}
+#scr-plan .sp2-rt-cap::after{content:'';flex:1;height:1px;background:color-mix(in oklab,var(--status-failed) 45%,transparent);}
 #scr-plan .sp2-rt-end{margin:4px 0 0 19px;font-size:11px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 #scr-plan .sp2-rt-over{color:var(--status-failed);}
 
@@ -1630,11 +1655,47 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 
 #scr-plan .sp2-ln-stops{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;}
 #scr-plan .sp2-ln-stops-lbl{font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;margin-right:2px;}
-#scr-plan .sp2-stop{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:9999px;background:var(--chip);font-size:12px;color:var(--fp-ink-1);cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
-#scr-plan .sp2-stop:hover{background:var(--fp-emphasis-hover);}
-#scr-plan .sp2-stop.sel{background:var(--fp-selected);box-shadow:inset 0 0 0 1px var(--fp-selected-border);}
+/* an order on the rig: the pill, and the fit chip docked to its end */
+#scr-plan .sp2-stopw{display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap;}
+#scr-plan .sp2-stop{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;
+  border-radius:9999px;background:var(--chip);font-size:12px;color:var(--fp-ink-1);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
+#scr-plan .sp2-stopw:hover .sp2-stop{background:var(--fp-emphasis-hover);}
+#scr-plan .sp2-stopw.sel .sp2-stop{background:var(--fp-selected);box-shadow:inset 0 0 0 1px var(--fp-selected-border);}
 #scr-plan .sp2-stop-t{color:var(--fp-ink-3);}
 #scr-plan .sp2-stop b{font-weight:400;color:var(--fp-ink-3);}
+/* How much of the compartments it needs the order actually fills — its own
+   chip, docked to the order's. Its left edge is the order chip's rounded end
+   cut back out of it: a 13px disc centred 5px left of this chip's box, which
+   is the pill's own 12px arc plus the 1px of air between them, so the gap
+   reads as 1px the whole way round rather than closing to a wedge. The right
+   end is an ordinary rounded chip. The box overlaps the pill by 7px for that
+   to be possible, and the mask takes those 7px back off. */
+#scr-plan .sp2-stop-fit{margin-left:-7px;height:24px;display:inline-flex;align-items:center;
+  padding:0 11px 0 15px;border-radius:0 9999px 9999px 0;background:var(--fp-emphasis);
+  font-size:12px;color:var(--fp-ink-2);font-variant-numeric:tabular-nums;
+  -webkit-mask-image:radial-gradient(circle 13px at -5px 50%,transparent 13px,#000 13.5px);
+  mask-image:radial-gradient(circle 13px at -5px 50%,transparent 13px,#000 13.5px);}
+/* The fit chip carries the verdict in the status colours every other verdict
+   in the system uses: under half is poor, 80% and over is a load that is not
+   driving air around. */
+#scr-plan .sp2-stop-fit.low{background:color-mix(in oklab,var(--status-failed) 14%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-failed) 86%,#0b0d12);font-weight:600;}
+#scr-plan .sp2-stop-fit.mid{background:color-mix(in oklab,var(--status-caution) 16%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-caution) 72%,#0b0d12);font-weight:600;}
+#scr-plan .sp2-stop-fit.high{background:color-mix(in oklab,var(--status-success) 14%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-success) 84%,#0b0d12);font-weight:600;}
+/* The best fit on the rig stays violet, as every highlight is, but it marks
+   the ORDER — the fit chip is busy saying how good the fit is. The token
+   carries its own fallback: this screen does not declare --accent-violet, and
+   a bare var() would resolve to nothing and take the color-mix with it. */
+#scr-plan .sp2-stopw.fit .sp2-stop{box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--accent-violet,#7c5cff) 48%,transparent);
+  background:color-mix(in oklab,var(--accent-violet,#7c5cff) 10%,var(--fp-surface-1b));}
+#scr-plan .sp2-stopw.fit.sel .sp2-stop{box-shadow:inset 0 0 0 1px var(--fp-selected-border);}
+#scr-plan .sp2-stop-x{border:none;background:none;padding:0 0 0 3px;margin-right:-3px;font-family:inherit;
+  font-size:14px;line-height:1;color:var(--fp-ink-3);}
+#scr-plan .sp2-stop-x:hover{color:var(--status-failed);}
+#scr-plan .sp2-stop-list{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 #scr-plan .sp2-stop-none{font-size:12px;color:var(--fp-ink-3);}
 
 
@@ -1722,16 +1783,40 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-body[data-only="orders"] .sp2-col-unit,#scr-plan .sp2-body[data-only="orders"] .sp2-split,#scr-plan .sp2-body[data-only="drivers"] .sp2-col-orders,#scr-plan .sp2-body[data-only="drivers"] .sp2-split{display:none;}
 #scr-plan .sp2-body[data-only="orders"] .sp2-col-orders,#scr-plan .sp2-body[data-only="drivers"] .sp2-col-unit{flex:1 1 100% !important;}
 #scr-plan .sp2-ln-stops{display:flex;align-items:center;gap:12px;}
-#scr-plan .sp2-stop-list{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 #scr-plan .sp2-ln-stops-lbl{margin-left:auto;flex-shrink:0;}
-#scr-plan .sp2-stop-x{border:none;background:none;padding:0 0 0 3px;margin-right:-3px;font-family:inherit;font-size:14px;line-height:1;color:var(--fp-ink-3);cursor:pointer;}
-#scr-plan .sp2-stop-x:hover{color:var(--status-failed);}
 
 /* more gallons than rig: say by how much, and offer the ways out */
 #scr-plan .sp2-over-warn{margin-top:9px;padding:9px 11px;border-radius:var(--r-md);background:color-mix(in oklab,var(--status-failed) 9%,transparent);border:1px solid color-mix(in oklab,var(--status-failed) 30%,transparent);}
-#scr-plan .sp2-over-head{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--status-failed);font-variant-numeric:tabular-nums;}
+/* What the rig holds is a fact, in the ink every other fact is written in.
+   What is over it is the warning, and only that part is red. */
+#scr-plan .sp2-over-head{display:flex;align-items:center;gap:7px;font-size:12px;
+  color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
 #scr-plan .sp2-over-head b{font-weight:600;}
-#scr-plan .sp2-over-fixes{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+#scr-plan .sp2-over-head>svg{flex-shrink:0;color:var(--status-failed);}
+#scr-plan .sp2-over-cap{margin-right:14px;}
+#scr-plan .sp2-over-by{color:var(--status-failed);}
+/* side by side: each is a short reading, and a column of them was a column of
+   white space. They grow where they stand when the remove opens. */
+#scr-plan .sp2-over-list{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+#scr-plan .sp2-over-row{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 3px 0 10px;
+  border-radius:9999px;background:var(--fp-surface-1b);font-size:12px;
+  font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-over-id{font-weight:500;color:var(--fp-ink-1);}
+#scr-plan .sp2-over-q{color:var(--fp-ink-3);}
+/* the remove sits on the right as an icon and says its name when reached for */
+/* what a chip can do: an icon that says its name when it is reached for */
+#scr-plan .sp2-over-act{height:24px;display:inline-flex;align-items:center;gap:0;
+  padding:0 5px;border:none;border-radius:9999px;background:transparent;
+  color:var(--fp-ink-3);font-family:inherit;font-size:12px;font-weight:500;
+  white-space:nowrap;transition:background .12s,color .12s;}
+#scr-plan .sp2-over-x{margin-left:auto;}
+#scr-plan .sp2-over-x-l{max-width:0;overflow:hidden;opacity:0;
+  transition:max-width .16s ease,opacity .12s linear,padding-left .16s ease;}
+#scr-plan .sp2-over-act:hover .sp2-over-x-l{max-width:120px;opacity:1;padding-left:6px;}
+#scr-plan .sp2-over-x:hover{background:color-mix(in oklab,var(--status-failed) 14%,transparent);
+  color:var(--status-failed);}
+/* splitting is not a removal, so it does not wear the removal's colour */
+#scr-plan .sp2-over-s:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
 #scr-plan .sp2-fix{height:28px;padding:0 11px;border:1px solid var(--fp-stroke-field);border-radius:var(--r-md);background:var(--fp-surface-1b);color:var(--fp-ink-1);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;font-variant-numeric:tabular-nums;}
 #scr-plan .sp2-fix:hover{background:var(--fp-emphasis);border-color:var(--fp-ink-3);}
 #scr-plan .sp2-move{min-width:290px;}
@@ -1856,12 +1941,15 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-two-r{flex:1 1 0;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
 /* Comp and the readouts take what they need; the product name gets the rest.
    TM is the tank monitor, and the head has to fit at this width. */
-#scr-plan .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 58px 46px;}
+#scr-plan .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 58px 68px;}
 #scr-plan .sp2-two-l .sp2-ct-head>span,#scr-plan .sp2-two-l .sp2-ct-n,#scr-plan .sp2-two-l .sp2-ct-p,#scr-plan .sp2-two-l .sp2-ct-f,#scr-plan .sp2-two-l .sp2-cell{padding-left:7px;padding-right:7px;}
 #scr-plan .sp2-two-l .sp2-ct-head>span{height:32px;font-size:12px;}
 #scr-plan .sp2-two-l .sp2-ct .sp2-lt-c{height:34px;}
 #scr-plan .sp2-two-l .sp2-ct-n,#scr-plan .sp2-two-l .sp2-ct-p,#scr-plan .sp2-two-l .sp2-ct-f,#scr-plan .sp2-two-l .sp2-cell{font-size:12px;}
-#scr-plan .sp2-two-l .sp2-ct-f{gap:7px;}
+/* the monitor keeps 12px of its own on the right, where every other cell
+   makes do with 7px — it is the column that runs into the card's edge */
+#scr-plan .sp2-two-l .sp2-ct-f{gap:3px;padding-right:12px;}
+#scr-plan .sp2-two-l .sp2-ct-pct{font-size:10px;}
 #scr-plan .sp2-two-l .sp2-ct-foot{padding:8px 9px;font-size:12px;flex-wrap:wrap;row-gap:7px;}
 #scr-plan .sp2-two-l .sp2-ct-btn{height:26px;padding:0 11px;font-size:12px;}
 #scr-plan .sp2-two-r .sp2-rig{margin-top:0;overflow:visible;min-width:0;max-width:100%;}
@@ -1886,9 +1974,13 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-ct-n{padding:0 12px;font-size:13px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
 #scr-plan .sp2-ct-p{gap:8px;padding:0 12px;font-size:13px;color:var(--fp-ink-1);overflow:hidden;
   white-space:nowrap;text-overflow:ellipsis;}
-#scr-plan .sp2-ct-f{gap:10px;padding:0 12px;font-size:13px;color:var(--fp-ink-3);
-  font-variant-numeric:tabular-nums;}
-#scr-plan .sp2-ct-bar{flex:1;height:5px;border-radius:9999px;background:var(--fp-card-1);overflow:hidden;}
+/* The monitor reads top-down: the bar across the whole column, the number
+   under it. Side by side, the bar was squeezed to a stub and the number sat
+   on the column's right edge with nothing to breathe into. */
+#scr-plan .sp2-ct-f{flex-direction:column;align-items:stretch;justify-content:center;gap:3px;
+  padding:0 12px;font-size:13px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-ct-pct{align-self:stretch;font-size:11px;line-height:1;color:var(--fp-ink-3);}
+#scr-plan .sp2-ct-bar{width:100%;height:6px;border-radius:9999px;background:var(--fp-card-1);overflow:hidden;}
 #scr-plan .sp2-ct-bar>i{display:block;height:100%;}
 #scr-plan .sp2-ct-foot{grid-column:1 / -1;display:flex;align-items:center;gap:10px;padding:9px 12px;
   border-top:1px solid var(--fp-stroke-hairline);font-size:13px;}
@@ -3228,6 +3320,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
               </button>
             </div>
             <button class="sp2-ico-tool" id="sp2AllBtn" onclick="sp2CardsAll()" title="Expand every order"></button>
+            <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('orders')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
           </div>
         </div>
 
@@ -3251,6 +3344,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
             <span class="sp2-count" id="sp2DrvCount">0</span>
           </span>
           <div class="sp2-tools-r">
+            <button class="sp2-ico-tool" id="sp2LaneAllBtn" onclick="sp2LanesAll()" title="Collapse every lane"></button>
             <button class="sp2-ico-tool sp2-pop-out" onclick="sp2PopOut('drivers')" title="Open this column in its own window"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
           </div>
         </div>
@@ -3285,6 +3379,17 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
     <div class="sp2-dlg-f">
       <button class="sp2-btn out" onclick="sp2DlgClose()">Cancel</button>
       <button class="sp2-btn pri" id="sp2DlgOk" onclick="sp2DlgSave()">Save view</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp2-dlg-scrim" id="sp2CfmScrim" onclick="sp2CfmClose()">
+  <div class="sp2-dlg" onclick="event.stopPropagation()">
+    <div class="sp2-dlg-t" id="sp2CfmT"></div>
+    <p class="sp2-dlg-p" id="sp2CfmP"></p>
+    <div class="sp2-dlg-f">
+      <button class="sp2-btn out" onclick="sp2CfmClose()">Cancel</button>
+      <button class="sp2-btn pri" id="sp2CfmOk" onclick="sp2CfmGo()"></button>
     </div>
   </div>
 </div>
@@ -5727,6 +5832,35 @@ var SP2_ORDERS = (function buildOrders() {
     d.load = lay(caps);
     d.tload = trl ? lay(tcaps) : [];
   });
+
+  // One rig is planned past its tanks on purpose. A day where nothing is ever
+  // over capacity never shows the red banner, the readings inside it, or the
+  // split — a dispatcher would have to drag orders on until it broke before
+  // seeing any of it. The order that grows is one whose product already sits
+  // in a part-filled compartment, so part of it would fit and it can be split.
+  (function overOne() {
+    for (var n = 0; n < road.length; n++) {
+      var k = road[n], d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
+      var best = null;
+      d.load.forEach(function (l, i) {
+        var room = t.comps[i].cap - l.q;
+        if (l.p && room > 0 && (!best || room > best.room)) best = { p:l.p, room:room };
+      });
+      if (!best) continue;
+      var mine = SP2_ORDERS.filter(function (o) {
+        return o.driver === k && o.prods.length === 1 && o.prods[0].p === best.p;
+      });
+      if (!mine.length) continue;
+      var cap = t.comps.reduce(function (a, c) { return a + c.cap; }, 0) +
+        (d.trailer ? SP2_TRAILERS[d.trailer].caps.reduce(function (a, c) { return a + c; }, 0) : 0);
+      var want = SP2_ORDERS.filter(function (o) { return o.driver === k; })
+        .reduce(function (a, o) { return a + sp2Gal(o); }, 0);
+      // past the tanks by more than the room left, so the split leaves a
+      // remainder worth being its own order
+      mine[mine.length - 1].prods[0].q += (cap - want) + 1500;
+      return;
+    }
+  })();
 })();
 
 // ── Orders sized to the fleet that is actually standing there ──
@@ -6029,6 +6163,139 @@ function sp2WouldFill(k, prods) {
   });
   return names;
 }
+// What of this order the rig could take as it stands: the same two passes the
+// packer runs — room for the same product in a part-filled compartment first,
+// then an empty one — against a copy, so nothing moves. This is the question
+// behind a split: fit what fits, and the rest is a second order.
+function sp2SplitPlan(k, o) {
+  var cells = sp2Cells(k).map(function (c) { return { cap:c.cap, p:c.l.p, q:c.l.q }; });
+  var take = [], req = 0, fits = 0;
+  o.prods.forEach(function (pr) {
+    var left = pr.q, got = 0;
+    req += pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.p === pr.p, empty = !c.p || c.q === 0;
+        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
+        var t = Math.min(c.cap - c.q, left);
+        if (!t) return;
+        if (pass === 2) c.p = pr.p;
+        c.q += t; left -= t; got += t;
+      });
+    });
+    take.push({ p:pr.p, q:got });
+    fits += got;
+  });
+  return { req:req, fits:fits, left:req - fits, take:take };
+}
+// D-5157076 splits into D-5157076 and D-5157076-2; split again and the next
+// one is -3. The number a customer was given stays on the part that ships.
+function sp2SplitId(id) {
+  // only a split suffix comes off \u2014 the order number itself ends in a long
+  // run of digits, and taking that for a suffix turns D-5157062 into D
+  var m = String(id).match(/^(.*-\d{4,})-(\d{1,2})$/);
+  var base = m ? m[1] : String(id);
+  for (var n = 2; n < 40; n++) {
+    var want = base + '-' + n;
+    if (!SP2_ORDERS.some(function (o) { return o.id === want; })) return want;
+  }
+  return base + '-x';
+}
+function sp2SplitAsk(e, k, id) {
+  e.stopPropagation();
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var d = SP2_DRIVERS[k];
+  if (!o || !d) return;
+  var plan = sp2SplitPlan(k, o);
+  if (!plan.fits)
+    return sp2Toast('Nothing of ' + id + ' fits on ' + d.truck + ' as it stands.\n' +
+      'Every compartment is holding another product, so there is nothing to split — ' +
+      'take an order off first.', 1);
+  if (!plan.left)
+    return sp2Toast(id + ' fits on ' + d.truck + ' whole — nothing to split.', 1);
+  var kid = sp2SplitId(o.id);
+  sp2Confirm('Split ' + id + '?',
+    plan.req.toLocaleString() + ' gal was ordered. ' + plan.fits.toLocaleString() +
+    ' gal fits on ' + d.truck + ' now and stays as ' + id + '. The other ' +
+    plan.left.toLocaleString() + ' gal becomes ' + kid +
+    ', unplanned, for another truck — same ship-to, same window.',
+    'Split order', function () { sp2SplitGo(k, id); });
+}
+function sp2SplitGo(k, id) {
+  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
+  var d = SP2_DRIVERS[k];
+  if (!o || !d) return;
+  var plan = sp2SplitPlan(k, o);
+  if (!plan.fits || !plan.left) return;
+  var kid = sp2SplitId(o.id);
+  var rest = [];
+  o.prods.forEach(function (pr, i) {
+    var got = plan.take[i] ? plan.take[i].q : 0;
+    if (pr.q - got > 0) rest.push({ p:pr.p, q:pr.q - got });
+    pr.q = got;
+  });
+  o.prods = o.prods.filter(function (pr) { return pr.q > 0; });
+  SP2_ORDERS.push({ id:kid, ship:o.ship, addr:o.addr, t:o.t, type:o.type, driver:'',
+    prods:rest, split:{ of:id, req:plan.req, here:plan.fits, left:plan.left, truck:d.truck } });
+  o.split = { to:kid, req:plan.req, here:plan.fits, left:plan.left, truck:d.truck };
+  sp2PackInto(k, plan.take, 'auto', -1);
+  sp2Render();
+  sp2Toast(id + ' split · ' + plan.req.toLocaleString() + ' gal ordered.\n' +
+    plan.fits.toLocaleString() + ' gal loaded onto ' + d.truck + ' as ' + id + ' · ' +
+    plan.left.toLocaleString() + ' gal left as ' + kid + ', back in the orders column.', 1);
+}
+
+// How well an order sits in a rig, on its own: pack it into the empty rig the
+// way the real packer would, then ask how much of the compartments it took up
+// it actually fills. 100% is an order that leaves no air in the tanks it uses;
+// 50% is an order that half-fills one. It is a property of the order and the
+// rig, not of what else happens to be loaded, so it does not change as the day
+// is built.
+function sp2OrderFit(k, o) {
+  var cells = sp2Cells(k).map(function (c) {
+    return { cap:c.cap, p:'', q:0, u:c.u, i:c.i };
+  });
+  var placed = 0;
+  sp2Lines(o).forEach(function (pr) {
+    var left = pr.q;
+    [1, 2].forEach(function (pass) {
+      cells.forEach(function (c) {
+        if (!left) return;
+        var same = c.p === pr.p, empty = !c.p || c.q === 0;
+        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
+        var take = Math.min(c.cap - c.q, left);
+        if (!take) return;
+        if (pass === 2) c.p = pr.p;
+        c.q += take; left -= take; placed += take;
+      });
+    });
+  });
+  var used = cells.filter(function (c) { return c.q > 0; });
+  var room = used.reduce(function (a, c) { return a + c.cap; }, 0);
+  return { pct: room ? Math.round(placed / room * 100) : 0,
+           placed:placed, room:room, comps:used.length };
+}
+// How good a fit is, as a reading rather than a number: a compartment left
+// half empty is a tank of air driven around the state, so under half is poor,
+// and 80% is where a load stops wasting room worth another order.
+function sp2FitBand(pct) {
+  return pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+}
+// The orders that fill this rig best: the top fit, and anything within four
+// points of it \u2014 so a lane of four orders usually marks one or two. It is
+// read against the other orders on the same rig, which is what "closest to
+// 100%" can mean when a 6,000 gal wagon and a 16,000 gal transport are both
+// on the screen; each chip still states its own number. Two points is a tie,
+// not a band \u2014 wider and most of the lane lights up, which marks nothing.
+function sp2BestFits(k, os) {
+  var fits = os.map(function (o) { return sp2OrderFit(k, o).pct; });
+  var top = Math.max.apply(null, fits.concat([0]));
+  if (os.length < 2 || !top) return {};
+  var out = {};
+  os.forEach(function (o, i) { if (top - fits[i] <= 2) out[o.id] = fits[i]; });
+  return out;
+}
 // "C1", "C1 and C3", "C1, C3 and C4", then a count \u2014 a list of five numbers
 // beside a button is not a read.
 function sp2CompList(ns) {
@@ -6058,7 +6325,12 @@ function sp2TakeSuggestion(e, k, id) {
   sp2Driver = k;
   sp2SelOrder = o.id;
   sp2Render();
-  sp2Toast(o.id + ' loaded onto ' + d.truck + ' \u00b7 ' + r.put.toLocaleString() + ' gal');
+  if (!r.put)
+    sp2Toast('Nothing could be loaded: ' + r.short.join(', ') + ' has nowhere to go in ' +
+             d.truck + ' (' + sp2RigCap(k).toLocaleString() + ' gal).\n' +
+             o.id + ' is on the rig with empty tanks.', 1);
+  else
+    sp2Toast(o.id + ' loaded onto ' + d.truck + ' \u00b7 ' + r.put.toLocaleString() + ' gal');
 }
 
 function sp2SuggestHtml(k) {
@@ -6456,6 +6728,16 @@ function sp2CardV3(o, style) {
           'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>') +
       '<span class="sp2-ord">' + o.id + '</span>' +
       '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+      (o.split
+        ? '<span class="sp2-pill sp2-pill-split" title="' +
+            (o.split.of
+              ? o.split.here.toLocaleString() + ' gal of ' + o.split.req.toLocaleString() +
+                ' went onto ' + o.split.truck + ' as ' + o.split.of + '. This is the ' +
+                o.split.left.toLocaleString() + ' gal left over.'
+              : o.split.here.toLocaleString() + ' gal of ' + o.split.req.toLocaleString() +
+                ' is on ' + o.split.truck + '. The other ' + o.split.left.toLocaleString() +
+                ' gal is ' + o.split.to + '.') + '">Split</span>'
+        : '') +
       '<span class="sp2-pill sp2-pill-r ' + (planned ? 'sp2-pill-planned' : 'sp2-pill-unplanned') + '">' +
         (planned ? 'Planned' : 'Unplanned') + '</span>' +
       '<button class="sp2-chev" title="Open this order" ' +
@@ -6548,6 +6830,25 @@ function sp2CardsAll() {
   sp2CardOpen = {};
   if (!any) sp2Visible().forEach(function (o) { sp2CardOpen[o.id] = true; });
   sp2RenderTimeline();
+}
+// The lanes answer to the same pair. A lane at rest is its driver and its rig
+// \u2014 the two head rows \u2014 and everything under them is what the press opens or
+// shuts: the shift, the route, the load and the stops. Lanes start open, so
+// the first press collapses.
+var sp2LaneShut = {};
+function sp2LanesAll() {
+  var any = Object.keys(sp2LaneShut).length > 0;
+  sp2LaneShut = {};
+  if (!any) sp2DriverKeys().forEach(function (k) { sp2LaneShut[k] = true; });
+  sp2RenderUnit();
+}
+function sp2LanesAllBtn() {
+  var b = document.getElementById('sp2LaneAllBtn');
+  if (!b) return;
+  var shut = Object.keys(sp2LaneShut).length > 0;
+  b.classList.toggle('on', shut);
+  b.title = shut ? 'Expand every lane' : 'Collapse every lane';
+  b.innerHTML = shut ? sp2IcoExpand() : sp2IcoCollapse();
 }
 function sp2CardsAllBtn() {
   var b = document.getElementById('sp2AllBtn');
@@ -8271,8 +8572,11 @@ function sp2CompTable(k) {
             'onclick="event.stopPropagation()" ' +
             'onchange="sp2SetComp(event,\'' + k + '\',\'' + c.u + '\',' + c.i + ')">' +
         '</span>' +
-        '<span class="sp2-lt-c sp2-ct-f"><span class="sp2-ct-bar"><i style="width:' + pct +
-          '%;background:' + (c.l.q ? col : 'transparent') + ';"></i></span>' + pct + '%</span>' +
+        '<span class="sp2-lt-c sp2-ct-f">' +
+          '<span class="sp2-ct-bar"><i style="width:' + pct +
+            '%;background:' + (c.l.q ? col : 'transparent') + ';"></i></span>' +
+          '<span class="sp2-ct-pct">' + pct + '%</span>' +
+        '</span>' +
       '</div>';
   }).join('');
 
@@ -8474,7 +8778,36 @@ function sp2DropTrailer(k) {
   sp2Render();
   sp2Toast(had + ' unhitched');
 }
+// Emptying a rig throws away a morning's loading, so it is asked for twice:
+// the button says what it will clear, the dialog says what survives it.
+var sp2CfmFn = null;
+function sp2Confirm(title, line, label, fn) {
+  document.getElementById('sp2CfmT').textContent = title;
+  document.getElementById('sp2CfmP').textContent = line;
+  document.getElementById('sp2CfmOk').textContent = label;
+  sp2CfmFn = fn;
+  document.getElementById('sp2CfmScrim').classList.add('on');
+}
+function sp2CfmClose() {
+  document.getElementById('sp2CfmScrim').classList.remove('on');
+  sp2CfmFn = null;
+}
+function sp2CfmGo() {
+  var fn = sp2CfmFn;
+  sp2CfmClose();
+  if (fn) fn();
+}
 function sp2Unload(k) {
+  var d = SP2_DRIVERS[k || sp2Driver];
+  var held = d.load.concat(d.tload).reduce(function (a, l) { return a + l.q; }, 0);
+  if (!held) return;                      // nothing in it to clear
+  sp2Confirm('Unload all of ' + d.truck + '?',
+    held.toLocaleString() + ' gal comes out of every compartment. The orders stay planned ' +
+      'on the rig, so the load can be built again.',
+    'Unload all',
+    function () { sp2UnloadGo(k); });
+}
+function sp2UnloadGo(k) {
   var d = SP2_DRIVERS[k || sp2Driver];
   d.load.forEach(function (l) { l.p = ''; l.q = 0; });
   d.tload.forEach(function (l) { l.p = ''; l.q = 0; });
@@ -8623,9 +8956,18 @@ function sp2Drop(e, unit, idx, k) {
   sp2Render();
 
   var what = loaded.length === 1 ? loaded[0] : loaded.length + ' orders';
-  if (shortOf.length)
-    sp2Toast(what + ' on ' + d.truck + ' — ' + shortOf.join(', ') + ' would not fit' +
-             (d.trailer ? '' : '; hitch a trailer'));
+  // Nothing went in. The order is on the rig — that is how a dispatcher plans
+  // past capacity and then finds a trailer — but the tanks did not move, and a
+  // line that opens "loaded onto" reads like it worked.
+  if (!gal)
+    sp2Toast('Nothing could be loaded: ' + shortOf.join(', ') + ' has nowhere to go in ' +
+             d.truck + ' (' + sp2RigCap(k).toLocaleString() + ' gal).\n' +
+             what + ' is on the rig with empty tanks — ' +
+             (d.trailer ? 'take an order off' : 'hitch a trailer or take an order off') + '.', 1);
+  else if (shortOf.length)
+    sp2Toast(what + ' on ' + d.truck + ' \u00b7 ' + gal.toLocaleString() + ' gal loaded.\n' +
+             shortOf.join(', ') + ' would not fit' +
+             (d.trailer ? '' : ' — hitch a trailer') + '.', 1);
   else
     sp2Toast(what + ' loaded onto ' + d.truck + ' \u00b7 ' + gal.toLocaleString() + ' gal');
 }
@@ -8649,50 +8991,24 @@ function sp2RigCap(k) {
   return cap;
 }
 
-// More gallons planned than the rig holds. Say by how much, and offer the two
-// ways out a dispatcher actually has: cut the biggest order back, or drop one
-// and take a smaller one that fills the space better.
+// More gallons planned than the rig holds: say by how much, and which orders
+// are past the line. The way out is to take one off, which every reading in
+// the banner does \u2014 one kind of chip, one act.
 function sp2Overload(k) {
   var cap = sp2RigCap(k);
   var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; });
   var want = mine.reduce(function (s, o) { return s + sp2Gal(o); }, 0);
   if (want <= cap) return null;
   var over = want - cap;
-  var bySize = mine.slice().sort(function (a, b) { return sp2Gal(b) - sp2Gal(a); });
-  var drop = mine.slice().sort(function (a, b) { return sp2Gal(a) - sp2Gal(b); })
-                 .filter(function (o) { return sp2Gal(o) >= over; })[0] || bySize[0];
-  var roomAfter = cap - (want - sp2Gal(drop));
-  var swapIn = SP2_ORDERS.filter(function (o) { return !o.driver && sp2Gal(o) <= roomAfter; })
-                 .sort(function (a, b) { return sp2Gal(b) - sp2Gal(a); })[0];
-  return { over:over, cap:cap, want:want, trim:bySize[0], drop:drop, swapIn:swapIn, roomAfter:roomAfter };
-}
-
-function sp2TrimOrder(e, k, id, by) {
-  e.stopPropagation();
-  var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
-  if (!o) return;
-  var total = sp2Gal(o), cut = [], run = 0;
-  o.prods.forEach(function (pr, n) {
-    // the last line absorbs the rounding, so the total cut is exactly `by`
-    var c = n === o.prods.length - 1 ? by - run : Math.min(pr.q, Math.round(by * pr.q / total));
-    c = Math.max(0, Math.min(pr.q, c));
-    run += c; cut.push({ p:pr.p, q:c }); pr.q -= c;
+  // The day fills the rig stop by stop, so the orders past capacity are the
+  // ones from the stop where the running total crosses it — those are what
+  // there is no room for, and what comes off.
+  var run = 0, past = [];
+  mine.slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (o) {
+    run += sp2Gal(o);
+    if (run > cap) past.push(o);
   });
-  sp2TakeOut(k, cut);
-  sp2Render();
-  sp2Toast(id + ' cut by ' + by.toLocaleString() + ' gal');
-}
-
-function sp2SwapOrder(e, k, dropId, addId) {
-  e.stopPropagation();
-  sp2UnplanOrder({ stopPropagation: function () {} }, k, dropId);
-  if (addId) {
-    var o = SP2_ORDERS.filter(function (x) { return x.id === addId; })[0];
-    sp2PackInto(k, o.prods, 'auto', -1);
-    o.driver = k;
-  }
-  sp2Render();
-  sp2Toast(addId ? dropId + ' out, ' + addId + ' in' : dropId + ' taken off');
+  return { over:over, cap:cap, want:want, past:past, first:past[0] };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -9060,8 +9376,19 @@ function sp2RouteHtml(k) {
   if (!rs.length) return '';
   var open = k === sp2Driver, cap = open ? rs.length : 5;   // a day is four or five stops
   var miss = rs.filter(function (r) { return r.kind === 'late'; }).length;
-  var rows = rs.slice(0, cap).map(function (r) {
-    return '<button class="sp2-rt-row ' + r.kind + (sp2SelOrder === r.o.id ? ' sel' : '') + '" ' +
+  // The run fills the rig stop by stop, so the day has a point where it stops
+  // fitting. The timeline marks it where it happens, between the last stop
+  // that fits and the first that does not.
+  var rigCap = sp2RigCap(k), run = 0, breach = -1;
+  rs.forEach(function (r, i) {
+    run += sp2Gal(r.o);
+    if (breach < 0 && run > rigCap) breach = i;
+  });
+  var capLine = '<div class="sp2-rt-cap">Tank capacity exceeded. Remove orders.</div>';
+  var rows = rs.slice(0, cap).map(function (r, i) {
+    return (i === breach ? capLine : '') +
+      '<div class="sp2-rt-row ' + r.kind + (sp2SelOrder === r.o.id ? ' sel' : '') + '" ' +
+        'role="button" tabindex="0" ' +
         'title="' + r.o.ship + ' \u00b7 window ' + sp2Short(r.w.from) + '\u2013' + sp2Short(r.w.to) +
           ' \u00b7 ' + sp2Gal(r.o).toLocaleString() + ' gal" ' +
         'onclick="event.stopPropagation();sp2PickOrder(\'' + r.o.id + '\')">' +
@@ -9069,14 +9396,22 @@ function sp2RouteHtml(k) {
         '<span class="sp2-rt-top">' +
           '<span class="sp2-rt-ship">' + r.o.ship + '</span>' +
           '<span class="sp2-rt-eta">' + sp2Hhmm(r.eta) + '</span>' +
+          '<button class="sp2-rt-x" title="Remove ' + r.o.id + ' from ' + SP2_DRIVERS[k].truck + '" ' +
+            'onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + r.o.id + '\')">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>' +
         '</span>' +
         '<span class="sp2-rt-note"><span class="sp2-rt-id">' + r.o.id + '</span> \u00b7 ' +
           '<span class="sp2-rt-v">' + r.note + '</span></span>' +
-      '</button>';
+      '</div>';
   }).join('');
   if (rs.length > cap)
     rows += '<button class="sp2-rt-more" onclick="sp2PickDriver(\'' + k + '\')">+' +
       (rs.length - cap) + ' more stop' + (rs.length - cap === 1 ? '' : 's') + '</button>';
+  // it breaks further down the run than this lane is showing — still said,
+  // where the stops it applies to are
+  if (breach >= cap) rows += capLine;
   // The stops answer "does this one make its window". The run as a whole has
   // its own question — does the driver get home inside the shift — and the
   // return leg is the part nobody sees until it is too late.
@@ -9093,7 +9428,37 @@ function sp2RouteHtml(k) {
     '</div>';
 }
 
+function sp2StopChips(k, mine, over) {
+  var past = {};
+  if (over) over.past.forEach(function (o) { past[o.id] = 1; });
+  var fitting = mine.filter(function (o) { return !past[o.id]; });
+  if (!fitting.length)
+    return '<span class="sp2-stop-none">' +
+      (mine.length ? 'Every order on this rig is over capacity'
+                   : 'No orders planned — drag one here') + '</span>';
+  var best = sp2BestFits(k, fitting);
+  var d = SP2_DRIVERS[k];
+  return fitting.map(function (o) {
+    var fit = sp2OrderFit(k, o).pct;
+    var band = sp2FitBand(fit);
+    return '<span class="sp2-stopw' + (sp2SelOrder === o.id ? ' sel' : '') +
+        (best[o.id] ? ' fit' : '') + '" data-id="' + o.id + '" ' +
+        'onclick="sp2PickOrder(\'' + o.id + '\')" ' +
+        'title="' + o.ship + ' · ' + sp2Gal(o).toLocaleString() + ' gal · fills ' + fit +
+          '% of the compartments it needs' + (best[o.id] ? ' — the best fit on this rig' : '') + '">' +
+        '<span class="sp2-stop" data-id="' + o.id + '">' +
+          '<span class="sp2-stop-t">' + sp2Hhmm(o.t) + '</span>' + o.id +
+          '<b>' + sp2Gal(o).toLocaleString() + ' gal</b>' +
+          '<button class="sp2-stop-x" title="Take this order off ' + d.truck + '" ' +
+            'onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + o.id + '\')">×</button>' +
+        '</span>' +
+        '<span class="sp2-stop-fit ' + band + '">' + fit + '% fit</span>' +
+      '</span>';
+  }).join('');
+}
+
 function sp2LaneHtml(k) {
+  var shut = !!sp2LaneShut[k];
   var d = SP2_DRIVERS[k], t = SP2_TRUCKS[d.truck];
   var caps = t.comps.map(function (c) { return c.cap; });
   var trl = d.trailer ? SP2_TRAILERS[d.trailer] : null;
@@ -9103,33 +9468,45 @@ function sp2LaneHtml(k) {
   var mine = SP2_ORDERS.filter(function (o) { return o.driver === k; })
                        .sort(function (x, y) { return x.t - y.t; });
   var gal = mine.reduce(function (s, o) { return s + sp2Gal(o); }, 0);
-  var stops = mine.length
-    ? mine.map(function (o) {
-        return '<span class="sp2-stop' + (sp2SelOrder === o.id ? ' sel' : '') +
-            '" onclick="sp2PickOrder(\'' + o.id + '\')" title="' + o.ship + '">' +
-            '<span class="sp2-stop-t">' + sp2Hhmm(o.t) + '</span>' + o.id +
-            '<b>' + sp2Gal(o).toLocaleString() + ' gal</b>' +
-            '<button class="sp2-stop-x" title="Take this order off ' + d.truck + '" ' +
-              'onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + o.id + '\')">×</button></span>';
-      }).join('')
-    : '<span class="sp2-stop-none">No orders planned — drag one here</span>';
 
   var over = sp2Overload(k);
   var warn = !over ? '' :
     '<div class="sp2-over-warn">' +
       '<div class="sp2-over-head">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-        over.want.toLocaleString() + ' gal planned onto ' + over.cap.toLocaleString() +
-        ' gal of rig — over by <b>' + over.over.toLocaleString() + ' gal</b>' +
+        '<span class="sp2-over-cap">Tank capacity: ' + over.cap.toLocaleString() +
+          ' gal</span>' +
+        '<span class="sp2-over-by">Exceeded by: <b>' + over.over.toLocaleString() +
+          ' gal</b></span>' +
       '</div>' +
-      '<div class="sp2-over-fixes">' +
-        '<button class="sp2-fix" onclick="sp2TrimOrder(event,\'' + k + '\',\'' + over.trim.id + '\',' + over.over + ')">' +
-          'Cut ' + over.trim.id + ' by ' + over.over.toLocaleString() + ' gal</button>' +
-        '<button class="sp2-fix" onclick="sp2SwapOrder(event,\'' + k + '\',\'' + over.drop.id + '\',' +
-            (over.swapIn ? '\'' + over.swapIn.id + '\'' : 'null') + ')">' +
-          'Drop ' + over.drop.id + ' (' + sp2Gal(over.drop).toLocaleString() + ' gal)' +
-          (over.swapIn ? ' and take ' + over.swapIn.id + ' (' + sp2Gal(over.swapIn).toLocaleString() + ' gal)' : '') +
-        '</button>' +
+      // What there is no room for, order by order. Cutting an order by gallons
+      // was a promise to a customer quietly rewritten; an order comes off whole.
+      '<div class="sp2-over-list">' +
+        over.past.map(function (o) {
+          return '<div class="sp2-over-row">' +
+              '<span class="sp2-over-id">' + o.id + '</span>' +
+              '<span class="sp2-over-q">' + sp2Gal(o).toLocaleString() + ' gal</span>' +
+              // Splitting is only on offer when this rig could actually take
+              // part of it: with every compartment holding another product
+              // there is nothing to split off.
+              (sp2SplitPlan(k, o).fits
+                ? '<button class="sp2-over-act sp2-over-s" ' +
+                    'onclick="sp2SplitAsk(event,\'' + k + '\',\'' + o.id + '\')">' +
+                    // one line forking into two \u2014 the shuffle glyph that was here
+                    // reads as "swap these", which is not what this does
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                      '<path d="M2 12h7"/><path d="M9 12l5-5h5"/><path d="M9 12l5 5h5"/>' +
+                      '<path d="m17 4 3 3-3 3"/><path d="m17 14 3 3-3 3"/></svg>' +
+                    '<span class="sp2-over-x-l">Split order</span></button>'
+                : '') +
+              '<button class="sp2-over-act sp2-over-x" onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + o.id + '\')">' +
+                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                  '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>' +
+                '<span class="sp2-over-x-l">Remove order</span></button>' +
+            '</div>';
+        }).join('') +
       '</div>' +
     '</div>';
 
@@ -9164,8 +9541,7 @@ function sp2LaneHtml(k) {
           '<polyline points="9 18 15 12 9 6"/></svg></button>' +
       '</div>' +
 
-      sp2ShiftBlock(k) +
-      sp2RouteHtml(k) +
+      (shut ? '' : sp2ShiftBlock(k) + sp2RouteHtml(k)) +
     '</div>' +
 
     '<div class="sp2-ln-day">' +
@@ -9191,31 +9567,35 @@ function sp2LaneHtml(k) {
           ? (trl
               ? '<button class="sp2-link" onclick="event.stopPropagation();sp2DropTrailer(\'' + k + '\')">Unhitch</button>'
               : '<button class="sp2-trl-btn sm" onclick="event.stopPropagation();sp2TrailerPop(this,\'' + k + '\')">+ Trailer</button>') +
-            '<button class="sp2-link" onclick="event.stopPropagation();sp2Unload(\'' + k + '\')">Unload</button>'
+            (q ? '<button class="sp2-link" onclick="event.stopPropagation();sp2Unload(\'' + k +
+                   '\')">Unload all</button>' : '')
           : '') +
       '</div>' +
 
       // A shut lane with nothing planned on it says so, and nothing else:
       // five empty boxes and a "0 orders" are a row of furniture.
-      (k !== sp2Driver && !mine.length
+      (!shut && k !== sp2Driver && !mine.length
         ? '<div class="sp2-ln-none">Load planning not started.</div>'
         : '') +
 
       // The open lane's middle is one band: the compartments as a table on the
       // left, the truck drawn beside it on the right. The drawing drops its
       // numbers because the table carries them. Head and foot are unchanged.
-      (k === sp2Driver
+      (shut ? ''
+        : k === sp2Driver
         ? '<div class="sp2-two">' +
             '<div class="sp2-two-l">' + sp2CompTable(k) + '</div>' +
             '<div class="sp2-two-r">' + sp2RigBareArt(k, 300) + '</div>' +
           '</div>' + sp2SuggestHtml(k)
         : mine.length ? sp2SimpleBars(k) : '') +
 
-      warn +
-      // the count has moved up into the head, so the stops are just the stops
-      (k === sp2Driver || mine.length
+      (shut ? '' : warn) +
+      // The orders on the rig, as chips. What is over capacity is in the red
+      // banner above, so these are the ones that fit — each saying how well it
+      // fills the compartments it needs, and the best of them marked.
+      (!shut && (k === sp2Driver || mine.length)
         ? '<div class="sp2-ln-stops">' +
-            '<div class="sp2-stop-list">' + stops + '</div>' +
+            '<div class="sp2-stop-list">' + sp2StopChips(k, mine, over) + '</div>' +
           '</div>'
         : '') +
     '</div>' +
@@ -9246,6 +9626,7 @@ function sp2RenderUnit() {
     document.getElementById('sp2FpN').textContent = n;
   }
   sp2CardsAllBtn();
+  sp2LanesAllBtn();
   var w = document.getElementById('sp2SrchWrap');
   if (w) w.classList.toggle('has', !!document.getElementById('sp2DrvSearch').value);
   sp2FpDraw();
@@ -9292,12 +9673,13 @@ function sp2ShiftDay(n) {
 }
 function sp2Today() { sp2Cursor = new Date(2026, 10, 19); document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor); sp2Render(); }
 
-function sp2Toast(msg) {
+function sp2Toast(msg, warn) {
   var t = document.getElementById('sp2Toast');
   t.textContent = msg;
+  t.classList.toggle('warn', !!warn);
   t.style.display = 'block';
   clearTimeout(t._h);
-  t._h = setTimeout(function(){ t.style.display = 'none'; }, 2600);
+  t._h = setTimeout(function(){ t.style.display = 'none'; }, warn ? 5200 : 2600);
 }
 
 (function () {

@@ -9,6 +9,8 @@
     catch (e) { out.steps.push('FAIL ' + name + ': ' + e.message); }
   };
   const fire = (el, ev) => el.dispatchEvent(new Event(ev, { bubbles: true }));
+  // V2 asks before it empties a rig; V1 does not. Tests want the act itself.
+  const unloadRig = k => (window.sp2UnloadGo || window.sp2Unload)(k);
 
   if (out.page.startsWith('create-order')) {
     step('pick customer', () => {
@@ -346,7 +348,7 @@
       box.value = ''; sp2RenderUnit();
     });
     step('dragging an order loads the truck', () => {
-      sp2SetQuick('all'); sp2PickDriver('d20'); sp2Unload();
+      sp2SetQuick('all'); sp2PickDriver('d20'); unloadRig();
       const un = SP2_ORDERS.filter(o => !o.driver)[0];
       if (!un) throw new Error('no unplanned order to drag');
       const card = [...document.querySelectorAll('.sp2-card')]
@@ -367,10 +369,10 @@
       if (load.some(l => !l.p)) throw new Error('a compartment holds gallons but no product');
       if (document.getElementById('sp2Body').classList.contains('dragging'))
         throw new Error('drag state left hanging');
-      sp2Unload(); un.driver = '';
+      unloadRig(); un.driver = '';
     });
     step('one product per compartment, blends aside', () => {
-      sp2PickDriver('d20'); sp2Unload();
+      sp2PickDriver('d20'); unloadRig();
       const o = SP2_ORDERS.filter(x => !x.driver)[0];
       const keep = JSON.parse(JSON.stringify(o.prods));
       o.prods = [{ p:'UNL87', q:600 }, { p:'CLR DSL', q:600 }];
@@ -378,7 +380,7 @@
       sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1);
       const used = SP2_DRIVERS.d20.load.filter(l => l.q > 0).map(l => l.p);
       if (new Set(used).size !== used.length) throw new Error('two products share a compartment');
-      o.prods = keep; o.driver = ''; sp2Unload();
+      o.prods = keep; o.driver = ''; unloadRig();
     });
     step('every driver maps to a truck', () => {
       Object.keys(SP2_DRIVERS).forEach(k => {
@@ -579,16 +581,17 @@
       if (parseFloat(getComputedStyle(all).borderTopWidth) < 1)
         throw new Error('expand-all has no outline');
 
-      // the orders column keeps only how it DRAWS itself: the timeline switch
-      // and the expand-all. Sort orders a list, so it went up with Filters.
+      // the orders column keeps only how it DRAWS itself: the timeline switch,
+      // the expand-all and the way out to its own window. Sort orders a list,
+      // so it went up with Filters.
       const o = document.querySelector('.sp2-col-orders .sp2-col-hdr');
       if (o.querySelector('#sp2SortBtn')) throw new Error('sort is still on the orders column');
       if (!head.querySelector('#sp2SortBtn')) throw new Error('sort is not in the head');
       const kept = [...o.querySelectorAll('.sp2-tools-r button')]
-        .map(b => b.id || b.getAttribute('data-v'));
-      if (kept.join() !== 'h,v,sp2AllBtn')
+        .map(b => b.id || b.getAttribute('data-v') || (/sp2PopOut/.test(b.getAttribute('onclick') || '') ? 'pop' : '?'));
+      if (kept.join() !== 'h,v,sp2AllBtn,pop')
         throw new Error('the orders column carries ' + kept.join(' ') +
-                        ', not the switch then expand-all');
+                        ', not the switch, expand-all and pop-out');
       // and the band over the lanes is gone: the column already names itself
       if (document.querySelector('.sp2-ln-hdr'))
         throw new Error('the lanes still carry a header band');
@@ -751,7 +754,7 @@
       const lanes = [...document.querySelectorAll('.sp2-ln')];
       const target = lanes.find(l => l.dataset.k !== sp2Driver);
       const k = target.dataset.k;
-      sp2Unload(k);
+      unloadRig(k);
       const un = SP2_ORDERS.filter(o => !o.driver)[0];
       if (!un) throw new Error('no unplanned order to drag');
       const card = [...document.querySelectorAll('.sp2-card')]
@@ -766,7 +769,7 @@
       fire(lane, 'drop');
       if (un.driver !== k) throw new Error('order went to ' + un.driver + ', not the lane it was dropped on');
       if (!SP2_DRIVERS[k].load.some(l => l.q > 0)) throw new Error('nothing went into that truck');
-      sp2Unload(k); un.driver = ''; sp2RenderUnit();
+      unloadRig(k); un.driver = ''; sp2RenderUnit();
     });
     step('a lane hitches its own trailer', () => {
       const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k).find(x => !SP2_DRIVERS[x].trailer);
@@ -925,13 +928,13 @@
       });
       // a full tank can take nothing
       const k = 'd0';
-      sp2Unload(k);
+      unloadRig(k);
       SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.forEach((c, i) => {
         SP2_DRIVERS[k].load[i].p = 'UNL87'; SP2_DRIVERS[k].load[i].q = c.cap;
       });
       const o = SP2_ORDERS.filter(x => !x.driver)[0];
       if (sp2FitFor(k, o).fits !== 0) throw new Error('a full rig still claims room');
-      sp2Unload(k);
+      unloadRig(k);
     });
     step('the fit follows the rig it is measured against', () => {
       sp2SetQuick('unplanned');
@@ -1275,7 +1278,7 @@
       const fresh = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
       if (sp2RigFill(k).pct >= 100 && fresh.indexOf(k) >= 0)
         throw new Error('a full rig is still offered as available after a fresh ask');
-      sp2Unload(k);
+      unloadRig(k);
       SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
       sp2SetDrvFilter('available');
     });
@@ -1308,7 +1311,7 @@
       const at = moved.indexOf(k);
       if (at > 0 && sp2RigFill(moved[at - 1]).pct > sp2RigFill(k).pct + 0.01)
         throw new Error('it landed above a rig with more room');
-      sp2Unload(k);
+      unloadRig(k);
       SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
       sp2SetDrvFilter('all');
     });
@@ -1359,7 +1362,7 @@
       if (!k) throw new Error('no transport to plan onto');
       const keep = JSON.parse(JSON.stringify(SP2_DRIVERS[k].load));
       const kept = SP2_ORDERS.filter(o => o.driver === k).map(o => o.id);
-      sp2Unload(k);
+      unloadRig(k);
       sp2PickDriver(k);
 
       // the strip belongs to the lane you are working in, and sits under the rig
@@ -1490,6 +1493,7 @@
       const planned = Object.keys(SP2_DRIVERS)
         .filter(k => SP2_ORDERS.some(o => o.driver === k));
       if (planned.length < 8) throw new Error('only ' + planned.length + ' rigs have a day planned');
+      const overfilled = [];
       planned.forEach(k => {
         const d = SP2_DRIVERS[k];
         const mine = SP2_ORDERS.filter(o => o.driver === k);
@@ -1503,12 +1507,18 @@
             throw new Error(d.name + ' out of ' + d.hub + ' is sent to ' + o.ship);
         });
 
-        // and the run has to fit the rig it is on
+        // and the run has to fit the rig it is on \u2014 bar the one rig the day
+        // deliberately plans past its tanks, so the banner and the split are
+        // on screen without a dispatcher having to break something first
         const gal = mine.reduce((a, o) => a + sp2Gal(o), 0);
-        if (gal > sp2RigCap(k))
-          throw new Error(d.name + ' is given ' + gal + ' gal onto ' + sp2RigCap(k));
-        if (sp2Overload(k)) throw new Error(d.name + ' starts the day overloaded');
+        if (gal > sp2RigCap(k)) overfilled.push(k);
       });
+      // exactly one, on purpose \u2014 two would be a packing bug, none would hide
+      // the banner, its readings and the split
+      if (overfilled.length !== 1)
+        throw new Error(overfilled.length + ' rigs are planned past their tanks, not one');
+      if (!sp2Overload(overfilled[0]))
+        throw new Error('the overfilled rig does not read as overloaded');
 
       // the day carries all three readings, or the timeline proves nothing
       const kinds = {};
@@ -1616,6 +1626,418 @@
       });
       sp2SetView('v');
       sp2SetQuick('unplanned');
+    });
+
+    if (V2) step('both columns carry the same two tools', () => {
+      // whatever one column can do to itself, the other can too
+      const ords = document.querySelector('.sp2-col-orders .sp2-tools-r');
+      const drvs = document.querySelector('.sp2-col-unit .sp2-tools-r');
+      if (!ords || !drvs) throw new Error('a column has no tools');
+      [['orders', ords], ['drivers', drvs]].forEach(([which, box]) => {
+        const pop = box.querySelector('[onclick*="sp2PopOut"]');
+        if (!pop) throw new Error(which + ' cannot be opened in its own window');
+        if (pop.getAttribute('onclick').indexOf(which) < 0)
+          throw new Error(which + '\u2019s pop-out opens the wrong column');
+      });
+
+      // and the lanes collapse the way the cards do, by the same icon
+      const lb = document.getElementById('sp2LaneAllBtn');
+      if (!lb) throw new Error('the driver column has no expand-all');
+      if (!/Collapse/.test(lb.title)) throw new Error('lanes start open, so it should offer to collapse');
+      if (lb.querySelectorAll('circle').length !== 1)
+        throw new Error('collapse-all is not the one-line icon');
+      const lanes = () => [...document.querySelectorAll('.sp2-ln')];
+      if (!lanes().length) throw new Error('no lanes to collapse');
+      const tall = lanes()[0].getBoundingClientRect().height;
+      lb.click();
+      if (document.querySelector('.sp2-ln .sp2-rt,.sp2-ln .sp2-ln-stops'))
+        throw new Error('a collapsed lane still shows its day');
+      if (!lanes().every(l => l.querySelector('.sp2-ln-truck')))
+        throw new Error('a collapsed lane dropped its rig');
+      if (lanes()[0].getBoundingClientRect().height >= tall)
+        throw new Error('collapsing the lanes saved no height');
+      if (!/Expand/.test(lb.title)) throw new Error('shut, it does not offer to expand');
+      if (lb.querySelectorAll('circle').length !== 3)
+        throw new Error('expand-all is not the three-line icon');
+      lb.click();
+      if (lanes()[0].getBoundingClientRect().height !== tall)
+        throw new Error('expanding did not put the lanes back');
+    });
+
+    if (V2) step('the day shows a rig planned past its tanks', () => {
+      // the banner, its readings and the split are all behind one state; a day
+      // that never reaches it hides the lot
+      const over = [...document.querySelectorAll('.sp2-ln')]
+        .map(l => l.dataset.k).filter(k => !!sp2Overload(k));
+      if (!over.length) throw new Error('no rig in the day is over capacity');
+      const lane = document.querySelector('.sp2-ln[data-k="' + over[0] + '"]');
+      if (!lane.querySelector('.sp2-over-warn')) throw new Error('the lane does not draw the banner');
+      if (!lane.querySelector('.sp2-over-row')) throw new Error('the banner lists nothing');
+      if (!lane.querySelector('.sp2-over-s'))
+        throw new Error('nothing in the day can be split, so the split cannot be seen');
+    });
+
+    if (V2) step('an order too big for the room left can be split', () => {
+      // fill a rig past its capacity, then split the one order the rig could
+      // take part of: what fits stays, the rest becomes its own order
+      sp2SetDrvFilter('available');
+      const k = [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
+      sp2PickDriver(k);
+      const cap = sp2RigCap(k);
+      let run = SP2_ORDERS.filter(o => o.driver === k).reduce((a, o) => a + sp2Gal(o), 0);
+      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+        if (run > cap * 1.3) return;
+        o.driver = k; run += sp2Gal(o); sp2PackInto(k, o.prods, 'auto', -1);
+      });
+      sp2RenderUnit();
+      const lane = () => document.querySelector('.sp2-ln[data-k="' + k + '"]');
+      const btn = lane().querySelector('.sp2-over-s');
+      if (!btn) throw new Error('no order on this rig can be split');
+      const row = btn.closest('.sp2-over-row');
+      const id = row.querySelector('.sp2-over-id').textContent.trim();
+      const o = SP2_ORDERS.filter(x => x.id === id)[0];
+
+      // the split is offered only where there is room for part of it
+      [...lane().querySelectorAll('.sp2-over-row')].forEach(r => {
+        const rid = r.querySelector('.sp2-over-id').textContent.trim();
+        const ro = SP2_ORDERS.filter(x => x.id === rid)[0];
+        const can = sp2SplitPlan(k, ro).fits > 0;
+        if (can !== !!r.querySelector('.sp2-over-s'))
+          throw new Error(rid + (can ? ' can be split and is not offered it'
+                                     : ' cannot be split and is offered it'));
+      });
+      // one line forking into two: three strokes out of a single point, not
+      // the two crossing strokes of a shuffle
+      const paths = [...btn.querySelectorAll('path')].map(p2 => p2.getAttribute('d'));
+      if (paths.length < 3) throw new Error('the split icon is drawn with ' + paths.length + ' strokes');
+      if (!paths.filter(d2 => /^M9 12/.test(d2)).length)
+        throw new Error('the split icon does not fork from one stem');
+
+      // the label waits for the cursor, like the remove beside it
+      const lbl = btn.querySelector('.sp2-over-x-l');
+      if (!lbl || !/Split order/.test(lbl.textContent))
+        throw new Error('the split does not name itself');
+      if (lbl.getBoundingClientRect().width > 2)
+        throw new Error('the split label is open before it is hovered');
+
+      const plan = sp2SplitPlan(k, o);
+      const req = sp2Gal(o);
+      if (!plan.fits || !plan.left) throw new Error('this order does not need splitting');
+
+      // it says what it will do before it does it
+      btn.click();
+      const dlg = document.getElementById('sp2CfmScrim');
+      if (!dlg.classList.contains('on')) throw new Error('splitting does not ask first');
+      const said = document.getElementById('sp2CfmP').textContent;
+      [req, plan.fits, plan.left].forEach(n => {
+        if (said.indexOf(n.toLocaleString()) < 0)
+          throw new Error('the dialog does not state ' + n.toLocaleString() + ' gal: ' + said);
+      });
+      if (sp2Gal(o) !== req) throw new Error('it split before the answer');
+
+      document.getElementById('sp2CfmOk').click();
+      // the number the customer was given stays on the part that ships
+      const kid = SP2_ORDERS.filter(x => x.split && x.split.of === id)[0];
+      if (!kid) throw new Error('the remainder did not become an order');
+      if (kid.id !== id + '-2') throw new Error('the remainder is called ' + kid.id);
+      if (kid.driver) throw new Error('the remainder went onto a truck by itself');
+      if (sp2Gal(kid) !== plan.left)
+        throw new Error('the remainder is ' + sp2Gal(kid) + ' gal, not ' + plan.left);
+      if (sp2Gal(o) !== plan.fits)
+        throw new Error('what stayed is ' + sp2Gal(o) + ' gal, not ' + plan.fits);
+      if (sp2Gal(o) + sp2Gal(kid) !== req)
+        throw new Error('the two halves do not add up to what was ordered');
+
+      // and both say so afterwards, in the toast and on the cards
+      const toast = document.getElementById('sp2Toast').textContent;
+      [req, plan.fits, plan.left].forEach(n => {
+        if (toast.indexOf(n.toLocaleString()) < 0)
+          throw new Error('the toast does not state ' + n.toLocaleString() + ' gal: ' + toast);
+      });
+      if (toast.indexOf(kid.id) < 0) throw new Error('the toast does not name the new order');
+      sp2SetQuick('all');
+      const kidCard = document.querySelector('.sp2-card[data-id="' + kid.id + '"]');
+      if (!kidCard) throw new Error('the remainder is not in the orders column');
+      const pill = kidCard.querySelector('.sp2-pill-split');
+      if (!pill) throw new Error('the remainder does not read as a split');
+      [req, plan.fits, plan.left].forEach(n => {
+        if (pill.title.indexOf(n.toLocaleString()) < 0)
+          throw new Error('the pill does not account for ' + n.toLocaleString() + ' gal');
+      });
+      // put the day back
+      SP2_ORDERS.filter(x => x.driver === k).forEach(x => { x.driver = ''; });
+      unloadRig(k);
+      sp2SetQuick('unplanned');
+      sp2RenderUnit();
+    });
+
+    if (V2) step('an order that cannot be loaded says so', () => {
+      // 9,000 gal onto a 2,800 gal wagon: the order goes on the rig, because
+      // that is how a day is planned past capacity, but nothing is loaded \u2014 and
+      // that has to read as a refusal, not as a receipt.
+      sp2SetDrvFilter('available');
+      // a rig with every compartment already spoken for: a new product has
+      // nowhere to go, however much room is left inside those compartments
+      const small = [...document.querySelectorAll('.sp2-ln')]
+        .map(l => l.dataset.k)
+        .filter(k => sp2Cells(k).length && sp2Cells(k).every(c => c.l.p))
+        .sort((a, b) => sp2RigCap(a) - sp2RigCap(b))[0];
+      if (!small) throw new Error('no rig has all its compartments loaded');
+      const taken = {};
+      sp2Cells(small).forEach(c => { taken[c.l.p] = 1; });
+      const big = SP2_ORDERS.filter(o => !o.driver && sp2Lines(o).every(l => !taken[l.p]))
+        .sort((a, b) => sp2Gal(b) - sp2Gal(a))[0];
+      if (!big || sp2Gal(big) <= sp2RigCap(small))
+        throw new Error('no order big enough to swamp ' + small);
+      const cells = () => sp2Cells(small).map(c => c.l.q).join(',');
+      const was = cells();
+      const t = document.getElementById('sp2Toast');
+      t.textContent = ''; t.className = '';
+      sp2Drag = [big.id];
+      sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => big.id } },
+              'auto', -1, small);
+      if (cells() !== was) throw new Error('it loaded fuel there was no room for');
+      const said = t.textContent;
+      if (!said) throw new Error('nothing was said at all');
+      if (/loaded onto/.test(said)) throw new Error('a refusal reads as a receipt: ' + said);
+      if (!/Nothing could be loaded/.test(said)) throw new Error('it does not say nothing went in: ' + said);
+      if (!/empty tanks/.test(said)) throw new Error('it does not say the order is on the rig regardless');
+      if (!t.classList.contains('warn')) throw new Error('a refusal looks like any other toast');
+      if (said.indexOf(sp2RigCap(small).toLocaleString()) < 0)
+        throw new Error('it does not say what the rig holds');
+      // and the lane says it too, where the chips would be
+      const lane = document.querySelector('.sp2-ln[data-k="' + small + '"]');
+      if (!lane.querySelector('.sp2-over-warn'))
+        throw new Error('the lane does not flag the order it cannot carry');
+      if (!lane.querySelector('.sp2-over-row[data-id],.sp2-over-row'))
+        throw new Error('the banner does not list it');
+      sp2UnplanOrder({ stopPropagation(){} }, small, big.id);
+      t.textContent = ''; t.className = ''; t.style.display = 'none';
+      sp2RenderUnit();
+    });
+
+    if (V2) step('the chips say how well each order fits, and which fit best', () => {
+      sp2SetDrvFilter('available');
+      const lane = [...document.querySelectorAll('.sp2-ln')]
+        .find(l => SP2_ORDERS.filter(o => o.driver === l.dataset.k).length >= 3);
+      if (!lane) throw new Error('no lane carries three orders');
+      const k = lane.dataset.k;
+      const mine = SP2_ORDERS.filter(o => o.driver === k);
+      const chips = [...lane.querySelectorAll('.sp2-stopw')];
+      if (chips.length !== mine.length)
+        throw new Error('the lane shows ' + chips.length + ' chips for ' + mine.length + ' orders');
+
+      // every chip states its own fit, and it is the fit the model computes
+      chips.forEach(c => {
+        const id = c.dataset.id;
+        const o = SP2_ORDERS.filter(x => x.id === id)[0];
+        const said = c.querySelector('.sp2-stop-fit');
+        if (!said) throw new Error(id + ' does not say how well it fits');
+        if (said.textContent.trim() !== sp2OrderFit(k, o).pct + '% fit')
+          throw new Error(id + ' says ' + said.textContent.trim() + ', the rig says ' +
+                          sp2OrderFit(k, o).pct + '%');
+      });
+
+      // and the marked ones are the ones that fill it best
+      const best = sp2BestFits(k, mine);
+      const lit = chips.filter(c => c.classList.contains('fit'));
+      if (!lit.length) throw new Error('nothing is marked as the best fit');
+      if (lit.length !== Object.keys(best).length)
+        throw new Error(lit.length + ' chips lit for ' + Object.keys(best).length + ' best fits');
+      const top = Math.max(...mine.map(o => sp2OrderFit(k, o).pct));
+      lit.forEach(c => {
+        const id = c.dataset.id;
+        if (!best[id]) throw new Error(id + ' is lit and is not a best fit');
+        if (top - sp2OrderFit(k, SP2_ORDERS.filter(x => x.id === id)[0]).pct > 2)
+          throw new Error(id + ' is lit and is not within two points of the best');
+      });
+      // the highlight is the violet one, as every highlight is \u2014 and it has to
+      // actually resolve: an undeclared token takes the whole color-mix with it
+      // the violet marks the ORDER \u2014 the fit chip is busy saying how good the
+      // fit is \u2014 and it has to actually resolve: an undeclared token takes the
+      // whole color-mix with it
+      const other = chips.find(c => !c.classList.contains('fit'));
+      const pillOf = w => w.querySelector('.sp2-stop');
+      const cs = getComputedStyle(pillOf(lit[0]));
+      if (/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor))
+        throw new Error('the best-fit tint did not resolve');
+      if (cs.boxShadow === 'none') throw new Error('the best-fit order chip has no rim');
+      if (other && cs.backgroundColor === getComputedStyle(pillOf(other)).backgroundColor)
+        throw new Error('a best fit looks like every other chip');
+      if (other && cs.boxShadow === getComputedStyle(pillOf(other)).boxShadow)
+        throw new Error('the best fit carries no rim the others lack');
+
+      // and it is coloured by the verdict, not by nothing
+      const bands = { low:0, mid:0, high:0 };
+      chips.forEach(c => {
+        const o = SP2_ORDERS.filter(x => x.id === c.dataset.id)[0];
+        const pct = sp2OrderFit(k, o).pct;
+        const want = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+        const t = c.querySelector('.sp2-stop-fit');
+        if (!t.classList.contains(want))
+          throw new Error(c.dataset.id + ' at ' + pct + '% is not read as ' + want);
+        bands[want]++;
+      });
+      // the three readings are three colours, and none of them is the chip grey
+      const seen = {};
+      ['low', 'mid', 'high'].forEach(b => {
+        const t = document.querySelector('.sp2-stop-fit.' + b);
+        if (!t) return;
+        const c = getComputedStyle(t).color, bg = getComputedStyle(t).backgroundColor;
+        Object.keys(seen).forEach(other => {
+          if (seen[other].c === c) throw new Error(b + ' and ' + other + ' read in the same ink');
+          if (seen[other].bg === bg) throw new Error(b + ' and ' + other + ' are the same fill');
+        });
+        seen[b] = { c, bg };
+      });
+      if (Object.keys(seen).length < 2)
+        throw new Error('the day never shows two different fits');
+
+      // the fit is its own chip, docked to the order's: 1px of air at the top
+      // and bottom of the join, and a left edge cut to the pill's own end
+      chips.forEach(c => {
+        const pill = c.querySelector('.sp2-stop'), t = c.querySelector('.sp2-stop-fit');
+        if (!pill.contains(t) === false) throw new Error('the fit is still inside the order chip');
+        const a = pill.getBoundingClientRect(), b = t.getBoundingClientRect();
+        if (Math.abs(a.height - b.height) > 1) throw new Error('the two chips are different heights');
+        if (Math.abs((a.right - b.left) - 7) > 1.5)
+          throw new Error('the fit chip overlaps the pill by ' + (a.right - b.left).toFixed(1) +
+                          'px, not the 7px the cutout needs');
+        const m = getComputedStyle(t).maskImage || getComputedStyle(t).webkitMaskImage;
+        if (!m || m === 'none' || m.indexOf('radial-gradient') < 0)
+          throw new Error('the fit chip has no cutout on its left edge');
+        const rad = getComputedStyle(t).borderRadius;
+        if (/^0px 0px 0px 0px/.test(rad) || rad.indexOf('0px') !== 0)
+          throw new Error('the fit chip is rounded on the wrong side: ' + rad);
+      });
+
+      // what is over capacity is in the banner, and only there
+      const cap = sp2RigCap(k);
+      let run = 0;
+      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+        if (run > cap * 1.2) return;
+        o.driver = k; run += sp2Gal(o) + cap;
+      });
+      sp2RenderUnit();
+      const l2 = document.querySelector('.sp2-ln[data-k="' + k + '"]');
+      const over = sp2Overload(k);
+      if (!over) throw new Error('the rig did not go over capacity');
+      const ids = [...l2.querySelectorAll('.sp2-stopw')].map(c => c.dataset.id);
+      over.past.forEach(o => {
+        if (ids.indexOf(o.id) >= 0) throw new Error(o.id + ' is over capacity and still chipped outside the banner');
+        if (!l2.querySelector('.sp2-over-warn').textContent.match(o.id))
+          throw new Error(o.id + ' is over capacity and not in the banner');
+      });
+      // and the fit stays outside it
+      if (l2.querySelector('.sp2-over-warn .sp2-stop-fit'))
+        throw new Error('the banner reads out a fit');
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      unloadRig(k);
+      mine.forEach(o => { o.driver = k; });
+      sp2RenderUnit();
+    });
+
+    if (V2) step('the route reads point to point, and a stop can be dropped there', () => {
+      sp2SetDrvFilter('available');
+      const k = SP2_ORDERS.filter(o => o.driver)[0].driver;
+      sp2PickDriver(k);
+      const rows = [...document.querySelectorAll('.sp2-ln[data-k="' + k + '"] .sp2-rt-row')];
+      if (!rows.length) throw new Error('no stops on the route');
+
+      // no box around a stop \u2014 the dot and the thread are the whole of it
+      rows.forEach(r => {
+        const cs = getComputedStyle(r);
+        if (cs.backgroundColor !== 'rgba(0, 0, 0, 0)' && cs.backgroundColor !== 'transparent')
+          throw new Error('a stop is still filled: ' + cs.backgroundColor);
+        if (cs.boxShadow !== 'none') throw new Error('a stop is still ringed');
+        if (parseFloat(cs.borderRadius) > 0) throw new Error('a stop still reads as a box');
+        if (!r.querySelector('.sp2-rt-dot')) throw new Error('a stop has no point');
+      });
+      // selection moved onto the point itself
+      sp2PickOrder(rows[0].querySelector('.sp2-rt-id').textContent.trim());
+      const sel = document.querySelector('.sp2-ln[data-k="' + k + '"] .sp2-rt-row.sel');
+      if (!sel) throw new Error('picking a stop does not mark it');
+      if (getComputedStyle(sel).boxShadow !== 'none') throw new Error('the picked stop is boxed again');
+      const dot = getComputedStyle(sel.querySelector('.sp2-rt-dot')).backgroundColor;
+      const plain = getComputedStyle(document.querySelector('.sp2-ln[data-k="' + k +
+        '"] .sp2-rt-row:not(.sel) .sp2-rt-dot')).backgroundColor;
+      if (dot === plain) throw new Error('the picked stop looks like every other');
+
+      // the remove waits on the row and is reached from the stop
+      const row = [...document.querySelectorAll('.sp2-ln[data-k="' + k + '"] .sp2-rt-row')][0];
+      const x = row.querySelector('.sp2-rt-x');
+      if (!x) throw new Error('a stop cannot be taken off from the route');
+      if (parseFloat(getComputedStyle(x).opacity) > 0.01)
+        throw new Error('the remove is showing before the row is hovered');
+      if (row.tagName === 'BUTTON') throw new Error('a button cannot hold the remove button');
+      const id = row.querySelector('.sp2-rt-id').textContent.trim();
+      x.click();
+      if (SP2_ORDERS.filter(o => o.id === id)[0].driver === k)
+        throw new Error('removing from the route left the order on the rig');
+    });
+
+    if (V2) step('a rig is only emptied on purpose', () => {
+      sp2SetDrvFilter('available');
+      const k = [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
+      sp2PickDriver(k);
+      unloadRig(k);
+      sp2RenderUnit();
+      const btn = () => [...document.querySelectorAll('.sp2-ln.on .sp2-link')]
+        .find(b => /Unload/.test(b.textContent));
+      if (btn()) throw new Error('an empty rig still offers to be unloaded');
+
+      // put something in it and the button comes back, named for what it does
+      const d = SP2_DRIVERS[k];
+      d.load[0].p = 'UNL87';
+      d.load[0].q = Math.min(500, SP2_TRUCKS[d.truck].comps[0].cap);
+      sp2RenderUnit();
+      const b = btn();
+      if (!b) throw new Error('a loaded rig does not offer to be unloaded');
+      if (b.textContent.trim() !== 'Unload all')
+        throw new Error('the button reads "' + b.textContent.trim() + '"');
+
+      // it asks before it throws the morning away
+      b.click();
+      const dlg = document.getElementById('sp2CfmScrim');
+      if (!dlg.classList.contains('on')) throw new Error('it emptied the rig without asking');
+      if (d.load[0].q === 0) throw new Error('it emptied the rig before the answer');
+      if (!/Unload all/.test(document.getElementById('sp2CfmOk').textContent))
+        throw new Error('the confirm does not name the act');
+      if (!/stay planned/.test(document.getElementById('sp2CfmP').textContent))
+        throw new Error('the confirm does not say what survives it');
+      sp2CfmClose();
+      if (d.load[0].q === 0) throw new Error('cancelling emptied it anyway');
+      b.click();
+      document.getElementById('sp2CfmOk').click();
+      if (sp2Cells(k).some(c => c.l.q)) throw new Error('confirming did not empty it');
+      if (dlg.classList.contains('on')) throw new Error('the dialog stayed up');
+    });
+
+    if (V2) step('the tank monitor reads top-down, with room of its own', () => {
+      const k = sp2Driver || [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
+      sp2PickDriver(k);
+      const d = SP2_DRIVERS[k];
+      d.load[0].p = 'UNL87';
+      d.load[0].q = Math.round(SP2_TRUCKS[d.truck].comps[0].cap * 0.48);
+      sp2RenderUnit();
+      const cell = document.querySelector('.sp2-ln.on .sp2-ct .sp2-ct-f');
+      if (!cell) throw new Error('no tank monitor cell');
+      const bar = cell.querySelector('.sp2-ct-bar'), pct = cell.querySelector('.sp2-ct-pct');
+      if (!bar || !pct) throw new Error('the monitor is missing its bar or its reading');
+      const br = bar.getBoundingClientRect(), pr = pct.getBoundingClientRect();
+      if (br.bottom > pr.top + 1) throw new Error('the bar is not above the reading');
+      if (Math.abs(br.left - pr.left) > 2) throw new Error('the bar and the reading are not aligned');
+      // the bar now runs the column rather than fighting the number for it
+      const cr = cell.getBoundingClientRect();
+      if (br.width < cr.width * 0.6)
+        throw new Error('the bar is ' + Math.round(br.width) + 'px in a ' + Math.round(cr.width) + 'px column');
+      if (cr.right - br.right < 10)
+        throw new Error('the monitor has only ' + Math.round(cr.right - br.right) + 'px on its right');
+      if (parseFloat(getComputedStyle(pct).fontSize) >= parseFloat(getComputedStyle(cell.parentElement.querySelector('.sp2-ct-p')).fontSize))
+        throw new Error('the reading is not the smaller text');
+      // and it did not take that room from the gallons
+      const gal = document.querySelector('.sp2-ln.on .sp2-ct input.sp2-cell');
+      if (gal.scrollWidth > gal.clientWidth + 2) throw new Error('the gallons no longer fit');
     });
 
     if (V2) step('a planned order answers with its own rig, and only its own', () => {
@@ -2512,7 +2934,7 @@
       const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
       const k = lane.dataset.k;
       SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
-      sp2Unload(k);
+      unloadRig(k);
       const cap = sp2RigCap(k);
       let piled = 0;
       SP2_ORDERS.filter(o => !o.driver).forEach(o => {
@@ -2525,18 +2947,105 @@
       const card = [...document.querySelectorAll('.sp2-ln')].find(l => l.dataset.k === k);
       const warn = card.querySelector('.sp2-over-warn');
       if (!warn) throw new Error('no warning on the lane');
-      if (!/over by/.test(warn.textContent)) throw new Error('it does not say by how much');
-      const fixes = warn.querySelectorAll('.sp2-fix');
-      if (fixes.length < 2) throw new Error('only ' + fixes.length + ' way out offered');
-      // and the first one actually clears it
-      const before = sp2Overload(k).over;
-      sp2TrimOrder({ stopPropagation(){} }, k, over.trim.id, over.over);
-      if (sp2Overload(k)) throw new Error('cutting ' + before + ' gal did not clear the overload');
+      if (!V2) {
+        if (!/over by/.test(warn.textContent)) throw new Error('it does not say by how much');
+      } else {
+        // two readings, and only those: what the tanks hold, and the surplus
+        const head = warn.querySelector('.sp2-over-head');
+        const cap = head.querySelector('.sp2-over-cap'), by = head.querySelector('.sp2-over-by');
+        if (!cap || !by) throw new Error('the banner does not split the two readings');
+        const want = 'Tank capacity: ' + sp2RigCap(k).toLocaleString() + ' gal';
+        if (cap.textContent.trim() !== want)
+          throw new Error('the banner reads "' + cap.textContent.trim() + '", not "' + want + '"');
+        const wantBy = 'Exceeded by: ' + over.over.toLocaleString() + ' gal';
+        if (by.textContent.trim() !== wantBy)
+          throw new Error('the banner reads "' + by.textContent.trim() + '", not "' + wantBy + '"');
+        // the fact is in ink, the surplus is in red, side by side
+        if (getComputedStyle(cap).color === getComputedStyle(by).color)
+          throw new Error('both readings are the same colour');
+        const cb = cap.getBoundingClientRect(), bb = by.getBoundingClientRect();
+        if (Math.abs(cb.top - bb.top) > 2) throw new Error('the two readings are not on one line');
+        if (bb.left - cb.right < 10)
+          throw new Error('only ' + Math.round(bb.left - cb.right) + 'px between the two readings');
+      }
+      if (!V2) {
+        const fixes = warn.querySelectorAll('.sp2-fix');
+        if (fixes.length < 2) throw new Error('only ' + fixes.length + ' way out offered');
+        const before = sp2Overload(k).over;
+        sp2TrimOrder({ stopPropagation(){} }, k, over.trim.id, over.over);
+        if (sp2Overload(k)) throw new Error('cutting ' + before + ' gal did not clear the overload');
+        return;
+      }
+      // one kind of chip in the banner: a reading you can remove, nothing else
+      if (warn.querySelector('.sp2-fix,button:not(.sp2-over-act)'))
+        throw new Error('the banner carries a second kind of control');
+      if (typeof window.sp2SwapOrder === 'function')
+        throw new Error('the swap is still reachable');
+
+      // the orders past capacity are listed whole \u2014 id, gallons, and a remove
+      const rows = [...warn.querySelectorAll('.sp2-over-row')];
+      if (!rows.length) throw new Error('nothing says which orders are over');
+      if (rows.length !== over.past.length)
+        throw new Error('it lists ' + rows.length + ' of ' + over.past.length + ' orders past capacity');
+      rows.forEach((r, i) => {
+        const id = r.querySelector('.sp2-over-id').textContent.trim();
+        if (id !== over.past[i].id) throw new Error('row ' + i + ' names ' + id);
+        if (r.querySelector('.sp2-over-q').textContent.trim() !== sp2Gal(over.past[i]).toLocaleString() + ' gal')
+          throw new Error(id + ' does not say what it adds');
+        if (!r.querySelector('.sp2-over-x')) throw new Error(id + ' has no remove');
+      });
+      // they stand side by side rather than stacking down the card
+      if (rows.length > 1) {
+        const a = rows[0].getBoundingClientRect(), b2 = rows[1].getBoundingClientRect();
+        if (Math.abs(a.top - b2.top) > 2)
+          throw new Error('the orders past capacity still stack one per line');
+        if (a.width > warn.getBoundingClientRect().width * 0.6)
+          throw new Error('each reading is still as wide as the card');
+      }
+      // the gallons are never quietly rewritten \u2014 nothing cuts an order down
+      if (/\bCut\b/.test(warn.textContent)) throw new Error('it still offers to cut an order');
+      if (typeof window.sp2TrimOrder === 'function') throw new Error('the cut is still reachable');
+      // the remove is an icon that names itself when reached for
+      const x = rows[0].querySelector('.sp2-over-x');   // the remove, never the split
+      const lbl = x.querySelector('.sp2-over-x-l');
+      if (!lbl || !/Remove order/.test(lbl.textContent))
+        throw new Error('the remove does not say what it does');
+      if (lbl.getBoundingClientRect().width > 2)
+        throw new Error('the label is open before it is hovered');
+
+      // the timeline says where the day stops fitting
+      const line = card.querySelector('.sp2-rt-cap');
+      if (!line) throw new Error('the route does not mark the capacity breach');
+      if (!/Tank capacity exceeded\. Remove orders\./.test(line.textContent))
+        throw new Error('the capacity line does not read as asked: ' + line.textContent);
+      const red = getComputedStyle(line).color;
+      if (red === getComputedStyle(card.querySelector('.sp2-rt-hd')).color)
+        throw new Error('the capacity line is not called out in red');
+      // it sits where it breaks: every stop above it fits, the one below does not
+      const shown = [...card.querySelectorAll('.sp2-rt-row,.sp2-rt-cap')];
+      const at = shown.indexOf(line);
+      if (at >= 0) {
+        const rigCap = sp2RigCap(k), route = sp2Route(k);
+        let run = 0;
+        for (let i = 0; i < at; i++) run += sp2Gal(route[i].o);
+        if (run > rigCap) throw new Error('the line sits past the stop that breaks it');
+        if (at < shown.length - 1 && run + sp2Gal(route[at].o) <= rigCap)
+          throw new Error('the line sits before the stop that breaks it');
+      }
+
+      // taking one off is what the row does
+      const firstId = over.past[0].id;
+      const wasOver = over.over;
+      x.click();
+      if (SP2_ORDERS.filter(o => o.id === firstId)[0].driver === k)
+        throw new Error('the remove left the order on the rig');
+      const after = sp2Overload(k);
+      if (after && after.over >= wasOver) throw new Error('removing it did not help');
     });
     step(V2 ? 'the load is a table you balance' : 'fuel moves in the quantity you choose', () => {
       sp2PickDriver('d0');
       const d = SP2_DRIVERS.d0;
-      sp2Unload('d0');
+      unloadRig('d0');
       d.load[1].p = 'HO DSL'; d.load[1].q = Math.min(800, SP2_TRUCKS[d.truck].comps[1].cap);
       sp2RenderUnit();
 
@@ -2684,7 +3193,7 @@
           if (planned) {
             if (!l.querySelector('.sp2-ln-cap')) throw new Error('a loaded lane does not say how full it is');
             if (!l.querySelector('.sp2-ln-orders')) throw new Error('a loaded lane does not say how many orders');
-            if (!l.querySelector('.sp2-ln-stops')) throw new Error('a loaded lane has no stops');
+            if (!l.querySelector('.sp2-stopw,.sp2-stop-none')) throw new Error('a loaded lane has no order chips');
           } else if (!l.classList.contains('on')) {
             if (l.querySelector('.sp2-ln-cap')) throw new Error('an empty lane still reads out 0%');
             if (l.querySelector('.sp2-ln-orders')) throw new Error('an empty lane still counts orders');
@@ -2710,8 +3219,27 @@
   // to an opaque colour first — ignoring alpha reports nearly everything as a
   // failure and buries the handful that are real.
   function contrastSweep() {
-    const px = c => { const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-      return m ? { r:+m[1], g:+m[2], b:+m[3], a: m[4] === undefined ? 1 : +m[4] } : null; };
+    // color-mix() computes to oklab(), and a colour this cannot read is a
+    // layer the sweep silently skips \u2014 which is how a tinted chip gets
+    // measured against the white page instead of its own fill.
+    const okl = (L, A, B) => {
+      const l = (L + 0.3963377774*A + 0.2158037573*B) ** 3;
+      const m = (L - 0.1055613458*A - 0.0638541728*B) ** 3;
+      const s2 = (L - 0.0894841775*A - 1.2914855480*B) ** 3;
+      return [+4.0767416621*l - 3.3077115913*m + 0.2309699292*s2,
+              -1.2684380046*l + 2.6097574011*m - 0.3413193965*s2,
+              -0.0041960863*l - 0.7034186147*m + 1.7076147010*s2]
+        .map(v => { const c = v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(Math.max(v, 0), 1/2.4) - 0.055;
+                    return Math.min(255, Math.max(0, c*255)); });
+    };
+    const px = c => {
+      const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      if (m) return { r:+m[1], g:+m[2], b:+m[3], a: m[4] === undefined ? 1 : +m[4] };
+      const o = c.match(/oklab\(([\d.-]+) ([\d.-]+) ([\d.-]+)(?: \/ ([\d.]+))?\)/);
+      if (o) { const v = okl(+o[1], +o[2], +o[3]);
+               return { r:v[0], g:v[1], b:v[2], a: o[4] === undefined ? 1 : +o[4] }; }
+      return null;
+    };
     const over = (f, b) => ({ r: f.r*f.a + b.r*(1-f.a), g: f.g*f.a + b.g*(1-f.a), b: f.b*f.a + b.b*(1-f.a), a: 1 });
     const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
       return 0.2126*f(c.r) + 0.7152*f(c.g) + 0.0722*f(c.b); };

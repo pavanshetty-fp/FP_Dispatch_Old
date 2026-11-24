@@ -1532,3 +1532,279 @@ curve in the middle of a card would be a corner with nothing behind it.
 ### Cost
 
 64 steps green at 1512×950. The suite now reads the radii in both states.
+
+## Round 35 — the two columns match, and nothing is emptied by accident
+
+**Both tools, both columns.** Orders had the expand-all and no way out to its
+own window; Driver & truck had the window and no expand-all. Each now carries
+both. A lane at rest is its driver and its rig — the two head rows — and the
+press shuts or opens everything under them: the shift, the route, the load,
+the stops. Lanes start open, so the first press collapses; 27 rigs read as a
+list at 68px a row instead of 150.
+
+**Unload.** It was there on a rig with nothing in it, offering to empty an
+empty truck. It only exists once something is loaded, it says **Unload all**,
+and it asks: the dialog names the gallons coming out and says the orders stay
+planned, so the load can be built again.
+
+**The tank monitor** read left to right in a 46px column, which left the bar a
+stub and the number against the card's edge. It reads top-down now: the bar
+across the whole column, the percentage under it in smaller text. The column
+took 22px from the product name and keeps 12px of its own on the right, where
+every other cell makes do with 7px.
+
+**Over capacity.** The card offered to *cut an order by 1,600 gal* — a promise
+to a customer quietly rewritten in the planner. It lists them instead: every
+order past the line, its number, the gallons it adds, and a remove on the
+right that names itself when reached for. An order comes off whole. The cut
+is gone from the code, not just the screen.
+
+**The route says where it breaks.** The run fills the rig stop by stop, so
+there is a stop where it stops fitting. A red line sits there — between the
+last stop that fits and the first that does not — reading "Tank capacity
+exceeded. Remove orders." When the breach is further down than a shut lane
+shows, the line goes under the "+N more".
+
+### Cost
+
+67 steps green at 1512×950, archived V1 52, merged bundle 93. The suite reads
+the line's position against the running total, so it cannot drift off the stop
+that causes it, and it fails if the cut ever comes back.
+
+## Round 36 — point to point
+
+**The route lost its boxes.** Every stop was a rounded panel that filled on
+hover and gained a ring when picked — a list of cards drawn over a line that
+was already doing the work. The dot and the thread between them carry the run
+now. Hovering underlines where it is going; the stop that is picked fills its
+own point rather than drawing a box around itself.
+
+**A stop can be dropped from the stop.** Each row carries a remove that waits
+at zero opacity until the row is hovered — it holds its 20px either way, so
+nothing shifts when it appears. The row became a `div` with `role="button"`,
+because a button cannot hold a button.
+
+**The order pills at the foot of the day card are gone.** They listed the same
+stops as the route, with the same remove, two cards apart. What is left is the
+one thing they said that the route cannot: "No orders planned — drag one
+here", on a selected lane with nothing on it, which is the only cue for where
+to drop an order.
+
+**The over-capacity readings stand side by side.** Each is a short line — a
+number and its gallons — and a column of them was a column of white space.
+They wrap, and the one being reached for grows in place as "Remove order"
+slides out.
+
+### Cost
+
+68 steps green at 1512×950, archived V1 52, merged bundle 94. The new step
+reads the computed fill, shadow and radius of every stop, so the boxes cannot
+come back quietly, and checks the remove is hidden until the row is hovered.
+
+## Round 37 — the chips are back, and they say how well they fit
+
+The order chips are back at the foot of the day card, and the card now splits
+the orders in two: **what fits is a chip outside the banner, what is over
+capacity is a reading inside it.** Both are pills, so they read as one family
+at two temperatures. The fit is stated only outside — inside the banner the
+question is not how well an order fits but that it does not.
+
+**Fit** is the order against the rig, on its own: pack it into the empty
+compartments the way the real packer would, then ask how much of the
+compartments it took up it actually fills. 100% is an order that leaves no air
+in the tanks it uses; 48% is one that half-fills a compartment. It is a
+property of the order and the rig, not of what else is loaded, so it does not
+move as the day is built.
+
+**Best fit** is the top fit on that rig and anything within two points of it —
+a tie, not a band. Read against the other orders on the same rig, because a
+6,000 gal wagon and a 16,000 gal transport are both on screen and absolute
+thresholds would mark one and never the other. A lane of four usually lights
+one or two. The chip is tinted violet with a violet rim, the way every
+highlight in the system is, and states its own number either way.
+
+Two things the suite would not have caught:
+
+- `--accent-violet` **is not declared in this screen.** The first tint silently
+  resolved to nothing and took the whole `color-mix` with it — the chip had no
+  fill and no rim and still passed a test comparing it to its neighbours. The
+  token carries its own fallback now, as the view-rail dot already did, and the
+  step fails if the tint does not resolve.
+- **The contrast sweep could not read `oklab()`**, which is what `color-mix()`
+  computes to. A tinted chip was a layer it skipped, so violet was measured
+  against the white page rather than its own fill. It parses oklab now. The
+  reading on the chip was 3.7:1 at `#7c5cff`; it is taken down the same hue to
+  5.6:1.
+
+### Cost
+
+69 steps green at 1512×950, archived V1 52, merged bundle 95. Nothing clipped.
+
+## Round 38 — one chip in the banner, and a refusal that reads like one
+
+**Two kinds of chip in the red banner.** The removable order readings, and a
+`Drop D-5157062 (2,050 gal) and take D-5157066 (550 gal)` button that looked
+like a third reading and did something else entirely. The banner is one kind of
+chip now: a reading you can take off. The swap went with it — `sp2SwapOrder`
+is gone from the code, and `sp2Overload` no longer works out a drop candidate
+or a replacement, because nothing asks it to.
+
+**"I added D-5157076, 9,000 gal, and nothing happened."** It did happen, and
+the planner all but hid it. D-5157076 is 9,000 gal of Diesel DEF; BT-4 is a
+2,800 gal wagon whose three compartments all held other products. The packer
+needs an *empty* compartment for a new product — room inside an occupied one is
+only usable by the same product — so **nothing was loaded**: the compartment
+table did not move, which is the thing a dispatcher is looking at. The order
+was still planned on the rig, which is deliberate (that is how a day is planned
+past capacity and a trailer found afterwards), so it also left the orders
+column. The only sign was a toast that read
+
+> D-5157076 on BT-4 — Diesel DEF 9,000 gal would not fit; hitch a trailer
+
+opening with the order and the truck like a receipt, on the success styling,
+gone in 2.6 seconds.
+
+Now a refusal is built as a refusal: the failed colour on its edge, two lines,
+and 5.2 seconds.
+
+> Nothing could be loaded: Diesel DEF 9,000 gal has nowhere to go in BT-4
+> (2,800 gal).
+> D-5157076 is on the rig with empty tanks — hitch a trailer or take an order
+> off.
+
+The partial case says what went in before what did not. The Add button in the
+suggestion row took the same path and could say "loaded onto BT-4 · 0 gal"; it
+now says the same thing as the drop.
+
+### Cost
+
+70 steps green at 1512×950, archived V1 52, merged bundle 96. The new step
+drops the biggest unplanned order onto the smallest rig whose compartments are
+all spoken for, and fails if the tanks move, if nothing is said, if the line
+reads "loaded onto", or if it is not styled as a warning.
+
+## Round 39 — split order
+
+**The banner says two numbers.** It was narrating the arithmetic — "11,050 gal
+planned onto 2,800 gal of rig — over by 8,250 gal". It now says what the tanks
+hold and what is over:
+
+> Tank capacity 10,500 gal · exceeded by 10,550 gal
+
+**An order can be split across two trucks.** Where this rig could take *part*
+of an order — an empty compartment, or room beside the same product in a
+part-filled one — the chip carries a second icon that opens to **Split order**,
+beside the remove. Offered only where there is something to split off: with
+every compartment holding another product there is no room for any of it, and
+the icon is not drawn.
+
+Splitting asks first, with the three numbers:
+
+> **Split D-5157062?**
+> 2,050 gal was ordered. 1,950 gal fits on LT-46 now and stays as D-5157062.
+> The other 100 gal becomes D-5157062-2, unplanned, for another truck — same
+> ship-to, same window.
+
+On confirm the fitting part is loaded and keeps the number the customer was
+given; the remainder becomes a new order in the column, same ship-to and
+window, carrying a **Split** pill whose hover accounts for all three figures.
+The part that stayed carries one too. Split again and the next is `-3`.
+
+The same two passes the packer runs decide what fits, on a copy of the
+compartments, so the dialog cannot promise what the load would not do.
+
+One thing this turned up: the first `sp2SplitId` stripped `-(\d+)$` from the
+order number, which is the order number — `D-5157062` became `D`, and the
+remainder was offered as `D-2`. A split suffix is one or two digits after a run
+of four or more; nothing else comes off.
+
+### Cost
+
+71 steps green at 1512×950, archived V1 52, merged bundle 97. The step checks
+the halves add up to what was ordered, that the dialog states all three figures
+before anything moves, and that the icon appears exactly where a split is
+possible.
+
+## Round 40 — two readings, two colours, and a day that shows the split
+
+**The banner's head is two readings now.** What the tanks hold is a fact and is
+written in the ink every other fact uses; what is over them is the warning, and
+only that is red. A 14px gap between them, the warning mark still red.
+
+> ⚠ Tank capacity: 2,800 gal      Exceeded by: 1,500 gal
+
+**"I don't see the split logic."** It was there, with nowhere to appear. The
+split lives on the chips inside the red banner — the orders the rig cannot take
+— and **no rig in the day was over capacity**, so there was no banner on any of
+the twenty lanes, and nothing to split. A dispatcher would have had to drag
+orders onto a truck until it broke before seeing any of it.
+
+So the day now plans one rig past its tanks on purpose. The order that grows is
+one whose product already sits in a part-filled compartment, so part of it
+would fit and it can genuinely be split. BT-4 opens the planner at
+`Tank capacity: 2,800 gal · Exceeded by: 1,500 gal`, with two readings in the
+banner, both carrying the split.
+
+This is the same rule as the no-empty-pickers one: a state the prototype
+supports but never reaches is a state nobody can review. The suite now fails if
+the day has none — or more than one, which would be a packing bug rather than a
+seeded demo.
+
+### Cost
+
+72 steps green at 1512×950, archived V1 52, merged bundle 98. The capacity step
+now counts rigs planned past their tanks and insists on exactly one; the new
+step checks that rig draws the banner, lists its orders, and offers a split.
+
+## Round 41 — the fit gets its own chip
+
+The fit was a grey reading inside the order chip. It is its own chip now,
+docked to the order's right end, and it carries the best-fit highlight instead
+of the order pill carrying it — the highlight is about the fit, so it belongs
+on the fit.
+
+**The shape.** Its left edge is the order chip's rounded end cut back out of
+it, and its right end is an ordinary rounded chip. A 13px disc centred 5px to
+the left of the fit chip's box does the cutting: that is the pill's own 12px
+arc plus the 1px of air between them, so the gap reads as **1px the whole way
+round** instead of closing to a wedge at the top and bottom. A naive notch —
+13px centred on the chip's own left edge — would have left 1px at the corners
+and 14px at mid-height.
+
+For the cut to be possible the chip's box overlaps the pill by 7px, which is
+how far the pill's arc reaches back from its rightmost point at the chip's top
+and bottom edge; the mask takes those 7px off again. A mask clips a box-shadow,
+so the fit chip is tinted rather than rimmed — the rim stays on the order pill.
+
+Violet on that 22% tint reads 5.0:1.
+
+### Cost
+
+72 steps green at 1512×950, archived V1 52, merged bundle 99. The step measures
+the 7px overlap, checks the mask is a radial gradient and that the chip is
+rounded on its right only, so neither the shape nor the gap can quietly change.
+
+## Round 42 — the fit chip carries its verdict
+
+**Three bands, in the status colours every other verdict uses.** Under 50% is
+red, 50–79% amber, 80% and over green. A compartment left half empty is a tank
+of air driven around the state; 80% is where a load stops wasting room worth
+another order. The inks are taken down the hue far enough to clear 4.5:1 on
+their own tint — 5.1 low, 6.4 mid, 5.4 high.
+
+**The violet moved to the order pill.** Two things were competing for the fit
+chip: how good the fit is, and whether it is the best on this rig. The chip now
+says the first; the pill's violet tint and rim say the second.
+
+**The split was there; the icon was wrong.** It has been on every banner chip
+since round 39 — on Arpita Shah / BT-4, the one rig the day plans past its
+tanks — but it was drawn with the **shuffle** glyph: two crossing strokes with
+arrowheads, which reads "swap these two". It is a fork now: one stem that
+splits into two arrows. Nothing else about it changed; the dialog, the
+remainder order, the numbers and the `-2` suffix are as round 39 left them.
+
+### Cost
+
+72 steps green at 1512×950, archived V1 52, merged bundle 100. The step checks
+every chip's band against the computed fit, that no two bands share an ink or a
+fill, and that the split icon forks from one stem rather than crossing.
