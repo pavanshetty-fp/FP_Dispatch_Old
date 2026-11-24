@@ -984,13 +984,18 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-fit.part b{color:var(--status-caution);}
 .sp2-fit.none{color:var(--status-neutral);}
 /* ranked by fit, the reading is a pill beside the order number */
+/* a flex box drops the whitespace between its children, so "100%" and
+   "utilization" need the gap putting back */
 .sp2-card-top .sp2-fit{margin-left:0;height:18px;padding:0 7px;border-radius:9999px;
-  display:inline-flex;align-items:center;background:var(--chip);}
+  display:inline-flex;align-items:center;gap:3px;background:var(--chip);}
 .sp2-card-top .sp2-fit.perfect{background:color-mix(in oklab,var(--status-success) 14%,var(--fp-surface-1b));}
 .sp2-card-top .sp2-fit.full{background:color-mix(in oklab,var(--status-success) 10%,var(--fp-surface-1b));}
 .sp2-card-top .sp2-fit.part{background:color-mix(in oklab,var(--status-caution) 16%,var(--fp-surface-1b));
   color:color-mix(in oklab,var(--status-caution) 72%,#0b0d12);}
 .sp2-card-top .sp2-fit.part b{color:inherit;}
+.sp2-card-top .sp2-fit.low{background:color-mix(in oklab,var(--status-failed) 12%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-failed) 86%,#0b0d12);}
+.sp2-card-top .sp2-fit.low b{color:inherit;}
 .sp2-card-top .sp2-fit.none{background:color-mix(in oklab,var(--status-failed) 12%,var(--fp-surface-1b));
   color:color-mix(in oklab,var(--status-failed) 86%,#0b0d12);}
 .sp2-card-top .sp2-fit.none b{color:inherit;}
@@ -1405,7 +1410,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
             <button class="sp2-fltrow on" data-o="time" onclick="sp2SetSort('time')"
               title="In the order the day runs them"><span class="sp2-tick">✓</span>Time</button>
             <button class="sp2-fltrow" data-o="fit" onclick="sp2SetSort('fit')"
-              title="Best fit for the chosen rig first"><span class="sp2-tick">✓</span>Fit
+              title="What each order would leave the chosen rig utilized at, fullest first">
+              <span class="sp2-tick">✓</span>Utilization
               <span class="sp2-fltrow-n" id="sp2SortFitVs"></span></button>
             <button class="sp2-fltrow" data-o="driver" onclick="sp2SetSort('driver')"
               title="Every driver’s orders together"><span class="sp2-tick">✓</span>Driver</button>
@@ -2142,15 +2148,13 @@ function sp2ShiftBand(k) { return (SP2_SHIFTS[k] && SP2_SHIFTS[k].name === 'Earl
 // Worth-doing-first, against the chosen rig: an order that fills the truck
 // outright, then ones that go on whole (fuller rig first), then part loads by
 // how much of them lands.
-// The pill is the sort. Whatever number the card shows, the list runs down
-// from the highest of them \u2014 anything else reads as no order at all. Among
-// orders that fit equally (and there are many at 100%), the one that leaves
-// the rig fullest comes first, so "which of these fills the truck" is still
-// answered inside each band.
+// The pill is the sort: the list runs down from the highest utilization, so
+// the order at the top is the one that leaves the truck fullest. Within a
+// percent, the one that puts more gallons on comes first.
 function sp2FitScore(o) {
   var f = sp2FitFor(sp2Driver, o);
   if (!f) return -1;
-  return f.pct * 1e6 + f.rigPct * 1000 + Math.min(999, Math.round(f.fits / 100));
+  return f.rigPct * 1e6 + Math.min(999999, f.fits);
 }
 
 // Orders the run does not reach inside the window the customer was given.
@@ -2796,14 +2800,18 @@ function sp2FitChip(o) {
   if (!f) return '';
   var d = SP2_DRIVERS[sp2Driver];
   var why = 'Against ' + d.name + ' · ' + d.truck + ' — ' + f.fits.toLocaleString() +
-            ' of ' + f.total.toLocaleString() + ' gal would load, leaving the rig ' + f.rigPct + '% full';
-  // The pill is one reading and nothing else: how much of this order the rig
-  // can take as it stands.
-  var cls = f.pct >= 100 && f.rigPct >= 100 ? 'perfect'
-          : f.pct >= 100 ? 'full'
-          : f.pct > 0 ? 'part' : 'none';
+            ' of ' + f.total.toLocaleString() + ' gal would load, taking the truck to ' +
+            f.rigPct + '% of its ' + f.cap.toLocaleString() + ' gal';
+  // How much of the truck is used once this order is on it \u2014 not how much of
+  // the order fits, which read 100% for a small order onto a nearly full rig
+  // and even for one that could not be loaded at all.
+  if (!f.fits)
+    return '<span class="sp2-fit none" title="' + why +
+      '. Every compartment with room is holding another product.">No room</span>';
+  var cls = f.rigPct >= 95 ? 'perfect' : f.rigPct >= 80 ? 'full'
+          : f.rigPct >= 50 ? 'part' : 'low';
   return '<span class="sp2-fit ' + cls + '" title="' + why + '">' +
-    '<b>' + f.pct + '%</b> fit</span>';
+    '<b>' + f.rigPct + '%</b> utilization</span>';
 }
 // What splitting it would actually put on, in gallons and compartments. Not a
 // pill: a pill is a reading, and this is a sentence about what would happen.
@@ -3341,7 +3349,7 @@ function sp2SortLbl() {
   if (!b) return;
   b.classList.toggle('on', sp2Sort !== 'time');
   document.getElementById('sp2SortN').textContent =
-    sp2Sort === 'fit' ? 'Fit' : sp2Sort === 'driver' ? 'Driver' : '';
+    sp2Sort === 'fit' ? 'Utilization' : sp2Sort === 'driver' ? 'Driver' : '';
 }
 function sp2SetSort(o) {
   sp2Sort = o;

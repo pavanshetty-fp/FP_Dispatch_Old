@@ -1868,9 +1868,21 @@
         if (!o || o.driver) return;
         const f = sp2FitFor(k, o);
         const said = c.querySelector('.sp2-fit');
-        if (!said) throw new Error(o.id + ' carries no fit');
-        if (said.textContent.indexOf(f.pct + '%') < 0)
-          throw new Error(o.id + ' says "' + said.textContent.trim() + '", the rig says ' + f.pct + '%');
+        if (!said) throw new Error(o.id + ' carries no reading');
+        // what the truck would be utilized at \u2014 not how much of the order fits,
+        // which read 100% for a small order onto a nearly full rig
+        if (!f.fits) {
+          if (!/No room/.test(said.textContent))
+            throw new Error(o.id + ' can load nothing and does not say so: ' + said.textContent);
+        } else {
+          if (said.textContent.indexOf(f.rigPct + '%') < 0)
+            throw new Error(o.id + ' says "' + said.textContent.trim() + '", the truck would reach ' +
+                            f.rigPct + '%');
+          if (!/utilization/.test(said.textContent))
+            throw new Error('the reading does not say what it is: ' + said.textContent);
+          if (f.pct >= 100 && f.rigPct < 100 && /\b100%/.test(said.textContent))
+            throw new Error(o.id + ' fits whole and claims the truck is full');
+        }
         if (said.closest('.sp2-card-top') === null)
           throw new Error('the fit pill is not beside the order number');
         // and the split is a sentence in gallons, not a second percentage
@@ -1890,22 +1902,22 @@
         }
       });
 
-      // the pill is the sort: the list runs down from the highest percentage,
-      // and inside a band the order that leaves the rig fullest comes first
+      // the pill is the sort: the list runs down from the highest utilization,
+      // and within a percent the one that puts more gallons on comes first
       const fitOf = id => sp2FitFor(k, SP2_ORDERS.filter(x => x.id === id)[0]);
       const seq = cards.map(c => c.dataset.id)
         .filter(id => { const o = SP2_ORDERS.filter(x => x.id === id)[0]; return o && !o.driver; });
       if (seq.length < 3) throw new Error('too few unplanned orders to judge the order');
-      if (fitOf(seq[0]).pct !== Math.max(...seq.map(id => fitOf(id).pct)))
-        throw new Error('the best fit in the list is not at the top');
+      if (fitOf(seq[0]).rigPct !== Math.max(...seq.map(id => fitOf(id).rigPct)))
+        throw new Error('the order that leaves the truck fullest is not at the top');
       for (let i = 1; i < seq.length; i++) {
         const a = fitOf(seq[i - 1]), b2 = fitOf(seq[i]);
-        if (b2.pct > a.pct)
-          throw new Error(seq[i] + ' fits ' + b2.pct + '% and ranks below ' + seq[i - 1] +
-                          ' at ' + a.pct + '%');
-        if (b2.pct === a.pct && b2.rigPct > a.rigPct)
-          throw new Error(seq[i] + ' fills the rig more than ' + seq[i - 1] +
-                          ' at the same fit and ranks below it');
+        if (b2.rigPct > a.rigPct)
+          throw new Error(seq[i] + ' would leave the truck at ' + b2.rigPct + '% and ranks below ' +
+                          seq[i - 1] + ' at ' + a.rigPct + '%');
+        if (b2.rigPct === a.rigPct && b2.fits > a.fits)
+          throw new Error(seq[i] + ' puts more on than ' + seq[i - 1] +
+                          ' at the same utilization and ranks below it');
       }
 
       SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });

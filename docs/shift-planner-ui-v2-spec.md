@@ -2038,3 +2038,39 @@ of the list contradicts reads as no order at all.
 75 steps green at 1512×950, archived V1 52, merged bundle 101. The step now
 checks the top card carries the best fit in the list, that no card out-fits the
 one above it, and that equal fits are broken by the rig's resulting fill.
+
+## Round 50 — utilization, not fit
+
+"100% fit" was a lie in the case that matters: a 550 gal order onto a truck
+with 750 gal of room read 100% because all of it fits, and an order that could
+not be loaded at all — every compartment with room holding another product —
+read 100% too, since nothing placed means nothing short.
+
+The reading is **what the truck would be utilized at** once the order is on,
+against its compartment capacity. On an empty truck a 10,500 gal order on a
+10,500 gal rig is 100%; on a part-loaded one the number is what the tanks
+actually come to. An order that can place nothing says **No room** rather than
+a percentage.
+
+On BT-4, loaded to 2,050 of 2,800:
+
+| order | gallons | was | now |
+|---|---|---|---|
+| D-5157083 | 10,000 | 8% fit | **100% utilization** (by splitting) |
+| D-5157060 | 550 | **100% fit** | 93% utilization |
+| D-5157062 | 2,050 | 10% fit | 80% utilization |
+| D-5157100 | 5,700 | **100% fit** | **No room** |
+
+The sort runs down from the highest utilization, so the top of the list is the
+order that leaves the truck fullest — which is round 47's ranking and round
+49's "the pill is the sort", now the same thing because the pill is the number
+the sort uses. The menu and the head button say **Utilization**.
+
+One small thing: a flex box drops the whitespace between its children, so the
+pill read "100%utilization" until the gap was put back as `gap:3px`.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step checks
+the pill against `rigPct`, that an order which can place nothing says No room,
+and specifically that an order which fits whole never claims the truck is full.
