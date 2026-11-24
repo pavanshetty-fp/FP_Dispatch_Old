@@ -1003,8 +1003,14 @@
           // the clocks are in the card behind the shift, and shut until hovered
           const card = l.querySelector('.sp2-hv-card');
           if (!card) throw new Error(d.name + ' has no card behind the shift');
-          if (getComputedStyle(card).display !== 'none')
+          if (getComputedStyle(card).visibility !== 'hidden')
             throw new Error(d.name + ' shows the card before it is hovered');
+          // and it can be reached: a bridge across the gap under the trigger,
+          // and a held-open window on the way out
+          if (!getComputedStyle(card, '::before').height.startsWith('10'))
+            throw new Error(d.name + '\u2019s card has a dead gap under the trigger');
+          if (!/visibility 0s/.test(getComputedStyle(card).transition))
+            throw new Error(d.name + '\u2019s card snaps shut rather than holding');
           const hos = card.querySelector('.sp2-hos');
           if (!hos) throw new Error(d.name + ' has no clocks behind the shift');
           if (hos.querySelectorAll('.sp2-hos-c').length !== 4)
@@ -1377,18 +1383,46 @@
       if (Math.abs(lw - rw) > 2)
         throw new Error('the band is ' + Math.round(lw) + ' / ' + Math.round(rw) + ', not half each');
 
-      // the heading says which compartments are being filled, not "the rest"
+      // one heading, whatever the rig is carrying — "the rest" named no part
+      // of the truck, and a rig's mix of empty and part-filled is not the
+      // reader's problem
       const ttl = sg.querySelector('.sp2-sg-ttl').textContent;
       if (/the rest/i.test(ttl)) throw new Error('the heading still says "the rest"');
-      if (!/compartments/i.test(ttl)) throw new Error('the heading does not name compartments: ' + ttl);
-      const anyEmpty = sp2Cells(k).some(c => !c.l.q);
-      const anyPart  = sp2Cells(k).some(c => c.l.q > 0 && c.l.q < c.cap);
-      if (anyEmpty && !anyPart && !/^Fill the empty compartments$/.test(ttl))
-        throw new Error('an all-empty rig is not headed as empty: ' + ttl);
+      if (ttl !== 'Fill the compartments with room left')
+        throw new Error('the heading is not the standard statement: ' + ttl);
 
       const picks = [...sg.querySelectorAll('.sp2-sg-item')];
       if (!picks.length) throw new Error('an emptied transport is offered nothing');
       // each one says where the fuel lands before it is added
+      // the miles are measured from the RACK, not the yard, and the minutes are
+      // everything driven to get there — both show their working on hover
+      picks.forEach(it => {
+        const why = it.querySelector('.sp2-why');
+        if (!why) throw new Error('a suggestion gives no distance or time');
+        if (!/mi from the rack/.test(why.textContent))
+          throw new Error('the distance is not measured from the rack: ' + why.textContent);
+        if (!/driving/.test(why.textContent)) throw new Error('it does not say the time is driving');
+        if (!why.querySelector('.sp2-info')) throw new Error('there is no info icon');
+        const card = why.querySelector('.sp2-why-card');
+        if (!card) throw new Error('the info icon explains nothing');
+        if (getComputedStyle(card).visibility !== 'hidden')
+          throw new Error('the explanation is open before it is asked for');
+        if (getComputedStyle(card, '::before').height === 'auto')
+          throw new Error('the explanation has a dead gap under the icon');
+        const legs = [...card.querySelectorAll('.sp2-why-row:not(.tot)')];
+        if (legs.length < 2) throw new Error('the working does not show the legs');
+        if (!/rack/.test(legs[0].textContent))
+          throw new Error('the first leg is not the hub to the rack: ' + legs[0].textContent);
+        const o2 = SP2_ORDERS.filter(x => x.id === it.querySelector('.sp2-sg-id').textContent)[0];
+        if (legs[legs.length - 1].textContent.indexOf(o2.ship) < 0)
+          throw new Error('the last leg does not reach this ship-to');
+        // the legs add up to the total the card states
+        const sum = legs.reduce((a, r) => a + parseFloat(r.querySelector('b').textContent), 0);
+        const tot = parseFloat(card.querySelector('.sp2-why-row.tot').textContent);
+        if (Math.abs(sum - tot) > 0.15)
+          throw new Error('the legs make ' + sum.toFixed(1) + ', the total says ' + tot);
+      });
+
       picks.forEach(it => {
         const to = it.querySelector('.sp2-sg-to');
         if (!to) throw new Error('a suggestion does not say where it goes');
@@ -1506,44 +1540,69 @@
       if (sum.querySelector('.sp2-lsum-q').textContent.trim() !== sp2Totals(o).join(' \u00b7 '))
         throw new Error('the summary and the table disagree on the total');
 
-      // the control draws what the press leaves behind: three list lines and
-      // arrows pushing apart to open it, one line and arrows meeting to close
-      const shutIco = sum.querySelector('.sp2-caret svg');
-      if (!shutIco) throw new Error('the summary has no expand icon');
-      if (shutIco.querySelectorAll('circle').length !== 3)
-        throw new Error('the expand icon is not three list lines');
+      // the line carries no chevron \u2014 the line itself is the control
+      if (sum.querySelector('svg'))
+        throw new Error('the summary line still wears an icon');
 
-      // opening it swaps the line for the table, and the total is the same
+      // shut, the line is the card's last band, so its wash turns the corner
+      // with the card instead of ending square inside it
+      const rad = getComputedStyle(sum);
+      ['borderBottomLeftRadius', 'borderBottomRightRadius'].forEach(k => {
+        if (parseFloat(rad[k]) < 4)
+          throw new Error('the shut line\u2019s wash has a square ' + k.replace('border', '').replace('Radius', '') + ' corner');
+      });
+      ['borderTopLeftRadius', 'borderTopRightRadius'].forEach(k => {
+        if (parseFloat(rad[k]) > 0)
+          throw new Error('the line is rounded at the top, where the card is not');
+      });
+
+      // opening it keeps the line exactly where it was, at the same size, and
+      // hangs the table off it
       const shutH = card.getBoundingClientRect().height;
+      const cb0 = card.getBoundingClientRect(), sb0 = sum.getBoundingClientRect();
+      const was = { t: sb0.top - cb0.top, l: sb0.left - cb0.left, w: sb0.width, h: sb0.height };
       sum.click();
       const open = document.querySelector('.sp2-card[data-id="' + id + '"]');
       const tbl = open.querySelector('.sp2-lt');
       if (!tbl) throw new Error('opening a card does not show the table');
-      if (open.querySelector('.sp2-lsum')) throw new Error('the summary stayed behind');
+      const sum2 = open.querySelector('.sp2-lsum');
+      if (!sum2) throw new Error('the line left with the chevron');
+      if (sum2.querySelector('svg'))
+        throw new Error('the open line grew an icon');
+      // open, the table carries the card's bottom edge, so the line is square
+      if (parseFloat(getComputedStyle(sum2).borderBottomLeftRadius) > 0)
+        throw new Error('the open line keeps a rounded corner mid-card');
+      const cb1 = open.getBoundingClientRect(), sb1 = sum2.getBoundingClientRect();
+      const now2 = { t: sb1.top - cb1.top, l: sb1.left - cb1.left, w: sb1.width, h: sb1.height };
+      Object.keys(was).forEach(k => {
+        if (Math.abs(was[k] - now2[k]) > 1)
+          throw new Error('the clickable line moved or resized on opening (' + k + ': ' +
+                          Math.round(was[k]) + ' \u2192 ' + Math.round(now2[k]) + ')');
+      });
+      if (sum2.querySelector('.sp2-lsum-q').textContent.trim() !== sp2Totals(o).join(' \u00b7 '))
+        throw new Error('the open line drops the total');
       if (tbl.querySelectorAll('.sp2-lt-row').length !== n)
         throw new Error('the table does not draw every line');
       if (open.getBoundingClientRect().height <= shutH)
         throw new Error('an open card is no taller than a shut one');
-      const openIco = open.querySelector('.sp2-lt-tot .sp2-caret svg');
-      if (!openIco) throw new Error('the open table has no collapse icon');
-      if (openIco.querySelectorAll('circle').length !== 1)
-        throw new Error('the collapse icon is not one list line');
-      if (getComputedStyle(open.querySelector('.sp2-lt-tot .sp2-caret')).transform !== 'none')
-        throw new Error('the icon is being turned rather than swapped');
-      if (!open.querySelector('.sp2-lt-tot .sp2-caret.open'))
-        throw new Error('there is no way to shut it again');
-      open.querySelector('.sp2-lt-tot .sp2-caret.open').click();
-      if (!document.querySelector('.sp2-card[data-id="' + id + '"] .sp2-lsum'))
+      // the same line shuts it again
+      sum2.click();
+      if (document.querySelector('.sp2-card[data-id="' + id + '"] .sp2-lt'))
         throw new Error('it did not shut again');
 
       // and one act does the lot, the icon saying which way it will go
       const all = document.getElementById('sp2AllBtn');
       if (!all) throw new Error('there is no expand-all');
       if (!/Expand/.test(all.title)) throw new Error('with all shut it does not offer to expand');
+      // the column tool wears the same pair as the cards it acts on
+      if (all.querySelectorAll('circle').length !== 3)
+        throw new Error('expand-all is not the three-line icon');
       all.click();
-      if (document.querySelector('.sp2-card .sp2-lsum'))
+      if ([...document.querySelectorAll('.sp2-card')].some(c => !c.querySelector('.sp2-lt')))
         throw new Error('expand all left a card shut');
       if (!/Collapse/.test(all.title)) throw new Error('with all open it does not offer to collapse');
+      if (all.querySelectorAll('circle').length !== 1)
+        throw new Error('collapse-all is not the one-line icon');
       all.click();
       if (document.querySelector('.sp2-card .sp2-lt'))
         throw new Error('collapse all left a card open');
@@ -1929,10 +1988,17 @@
       });
       sp2FpClear();
 
-      // ── customer and ship-to are two filters, not one
+      // ── customer, ship-to and the window stand on their own in the menu
       if (getComputedStyle(fp).display === 'none') sp2FpToggle();
       sp2FpTabs('orders');
-      sp2FpPick('Order');
+      ['Customers', 'Ship-tos', 'Delivery window'].forEach(g => {
+        if (sp2TabGroups('orders').indexOf(g) < 0)
+          throw new Error(g + ' is not its own group on the Orders tab');
+        if (sp2GroupFacets(g).length !== 1) throw new Error(g + ' holds more than its own filter');
+      });
+      if (sp2GroupFacets('Order').some(f => /cust|shipto|win/.test(f.k)))
+        throw new Error('one of the three is still nested under Order');
+      sp2FpPick('Customers');
       const cf = SP2_FACETS.filter(f => f.k === 'cust')[0];
       const sf = SP2_FACETS.filter(f => f.k === 'shipto')[0];
       if (!cf || !sf) throw new Error('customer and ship-to are not both filters');
@@ -1945,6 +2011,27 @@
       sp2FpApply();
       SP2_ORDERS.filter(o => sp2OrderMatch(o, sp2Facet)).forEach(o => {
         if (sp2CustOf(o.ship) !== cust) throw new Error(o.id + ' is another customer\u2019s');
+      });
+      sp2FpClear();
+
+      // ── the delivery window is a filter of its own
+      if (getComputedStyle(fp).display === 'none') sp2FpToggle();
+      sp2FpTabs('orders');
+      sp2FpPick('Delivery window');
+      const wf = SP2_FACETS.filter(f => f.k === 'win')[0];
+      if (!wf) throw new Error('there is no delivery window filter');
+      if (wf.opts.length < 3) throw new Error('the window bands are too few to plan against');
+      // a window that straddles two bands answers with both
+      const straddles = SP2_ORDERS.find(o2 => wf.ord(o2).length > 1);
+      if (!straddles) throw new Error('no window spans two bands — the bands are not overlapping');
+      const band = wf.opts.find(v2 => sp2OrderCountFor(wf, v2) > 0);
+      sp2FpTick('win', band);
+      sp2FpApply();
+      const bd = SP2_WIN_BANDS.filter(b2 => b2.k === band)[0];
+      SP2_ORDERS.filter(o2 => sp2OrderMatch(o2, sp2Facet)).forEach(o2 => {
+        const w2 = sp2Win(o2);
+        if (!(w2.from < bd.to && w2.to > bd.from))
+          throw new Error(o2.id + ' does not touch ' + band + ' and is shown');
       });
       sp2FpClear();
 
@@ -2101,15 +2188,17 @@
       // the products are a SECTION of the card, not a card inside it: one rule
       // divides them from the head, and the table runs to the card's edges
       // the table is a click away at rest, so open it to read it
-      if (c.querySelector('.sp2-lsum')) {
+      if (!c.querySelector('.sp2-lt')) {
         c.querySelector('.sp2-lsum').click();
         c = document.querySelector('.sp2-card[data-id="' + c.dataset.id + '"]');
       }
       const lt0 = c.querySelector('.sp2-lt');
       if (!lt0) throw new Error('the two units are not divided');
+      // the rule sits on the summary line the table hangs from
+      if (parseFloat(getComputedStyle(c.querySelector('.sp2-lsum')).borderTopWidth) < 1)
+        throw new Error('nothing divides the two units');
       const cs = getComputedStyle(lt0);
-      if (parseFloat(cs.borderTopWidth) < 1) throw new Error('nothing divides the two units');
-      ['borderLeftWidth', 'borderRightWidth', 'borderBottomWidth'].forEach(side => {
+      ['borderTopWidth', 'borderLeftWidth', 'borderRightWidth', 'borderBottomWidth'].forEach(side => {
         if (parseFloat(cs[side]) > 0) throw new Error('the products are still boxed in a card');
       });
       if (parseFloat(cs.borderRadius) > 0) throw new Error('the products still read as a card');
@@ -2182,7 +2271,7 @@
         throw new Error('the product name is editable and should not be');
 
       // the total follows what is typed, and a blend keeps its ratio
-      const tot = () => document.querySelector('.sp2-card.sp2-v3 .sp2-lt-tot').innerText.replace(/\s+/g, ' ');
+      const tot = () => document.querySelector('.sp2-card.sp2-v3 .sp2-lsum').innerText.replace(/\s+/g, ' ');
       if (tot().indexOf(sp2Gal(o).toLocaleString() + ' gal') < 0)
         throw new Error('the total does not state the order: ' + tot());
       const keep = o.prods.map(pr => pr.q);
@@ -2657,6 +2746,21 @@
     if (r.width > 40 || r.height > 40) out.layout.push('oversized svg: ' + Math.round(r.width) + 'x' + Math.round(r.height));
   });
   if (document.documentElement.scrollWidth > innerWidth + 2) out.layout.push('page scrolls horizontally');
+  // An escape written into MARKUP is not an escape \u2014 it is six characters of
+  // text, and it overflows whatever box was sized for the glyph. Catch it
+  // anywhere on the page, menus and popups included.
+  document.querySelectorAll('body *').forEach(e => {
+    if (/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE)$/.test(e.tagName)) return;   // source, not text
+    [...e.childNodes].forEach(n => {
+      if (n.nodeType === 3 && /\\u[0-9a-fA-F]{4}/.test(n.nodeValue))
+        out.layout.push('raw escape in text: "' + n.nodeValue.trim().slice(0, 30) + '"');
+    });
+    ['title', 'aria-label', 'placeholder'].forEach(a2 => {
+      const v = e.getAttribute && e.getAttribute(a2);
+      if (v && /\\u[0-9a-fA-F]{4}/.test(v))
+        out.layout.push('raw escape in @' + a2 + ': "' + v.slice(0, 30) + '"');
+    });
+  });
 
   return JSON.stringify(out, null, 1);
 })();

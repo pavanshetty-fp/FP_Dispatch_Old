@@ -350,11 +350,14 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-chipf-x{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
   border:none;border-radius:50%;background:none;padding:0;color:var(--fp-ink-3);cursor:pointer;}
 .sp2-chipf-x:hover{background:rgba(3,4,5,.08);color:var(--fp-ink-1);}
-.sp2-chipf-card{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:95;
-  min-width:180px;max-width:280px;padding:6px;background:var(--fp-surface-1b);
+.sp2-chipf-card{visibility:hidden;opacity:0;position:absolute;left:0;top:calc(100% + 6px);
+  z-index:95;min-width:180px;max-width:280px;padding:6px;background:var(--fp-surface-1b);
   border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);
-  box-shadow:0 8px 20px -6px rgba(3,4,5,.18);}
-.sp2-chipf.has-card:hover .sp2-chipf-card{display:block;}
+  box-shadow:0 8px 20px -6px rgba(3,4,5,.18);
+  transition:opacity .12s linear,visibility 0s linear .45s;}
+.sp2-chipf-card::before{content:'';position:absolute;left:0;right:0;top:-10px;height:10px;}
+.sp2-chipf.has-card:hover .sp2-chipf-card,.sp2-chipf-card:hover{visibility:visible;opacity:1;
+  transition:opacity .12s linear;}
 .sp2-chipf-card-h{display:block;padding:2px 6px 4px;font-size:10px;font-weight:600;
   letter-spacing:.12em;text-transform:uppercase;color:var(--fp-ink-3);}
 .sp2-chipf-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -964,13 +967,20 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-hv:hover .sp2-ln-left{text-decoration-color:var(--fp-ink-1);}
 .sp2-ln-left.before{color:var(--fp-ink-3);}
 .sp2-ln-left.over,.sp2-ln-left.off{color:var(--fp-ink-3);}
-/* the card is inside the hovered group and meets its edge, so the pointer can
-   travel into it without the card closing underneath */
-.sp2-hv-card{display:none;position:absolute;left:-10px;top:100%;margin-top:4px;z-index:60;
-  width:320px;padding:12px;border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);
-  background:var(--fp-surface-1b);
-  box-shadow:0 8px 10px -6px rgba(3,4,5,.1),0 20px 25px -5px rgba(3,4,5,.1);}
-.sp2-hv:hover .sp2-hv-card,.sp2-hv-card:hover{display:block;}
+/* A hover card you cannot reach is a hover card you cannot read. Two things
+   keep it: a transparent bridge across the gap under the trigger, so the
+   pointer never crosses dead ground, and a held-open window on the way out —
+   the card stays hit-testable for .45s after the pointer leaves, which is long
+   enough to land on it and short enough never to be in the way. Visibility
+   does the holding because `display` cannot be delayed. */
+.sp2-hv-card{visibility:hidden;opacity:0;position:absolute;left:-10px;top:100%;margin-top:6px;
+  z-index:60;width:320px;padding:12px;border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-lg);background:var(--fp-surface-1b);
+  box-shadow:0 8px 10px -6px rgba(3,4,5,.1),0 20px 25px -5px rgba(3,4,5,.1);
+  transition:opacity .12s linear,visibility 0s linear .45s;}
+.sp2-hv-card::before{content:'';position:absolute;left:0;right:0;top:-10px;height:10px;}
+.sp2-hv:hover .sp2-hv-card,.sp2-hv-card:hover{visibility:visible;opacity:1;
+  transition:opacity .12s linear;}
 .sp2-hv-card .sp2-shift{margin-top:0;}
 .sp2-hv-card .sp2-hos{cursor:default;}
 .sp2-hv-card .sp2-hos:hover{background:var(--fp-surface-1a);}
@@ -1080,6 +1090,27 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
   font-family:inherit;font-size:13px;cursor:pointer;}
 .sp2-sg-addall:hover{background:var(--fp-emphasis);}
 .sp2-sg-none{font-size:12px;color:var(--fp-ink-3);line-height:1.5;}
+.sp2-why{position:relative;display:inline-flex;align-items:center;gap:5px;}
+.sp2-info{display:inline-flex;color:var(--fp-ink-3);cursor:help;}
+.sp2-info:hover{color:var(--fp-ink-1);}
+.sp2-why-card{visibility:hidden;opacity:0;position:absolute;left:0;top:calc(100% + 8px);
+  z-index:95;width:320px;padding:8px;background:var(--fp-surface-1b);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);
+  box-shadow:0 8px 20px -6px rgba(3,4,5,.18);cursor:default;
+  transition:opacity .12s linear,visibility 0s linear .45s;}
+.sp2-why-card::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;}
+.sp2-info:hover + .sp2-why-card,.sp2-info:focus + .sp2-why-card,
+.sp2-why-card:hover{visibility:visible;opacity:1;transition:opacity .12s linear;}
+.sp2-why-h{display:block;padding:2px 6px 5px;font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--fp-ink-3);}
+.sp2-why-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:3px 6px;font-size:12px;color:var(--fp-ink-2,var(--fp-ink-3));line-height:1.4;}
+.sp2-why-row b{flex-shrink:0;font-weight:500;color:var(--fp-ink-1);
+  font-variant-numeric:tabular-nums;}
+.sp2-why-row.tot{margin-top:3px;padding-top:6px;border-top:1px solid var(--fp-stroke-hairline);
+  color:var(--fp-ink-1);}
+.sp2-why-n{display:block;padding:6px 6px 2px;font-size:11px;color:var(--fp-ink-3);
+  line-height:1.45;}
 
 /* ── the order card, round 3 ──────────────────────────
    Two units with a rule between them; the rule is flush to the card's edges
@@ -1114,20 +1145,21 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-lsum{display:flex;align-items:center;gap:8px;height:44px;
   margin:10px -12px -10px;width:calc(100% + 24px);padding:0 12px;
   background:none;border:none;border-top:1px solid var(--fp-stroke-hairline);
-  font-family:inherit;cursor:pointer;text-align:left;}
+  font-family:inherit;cursor:pointer;text-align:left;
+  /* shut, the line is the card's last band, so its wash turns the card's own
+     bottom corners rather than ending square inside them — the 3px comes off
+     the card's inner curve for the band's own inset */
+  border-radius:0 0 calc(var(--r-lg) - 3px) calc(var(--r-lg) - 3px);}
+/* open, the same button keeps its box — square again, since the table now
+   carries the card's bottom edge — and the table grows below it */
+.sp2-lsum.open{margin-bottom:0;border-radius:0;}
 .sp2-lsum:hover{background:var(--fp-emphasis-hover);}
 .sp2-lsum-n{font-size:14px;color:var(--fp-ink-1);white-space:nowrap;}
 .sp2-lsum-q{margin-left:auto;font-size:14px;font-weight:600;color:var(--fp-ink-1);
   font-variant-numeric:tabular-nums;white-space:nowrap;}
-/* The icon says which way the press goes, so it is never turned on its side. */
-.sp2-caret{display:inline-flex;align-items:center;justify-content:center;
-  width:17px;flex-shrink:0;color:var(--fp-ink-3);}
-.sp2-caret.open{cursor:pointer;margin-right:4px;}
-.sp2-lt-tot>span:first-child{display:flex;align-items:center;}
 
 .sp2-lt{display:grid;grid-template-columns:minmax(0,1fr) 110px 64px;
-  margin:10px -12px -10px;background:none;
-  border-top:1px solid var(--fp-stroke-hairline);overflow:hidden;}
+  margin:0 -12px -10px;background:none;overflow:hidden;}
 .sp2-lt.blended{grid-template-columns:minmax(0,1fr) 76px 110px 64px;}
 .sp2-lt-head{display:contents;}
 .sp2-lt-head>span{min-height:40px;display:flex;align-items:center;padding:9px 12px;
@@ -1166,11 +1198,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
   background-position:calc(100% - 13px) 20px,calc(100% - 8px) 20px;
   background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
 .sp2-cell-u:hover{background-color:var(--fp-emphasis);}
-/* the total is a foot row with a top rule only — a full box would stack on the card's rim */
-.sp2-lt-tot{display:contents;}
-.sp2-lt-tot>span{height:44px;display:flex;align-items:center;padding:0 12px;
-  border-top:1px solid var(--fp-stroke-hairline);font-size:14px;color:var(--fp-ink-3);}
-.sp2-lt-tot>span:nth-last-child(2){font-weight:500;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;}
 
 /* the head's right edge: the status, then the way in */
 .sp2-pill-r{margin-left:auto;}
@@ -1258,12 +1285,12 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
           <div class="sp2-fltpop" id="sp2SortPop" onclick="event.stopPropagation()">
             <div class="sp2-fltpop-h">Sort orders by</div>
             <button class="sp2-fltrow on" data-o="time" onclick="sp2SetSort('time')"
-              title="In the order the day runs them"><span class="sp2-tick">\u2713</span>Time</button>
+              title="In the order the day runs them"><span class="sp2-tick">✓</span>Time</button>
             <button class="sp2-fltrow" data-o="fit" onclick="sp2SetSort('fit')"
-              title="Best fit for the chosen rig first"><span class="sp2-tick">\u2713</span>Fit
+              title="Best fit for the chosen rig first"><span class="sp2-tick">✓</span>Fit
               <span class="sp2-fltrow-n" id="sp2SortFitVs"></span></button>
             <button class="sp2-fltrow" data-o="driver" onclick="sp2SetSort('driver')"
-              title="Every driver\u2019s orders together"><span class="sp2-tick">\u2713</span>Driver</button>
+              title="Every driver’s orders together"><span class="sp2-tick">✓</span>Driver</button>
           </div>
         </div>
       </div>
@@ -1445,6 +1472,17 @@ function sp2IsBlend(p) { return !!SP2_BLENDS[p]; }
 function sp2HasBlend(o) { return o.prods.some(function (pr) { return sp2IsBlend(pr.p); }); }
 
 var SP2_HUBS   = ['Denver Hub','Phoenix Hub','Portland Hub','Tampa Hub','San Jose Hub'];
+// The terminal each hub loads at, how far out of the yard it is, and how fast
+// the rack fills a truck. Declared here because the day is built into runs
+// long before anything else reads them.
+var SP2_GPM_LOAD = 600;
+var SP2_TERMINALS = {
+  'Denver Hub':   { name:'Commerce City rack', mi:12.4 },
+  'Phoenix Hub':  { name:'Phoenix rack',       mi:9.8 },
+  'Portland Hub': { name:'Willbridge rack',    mi:7.6 },
+  'Tampa Hub':    { name:'Port Tampa rack',    mi:11.2 },
+  'San Jose Hub': { name:'San Jose rack',      mi:14.5 },
+};
 var SP2_SHIFTK = ['e6','e5','l7','l8'];
 // The bulk products the tank fleet carries, which is what an order is cut
 // from and what the Products filter lists. Twenty-five straight products and
@@ -1786,7 +1824,11 @@ var SP2_ORDERS = (function buildOrders() {
     var pb = SP2_PRODS[(n + 2) % SP2_PRODS.length];
 
     var sh = SP2_SHIFTS[d.shift];
-    var begin = Math.max(sh.from, SP2_NOW - 45);
+    // Nothing can be delivered until the truck has driven to the rack and
+    // loaded, so the windows are laid out from THAT moment, not from the
+    // start of the shift. Without this every run reads late by an hour.
+    var begin = Math.max(sh.from, SP2_NOW - 45) +
+      sp2Drive(sp2Terminal(d.hub).mi, k) + Math.round(total / SP2_GPM_LOAD + 25);
     // windows open and close at different times across the fleet, so the day
     // carries all three readings: made, waited for, and missed
     // Windows open at different hours and run for different spans across the
@@ -1794,7 +1836,7 @@ var SP2_ORDERS = (function buildOrders() {
     // A run whose windows are packed into the front of the shift finishes late;
     // one whose windows are spread wide leaves the driver waiting.
     var first = begin + [10, 70, 25, 90, 40][n % 5];
-    var last  = Math.min(sh.to - 60, first + [170, 330, 290, 350, 200][n % 5]);
+    var last  = Math.min(sh.to - 60, first + [170, 330, 105, 350, 200][n % 5]);
     last = Math.max(last, first + 40);
 
     var left = total;
@@ -2169,16 +2211,10 @@ function sp2TakeSuggestion(e, k, id) {
 
 function sp2SuggestHtml(k) {
   var sg = sp2Suggest(k, 3);
-  // The heading says WHICH compartments are being filled, because that is the
-  // question a dispatcher is holding \u2014 an empty one takes anything, a part-filled
-  // one only takes more of what is already in it.
-  var free = sp2Cells(k).filter(function (c) { return c.l.q < c.cap; });
-  var part = free.some(function (c) { return c.l.q > 0; });
-  var bare = free.some(function (c) { return !c.l.q; });
-  var ttl = part && bare ? 'Fill the empty and part-filled compartments'
-          : part ? 'Fill the part-filled compartments'
-          : 'Fill the empty compartments';
-  var head = '<div class="sp2-sg-head"><span class="sp2-sg-ttl">' + ttl + '</span>' +
+  // One statement, whatever the rig is carrying: a compartment with room left
+  // is a compartment with room left, empty or part-filled.
+  var head = '<div class="sp2-sg-head">' +
+    '<span class="sp2-sg-ttl">Fill the compartments with room left</span>' +
     (sg.room > 0
       ? '<span class="sp2-sg-room">' + sg.room.toLocaleString() + ' gal of room' +
         (sg.best && sg.best.gal < sg.room
@@ -2192,7 +2228,7 @@ function sp2SuggestHtml(k) {
   // A suggestion is an act, not a label: each one is a row with its own Add,
   // so an order goes onto the rig without being dragged there.
   var rows = sg.picks.map(function (o) {
-    var trip = sp2Trip(o, k), w = sp2Win(o);
+    var rc = sp2Reach(k, o), w = sp2Win(o);
     return '<div class="sp2-sg-item">' +
         '<div class="sp2-sg-main">' +
           '<div class="sp2-sg-l1">' +
@@ -2204,8 +2240,7 @@ function sp2SuggestHtml(k) {
             '<span class="sp2-sg-gal">' + sp2Gal(o).toLocaleString() + ' gal</span>' +
             '<span class="sp2-sep"></span>' +
             '<span>' + sp2Clock(w.from) + '\u2013' + sp2Clock(w.to) + '</span>' +
-            (trip ? '<span class="sp2-sep"></span><span>' + trip.mi.toFixed(1) + ' mi \u00b7 ' +
-                    trip.min + ' min</span>' : '') +
+            (rc ? '<span class="sp2-sep"></span>' + sp2ReachHtml(rc, o) : '') +
           '</div>' +
         '</div>' +
         (function (into) {
@@ -2225,6 +2260,33 @@ function sp2SuggestHtml(k) {
         sg.picks.length + '</button>'
     : '';
   return '<div class="sp2-sg">' + head + '<div class="sp2-sg-list">' + rows + '</div>' + all + '</div>';
+}
+
+// The reader is being told a distance and a time; both are worked out, so both
+// show their working. The distance is the rack to this ship-to \u2014 a truck
+// delivers out of the terminal, not out of the yard \u2014 and the time is
+// everything driven to get there, hub to rack to the stops ahead of it.
+function sp2ReachHtml(rc, o) {
+  var I = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.4"/></svg>';
+  return '<span class="sp2-why">' +
+      rc.mi.toFixed(1) + ' mi from the rack \u00b7 ' + sp2Dur(rc.min) + ' driving' +
+      '<span class="sp2-info" tabindex="0" role="button" ' +
+        'aria-label="How this distance and time are worked out">' + I + '</span>' +
+      '<span class="sp2-why-card">' +
+        '<span class="sp2-why-h">How this is worked out</span>' +
+        rc.legs.map(function (l) {
+          return '<span class="sp2-why-row"><span>' + l.from + ' \u2192 ' +
+            l.to + '</span><b>' + l.mi.toFixed(1) + ' mi</b></span>';
+        }).join('') +
+        '<span class="sp2-why-row tot"><span>' + rc.total.toFixed(1) + ' mi at ' +
+          rc.mph + ' mph</span><b>' + sp2Dur(rc.min) + '</b></span>' +
+        '<span class="sp2-why-n">Stop ' + rc.at + ' of ' + rc.of +
+          ' once this is on. The miles shown are the rack to ' + o.ship +
+          '; the time is everything driven to reach it, loading and time on site aside.</span>' +
+      '</span>' +
+    '</span>';
 }
 
 function sp2TakeAll(e, k) {
@@ -2279,6 +2341,47 @@ function sp2Hash(str) {
   for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h * 16777619) >>> 0; }
   return h;
 }
+// \u2500\u2500 The rack \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// A truck does not deliver out of the yard. It leaves the hub empty, drives to
+// the terminal its hub loads at, racks the load, and only then starts
+// delivering. So the miles into a stop are measured from the TERMINAL, and the
+// time to reach a stop is everything driven since the hub.
+function sp2Terminal(hub) { return SP2_TERMINALS[hub] || { name:'Terminal', mi:10 }; }
+// Miles from the rack to a ship-to. The rack sits in the hub's own city, so
+// this is the same shape of pseudo-distance the hub used, off its own hash.
+function sp2FromTerminal(o, k) {
+  var d = SP2_DRIVERS[k || sp2Driver];
+  if (!d) return 0;
+  var h = sp2Hash('rack|' + d.hub + '|' + o.ship);
+  return sp2InRegion(d.hub, o.addr || sp2AddrOf(o.ship))
+    ? 2 + (h % 260) / 10
+    : 160 + (h % 3400) / 10;
+}
+// What it takes to REACH a stop: out of the hub, into the rack, then stop by
+// stop in window order until this one. Driving only \u2014 loading and the time on
+// site belong to the shift, not to the distance.
+function sp2Reach(k, o) {
+  var d = SP2_DRIVERS[k];
+  if (!d) return null;
+  var term = sp2Terminal(d.hub);
+  var stops = SP2_ORDERS.filter(function (x) { return x.driver === k && x.id !== o.id; })
+                        .concat([o])
+                        .sort(function (a, b) { return a.t - b.t; });
+  var legs = [{ from:d.hub, to:term.name, mi:term.mi }];
+  var run = term.mi, prev = null, reach = 0, at = 0;
+  stops.forEach(function (x, i) {
+    var m = prev ? sp2Leg(prev, x.ship) : sp2FromTerminal(x, k);
+    legs.push({ from: prev || term.name, to:x.ship, mi:m });
+    run += m;
+    if (x.id === o.id) { reach = run; at = i + 1; }
+    prev = x.ship;
+  });
+  return { term:term, legs:legs,
+           mi: sp2FromTerminal(o, k),     // the rack to THIS ship-to
+           total: reach,                  // hub \u2192 rack \u2192 \u2026 \u2192 this stop
+           min: sp2Drive(reach, k), mph: sp2Mph(k), at:at, of:stops.length };
+}
+
 function sp2Trip(o, k) {
   var d = SP2_DRIVERS[k || sp2Driver];
   if (!d) return null;
@@ -2528,6 +2631,17 @@ function sp2CardV3(o, style) {
     // ── unit 2 · what was asked for, correctable in place ──
     // The DS lines table: flush to the card's edges, a tinted header band,
     // 44px rows, every cell the control itself rather than a box inside a box.
+    // The line itself is the switch: the same button, in the same place, at the
+    // same size whether the products are showing or not, so a second click
+    // lands where the first one did without the cursor moving.
+    '<button class="sp2-lsum' + (open ? ' open' : '') + '" ' +
+      'onclick="sp2CardToggle(event,\'' + o.id + '\')" ' +
+      'title="' + (open ? 'Hide what is on this order' : 'Show what is on this order') + '">' +
+      '<span class="sp2-lsum-n">' + lines.length + ' product' +
+        (lines.length === 1 ? '' : 's') + '</span>' +
+      (anyBlend ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
+      '<span class="sp2-lsum-q">' + sp2Totals(o).join(' \u00b7 ') + '</span>' +
+    '</button>' +
     (open
       ? '<div class="sp2-lt' + (anyBlend ? ' blended' : '') + '">' +
           '<div class="sp2-lt-head">' +
@@ -2536,20 +2650,8 @@ function sp2CardV3(o, style) {
             '<span>Quantity</span><span>Type</span>' +
           '</div>' +
           rows +
-          '<div class="sp2-lt-tot">' +
-            '<span>' + sp2Caret(o, true) + 'Total</span>' +
-            (anyBlend ? '<span></span>' : '') +
-            '<span>' + sp2Totals(o).join(' \u00b7 ') + '</span><span></span>' +
-          '</div>' +
         '</div>'
-      : '<button class="sp2-lsum" ' +
-          'onclick="sp2CardToggle(event,\'' + o.id + '\')" ' +
-          'title="Show what is on this order">' + sp2Caret(o, false) +
-          '<span class="sp2-lsum-n">' + lines.length + ' product' +
-            (lines.length === 1 ? '' : 's') + '</span>' +
-          (anyBlend ? '<span class="sp2-pill sp2-pill-blend">Blend</span>' : '') +
-          '<span class="sp2-lsum-q">' + sp2Totals(o).join(' \u00b7 ') + '</span>' +
-        '</button>') +
+      : '') +
   '</div>';
 }
 
@@ -2560,10 +2662,10 @@ function sp2Clock(m) {
   return h12 + ':' + String(x).padStart(2, '0') + ' ' + ap;
 }
 
-// A chevron says "there is more", not "there are products". These say both:
-// a list with arrows beside it. Shut, the control OPENS \u2014 three lines and the
-// arrows pushing apart. Open, it CLOSES \u2014 one line and the arrows coming
-// together. The icon draws what the press will leave behind.
+// The column's expand-all pair: a list with arrows beside it, drawing what the
+// press will leave behind \u2014 three lines with the chevrons pushing apart to open
+// every card, one line with the chevrons coming together to shut them. The
+// cards keep their own chevron; this is the tool that acts on all of them.
 function sp2ListRow(y) {
   return '<circle cx="3.3" cy="' + y + '" r="1.9" stroke-width="1.7"/>' +
          '<path d="M7.8 ' + y + 'h8"/>';
@@ -2572,20 +2674,15 @@ function sp2IcoExpand() {
   return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
     'stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
     sp2ListRow(6) + sp2ListRow(12) + sp2ListRow(18) +
-    '<path d="M20.3 10.6V3.6"/><path d="M17.9 6l2.4-2.4L22.7 6"/>' +
-    '<path d="M20.3 13.4v7"/><path d="M17.9 18l2.4 2.4 2.4-2.4"/></svg>';
+    '<path d="M17.9 8.4l2.4-2.8 2.4 2.8"/>' +
+    '<path d="M17.9 15.6l2.4 2.8 2.4-2.8"/></svg>';
 }
 function sp2IcoCollapse() {
   return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
     'stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' +
     sp2ListRow(12) +
-    '<path d="M20.3 3.6v7"/><path d="M17.9 8.2l2.4 2.4 2.4-2.4"/>' +
-    '<path d="M20.3 20.4v-7"/><path d="M17.9 15.8l2.4-2.4 2.4 2.4"/></svg>';
-}
-function sp2Caret(o, open) {
-  return '<span class="sp2-caret' + (open ? ' open' : '') + '"' +
-      (open ? ' onclick="sp2CardToggle(event,\'' + o.id + '\')" title="Hide the products"' : '') + '>' +
-      (open ? sp2IcoCollapse() : sp2IcoExpand()) + '</span>';
+    '<path d="M17.9 5.6l2.4 2.8 2.4-2.8"/>' +
+    '<path d="M17.9 18.4l2.4-2.8 2.4 2.8"/></svg>';
 }
 function sp2CardToggle(e, id) {
   if (e) e.stopPropagation();
@@ -2606,15 +2703,9 @@ function sp2CardsAllBtn() {
   var any = Object.keys(sp2CardOpen).length > 0;
   b.classList.toggle('on', any);
   b.title = any ? 'Collapse every order' : 'Expand every order';
-  b.innerHTML = any
-    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>' +
-      '<line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
-    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
-      '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+  // The same pair the cards wear, because it is the same act done to all of
+  // them at once \u2014 one icon for expand, one for collapse, everywhere.
+  b.innerHTML = any ? sp2IcoCollapse() : sp2IcoExpand();
 }
 
 // Every order card is the round-3 card now; the band design it replaced is
@@ -2988,8 +3079,10 @@ function sp2Avail(d) {
 // dispatcher thinks about a rig; the dimension is what the chip says.
 // The head narrows BOTH columns, so a group says which one it acts on and a
 // facet carries the column its chip belongs in.
-var SP2_GROUPS = ['Order', 'Products', 'Driver', 'Shift', 'Hubs', 'Truck & trailer', 'Truck capacity'];
-var SP2_GROUP_COL = { 'Order':'orders', 'Products':'orders' };
+var SP2_GROUPS = ['Order', 'Products', 'Customers', 'Ship-tos', 'Delivery window',
+                  'Driver', 'Shift', 'Hubs', 'Truck & trailer', 'Truck capacity'];
+var SP2_GROUP_COL = { 'Order':'orders', 'Products':'orders', 'Customers':'orders',
+                      'Ship-tos':'orders', 'Delivery window':'orders' };
 // The panel is two tabs, because a filter narrows one list or the other and
 // the reader should never have to work out which.
 var SP2_FP_TABS = [{ k:'orders', label:'Orders' }, { k:'drivers', label:'Drivers and trucks' }];
@@ -3016,6 +3109,16 @@ function sp2TrailerDesc(n) {
   return r.type + ' \u00b7 ' + r.caps.length + ' compartments \u00b7 ' + cap.toLocaleString() + ' gal';
 }
 
+// The bands a dispatcher plans the day against. A window can straddle two of
+// them, so an order answers with every band it touches rather than the one it
+// opens in \u2014 "show me the afternoon" should find a window that runs into it.
+var SP2_WIN_BANDS = [
+  { k:'Before 8 AM',      from:0,       to:8 * 60 },
+  { k:'8 AM \u2013 12 PM', from:8 * 60,  to:12 * 60 },
+  { k:'12 PM \u2013 4 PM', from:12 * 60, to:16 * 60 },
+  { k:'After 4 PM',       from:16 * 60, to:24 * 60 },
+];
+
 var SP2_FACETS = [
   // ── Orders ──
   // What the order's own day looks like: nobody has taken it, somebody has,
@@ -3026,11 +3129,19 @@ var SP2_FACETS = [
       return !sp2Planned(o) ? ['Unplanned']
         : sp2Outside(o) ? ['Planned','Outside'] : ['Planned'];
     } },
+  { c:'orders', g:'Delivery window', k:'win', label:'Delivery window',
+    opts:SP2_WIN_BANDS.map(function (b) { return b.k; }),
+    ord:function (o) {
+      var w = sp2Win(o);
+      return SP2_WIN_BANDS.filter(function (b) { return w.from < b.to && w.to > b.from; })
+                          .map(function (b) { return b.k; });
+    } },
+
   // A ship-to is named "Customer \u2014 Site", so the customer is already in it
   // and there is no second list to keep in step.
-  { c:'orders', g:'Order', k:'cust', label:'Customer', searchable:true,
+  { c:'orders', g:'Customers', k:'cust', label:'Customer', searchable:true,
     opts:sp2CustList(), ord:function (o) { return [sp2CustOf(o.ship)]; } },
-  { c:'orders', g:'Order', k:'shipto', label:'Ship-to', searchable:true,
+  { c:'orders', g:'Ship-tos', k:'shipto', label:'Ship-to', searchable:true,
     ph:'Search ship-to\u2026', opts:sp2ShipList(),
     desc:function (v) { return sp2AddrOf(v); },
     ord:function (o) { return [o.ship]; } },
@@ -5014,7 +5125,6 @@ function sp2SimpleBars(k) {
 //
 // The miles are still pseudo-distance from a hash — that part is ours — but
 // everything done with them now matches the model the planner is built to.
-var SP2_GPM_LOAD = 600;
 
 function sp2Assets(ship) {
   // The doc's range is 5–100 assets per ship-to, "skewed low". These are fuel
@@ -5043,7 +5153,8 @@ function sp2OnSite(o, k) {
   var d = SP2_DRIVERS[k], t = d && SP2_TRUCKS[d.truck], gal = sp2Gal(o);
   return Math.round(20 + 1.2 * sp2Assets(o.ship) + gal / ((t && t.meter) || 300) + sp2Buffer(gal));
 }
-// Loading out of the hub, once, before the first delivery.
+// Racking the load, once, at the terminal \u2014 after the drive out of the hub and
+// before the first delivery.
 function sp2LoadOut(k) {
   var gal = SP2_ORDERS.reduce(function (a, o) { return a + (o.driver === k ? sp2Gal(o) : 0); }, 0);
   return Math.round(gal / SP2_GPM_LOAD + 25);
@@ -5059,11 +5170,14 @@ function sp2Route(k) {
                        .sort(function (x, y) { return x.t - y.t; });
   if (!mine.length) return [];
   var sh = SP2_SHIFTS[d.shift];
-  var at = Math.max(SP2_NOW, sh ? sh.from : SP2_NOW) + sp2LoadOut(k);
+  // out of the hub, into the rack, load, and only then deliver
+  var term = sp2Terminal(d.hub);
+  var at = Math.max(SP2_NOW, sh ? sh.from : SP2_NOW) +
+           sp2Drive(term.mi, k) + sp2LoadOut(k);
   var prev = null;
   return mine.map(function (o) {
-    var trip = sp2Trip(o, k);
-    var leg = prev ? sp2Drive(sp2Leg(prev, o.ship), k) : (trip ? trip.min : 30);
+    var leg = prev ? sp2Drive(sp2Leg(prev, o.ship), k)
+                   : sp2Drive(sp2FromTerminal(o, k), k);
     var eta = at + leg, w = sp2Win(o);
     // Arriving a few minutes before the window opens is not waiting — the
     // stop's own volume buffer is 5–20 minutes wide and absorbs it. Ten

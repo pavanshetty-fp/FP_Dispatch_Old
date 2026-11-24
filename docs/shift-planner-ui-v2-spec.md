@@ -1288,31 +1288,247 @@ against the ones the row named.
 
 ---
 
-## Round 29 — the order card's expand and collapse
+## Round 29 — one expand-and-collapse pair, on the column tool
 
-A chevron says *"there is more over here"*. It does not say what the more is,
-and turning it 90° to mean "shut" asks the reader to remember which rotation
-is which.
+The orders column's expand-all tool sat on a pair of diagonal box arrows — the
+"open this wider" sign, not "show me the lines". It acts on every card's
+product table at once, so it should draw the lines it is acting on.
 
-The order card now uses a drawn pair, in the style Pavan supplied: a list with
-arrows beside it, where **the icon draws what the press will leave behind.**
+It now uses the pair Pavan supplied, where **the icon draws what the press will
+leave behind:**
 
-| State | Control | Icon |
+| State | Press does | Icon |
 |---|---|---|
-| Shut (`3 products`) | opens the table | three list lines, arrows pushing **apart** |
-| Open (`Total` row) | shuts the table | one list line, arrows coming **together** |
+| Everything shut | opens every card | three list lines, chevrons pushing **apart** |
+| Anything open | shuts every card | one list line, chevrons coming **together** |
 
 Each list line is an outlined bullet and a rounded bar, as in the reference.
+The reference's arrows are chevrons here — a head with no shaft, which is the
+direction without the weight, and the same chevron the cards use.
 `sp2ListRow(y)` draws one, so the two icons are the same part repeated three
 times and once — they cannot drift apart.
 
-The rotation is gone: `.sp2-caret.open` no longer transforms, because the
-icons are swapped rather than turned. The smoke suite asserts the count of
-list lines in each state and that the transform is `none`.
-
-The column's own expand-all tool keeps the box-expansion icon it was given in
-round 24 — it is a tool on the view row, not a control on a card.
+**The cards keep their chevron.** It was tried there and taken back out: a
+14px control inside a card is read at a glance, and a chevron is the fastest
+"there is more" there is. The drawn pair earns its space on the column tool,
+where it is a deliberate act on the whole list; inside a card it is detail
+nobody reads. The smoke suite asserts both — list lines on the tool, no
+circles in the card's caret.
 
 ### Cost
 
 64 steps green at 1512×950, nothing clipped.
+
+---
+
+## Round 30 — the rack, and what a suggestion actually costs
+
+### One heading
+
+"Fill the empty and part-filled compartments" was precise and unreadable, and
+it changed under the reader as the rig filled. One statement now, true of both:
+
+> **Fill the compartments with room left**
+
+### The truck does not deliver out of the yard
+
+The suggestion row said `2.8 mi · 7 min`, measured hub → ship-to. That is not
+how a day runs. A truck leaves the hub **empty**, drives to the terminal its
+hub loads at, racks the load, and only then starts delivering. Miles from the
+yard describe a trip nobody makes.
+
+The planner now carries the rack:
+
+| Hub | Loads at | Out of the yard |
+|---|---|---|
+| Denver | Commerce City rack | 12.4 mi |
+| Phoenix | Phoenix rack | 9.8 mi |
+| Portland | Willbridge rack | 7.6 mi |
+| Tampa | Port Tampa rack | 11.2 mi |
+| San Jose | San Jose rack | 14.5 mi |
+
+A run now begins `shift start + drive to the rack + load`, and the first leg is
+**rack → first stop**, not hub → first stop. `sp2RunEnd` still drives home to
+the hub.
+
+The windows the day is built with moved with it: they are laid out from the
+moment the truck **leaves the rack**, not from the start of the shift.
+Without that every run in the fleet read an hour late. One bucket's window span
+was tightened to 105 minutes so the day still carries a run that misses — the
+day reads 35 in window, 7 waiting, 3 late, 6 runs ending past the shift.
+
+### The row shows its working
+
+```
+5,300 gal · 12:07 PM–2:07 PM · 23.2 mi from the rack · 2h 43m driving ⓘ
+```
+
+- **the miles** are the rack to this ship-to — the leg that actually gets the
+  fuel there
+- **the time** is everything driven to reach it: hub → rack → each stop ahead
+  of it in window order → this one. Loading and time on site are the shift's,
+  not the distance's.
+
+Hovering ⓘ opens the arithmetic — every leg with its miles, the total against
+the truck's own mph, and which stop of the run this becomes:
+
+```
+HOW THIS IS WORKED OUT
+Denver Hub → Commerce City rack                12.4 mi
+Commerce City rack → Arapahoe Schools — …      23.2 mi
+Arapahoe Schools — … → Morris Group — …         3.2 mi
+…
+67.9 mi at 25 mph                               2h 43m
+
+Stop 5 of 5 once this is on. The miles shown are the rack to
+Arapahoe Schools — Bus Depot; the time is everything driven to
+reach it, loading and time on site aside.
+```
+
+The smoke suite adds the legs up and checks they make the stated total.
+
+### Delivery window is a filter
+
+Under Orders, four bands — before 8 AM, 8 AM–12 PM, 12 PM–4 PM, after 4 PM. A
+window that straddles two answers with **both**, so "show me the afternoon"
+finds a window that runs into it rather than only one that opens in it.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped.
+
+---
+
+## Round 31 — a hover card you can reach
+
+The shift card behind *"starts in 30m"* could not be got to. The card sat
+`top:100% + 4px`, and those four pixels were dead ground: the moment the
+pointer left the text, `.sp2-hv:hover` went false and the card closed before
+the pointer arrived. The card was reachable only by luck.
+
+Two things fix it, and they are now the house rule for every hover card in the
+planner:
+
+**A bridge.** Each card carries a transparent `::before` that reaches back over
+the gap to the trigger. It belongs to the card, so crossing it keeps the card
+hovered — the pointer never crosses nothing.
+
+**A held-open window.** `display` cannot be delayed, so the cards are hidden
+with `visibility` instead:
+
+```css
+.sp2-hv-card{visibility:hidden;opacity:0;
+  transition:opacity .12s linear, visibility 0s linear .45s;}
+.sp2-hv:hover .sp2-hv-card,.sp2-hv-card:hover{visibility:visible;opacity:1;
+  transition:opacity .12s linear;}
+```
+
+The card stays hit-testable for **.45s** after the pointer leaves — long
+enough to land on it from any direction, short enough never to be in the way.
+Move somewhere else and it goes, which is what Pavan asked for: it should
+survive the trip towards it, not outstay it.
+
+Applied to all three: the driver's shift card (`.sp2-hv-card`), a filter chip's
+values (`.sp2-chipf-card`), and the working behind a suggestion's miles
+(`.sp2-why-card`). The plain address tooltip is left alone — there is nothing
+in it to reach for.
+
+Measured: visible on the trigger, visible mid-gap, visible and `:hover` on the
+card itself, hidden 700ms after the pointer leaves.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped.
+
+---
+
+## Round 32 — three filters out of the Order drawer
+
+Customer, ship-to and delivery window were sections inside the **Order** group,
+behind Status. A dimension you have to go looking for is a dimension nobody
+uses: the menu is the index, and anything not in it is hidden.
+
+The Orders tab's menu is five entries now, each holding exactly one filter:
+
+```
+Order              Status
+Products           Product · Blended
+Customers          Customer      (searchable)
+Ship-tos           Ship-to       (searchable, address on the second line)
+Delivery window    four bands
+```
+
+A group with one filter draws no section heading, so each of the three opens
+straight onto its own list — one click from Filters instead of a click and a
+scroll.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped.
+
+---
+
+## Round 33 — the tick that was six characters
+
+The sort menu read `✓⟋Time`. The tick was not a tick: the markup said
+`<span class="sp2-tick">✓</span>`, and **HTML has no `\u` escape**. Six
+literal characters were sitting in a box sized `width:14px` for one glyph, so
+they spilled over the label beside them. A `title` attribute carried
+`driver’s` the same way.
+
+The cause is mine and mechanical: that popup's static HTML was written through
+a Python heredoc, where `✓` IS an escape, and the escapes went into the
+markup unchanged. It has been wrong since the sort moved into the head, because
+nobody opened the menu after writing it — including me.
+
+Four fixed, to the characters themselves. And the smoke sweep now refuses the
+whole class: any `\uXXXX` left in rendered text, or in a `title`,
+`aria-label` or `placeholder`, is reported as layout damage — `script` and
+`style` excluded, since source legitimately contains them.
+
+Logged as **M-055**.
+
+### Cost
+
+64 steps green at 1512×950, nothing clipped.
+
+## Round 34 — the line is the switch
+
+The chevron is gone from the order card. The product line itself — "3 products
+· 5,700 gal" — is the control, and clicking it opens the table, clicking it
+again shuts it.
+
+The thing Pavan asked to be fixed was the hit area. Before, a shut card gave
+the whole 44px line to click, and an open card gave a 13px chevron buried in
+the table's Total row: the target shrank to a twentieth of itself the moment
+you used it, and moved. Now it is one button that does not move. The line
+stays in the same slot, at the same width and the same height, whether the
+products are showing or not — measured at top 98.4px, left 3px, 272.5×44 in
+both states — so a second click lands where the first one did without the
+cursor travelling.
+
+The table's **Total** foot row went with the chevron. It had carried the same
+figures as the line directly above it, so keeping both would have printed the
+order's total twice in one card. The line is the total now, and the table is
+header plus rows.
+
+### Cost
+
+64 steps green at 1512×950. The step that drives the card now measures the
+button's box in both states and fails if it shifts or resizes by more than a
+pixel, so the hit area cannot drift back. The clip check is clean with all 55
+cards open.
+
+## Round 34a — the wash turns the corner
+
+The hover on the product line ran to square corners inside a card with a 10px
+radius, so the bottom of the wash cut across the card's own curve. Shut, that
+line is the card's last band, so it now carries the bottom corners itself:
+7px, which is the card's 9px inner curve less the 2px the band sits inside it.
+
+Open, it goes square again — the table is the card's bottom edge then, and a
+curve in the middle of a card would be a corner with nothing behind it.
+
+### Cost
+
+64 steps green at 1512×950. The suite now reads the radii in both states.
