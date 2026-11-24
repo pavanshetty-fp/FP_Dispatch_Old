@@ -793,13 +793,25 @@
         if (!col) throw new Error('the drawing is not beside the table');
         if (svg.getBoundingClientRect().width > col.getBoundingClientRect().width + 1)
           throw new Error('the rig spills past its column');
-        // and it stands on the compartment card's baseline, not floating in
-        // the middle of the band
-        const tbl = document.querySelector('.sp2-ln.on .sp2-two-l');
-        if (!tbl) throw new Error('there is no compartment card to stand on');
-        const gap = svg.getBoundingClientRect().bottom - tbl.getBoundingClientRect().bottom;
-        if (Math.abs(gap) > 4)
-          throw new Error('the truck sits ' + Math.round(-gap) + 'px above the card');
+        // the drawing has a card of its own, built like the table's, and it
+        // takes the band's height \u2014 whichever of the two is taller
+        const card = col.querySelector('.sp2-rig-box');
+        if (!card) throw new Error('the drawing has no box of its own');
+        const cs2 = getComputedStyle(card);
+        if (parseFloat(cs2.borderTopWidth) < 1) throw new Error('the drawing\u2019s box has no rim');
+        if (parseFloat(cs2.borderRadius) <= 0) throw new Error('the drawing\u2019s box has square corners');
+        const tbl = document.querySelector('.sp2-ln.on .sp2-two-l .sp2-ct');
+        if (!tbl) throw new Error('there is no compartment card to measure against');
+        const cb = card.getBoundingClientRect(), tb = tbl.getBoundingClientRect();
+        if (Math.abs(cb.height - Math.max(tb.height, svg.getBoundingClientRect().height)) > 2)
+          throw new Error('the box is ' + Math.round(cb.height) + 'px against a ' +
+                          Math.round(tb.height) + 'px table');
+        // and the truck sits in the middle of it, both ways
+        const sb = svg.getBoundingClientRect();
+        if (Math.abs((sb.top - cb.top) - (cb.bottom - sb.bottom)) > 2)
+          throw new Error('the truck is not centred down the box');
+        if (Math.abs((sb.left - cb.left) - (cb.right - sb.right)) > 2)
+          throw new Error('the truck is not centred across the box');
       } else {
         // when the compartments are already at their floor the rig cannot give
         // back the full padding; it just must not spill past the lane
@@ -901,9 +913,14 @@
       sp2SetQuick('unplanned');
     });
     step('the fit is the number a drop would really give', () => {
-      const k = 'd0';
+      // a rig with room for it, since a rig at its tanks now refuses the drop
+      const planned = x => SP2_ORDERS.filter(y => y.driver === x).reduce((a, y) => a + sp2Gal(y), 0);
+      const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => SP2_ORDERS.some(y => !y.driver && sp2Gal(y) <= sp2RigCap(x) - planned(x)));
+      if (!k) throw new Error('no rig in the day has room for an unplanned order');
       sp2PickDriver(k);
-      const o = SP2_ORDERS.filter(x => !x.driver)[0];
+      const room0 = sp2RigCap(k) - planned(k);
+      const o = SP2_ORDERS.filter(x => !x.driver && sp2Gal(x) <= room0)[0];
       const said = sp2FitFor(k, o);
       const before = sp2Cells(k).reduce((s, c) => s + c.l.q, 0);
       sp2Drag = o.id;
@@ -1430,7 +1447,17 @@
         const to = it.querySelector('.sp2-sg-to');
         if (!to) throw new Error('a suggestion does not say where it goes');
         if (!/Rig at \d+%/.test(to.textContent)) throw new Error('it does not say where the rig lands');
-        if (!/Into /.test(to.textContent)) throw new Error('it does not name the compartment');
+        // the product as well as the compartment: a product only goes in beside
+        // its own or into an empty tank, so which product it is decides this
+        if (!/ into /.test(to.textContent))
+          throw new Error('it does not name the product and the compartment: ' + to.textContent);
+        const o3 = SP2_ORDERS.filter(x => x.id === it.querySelector('.sp2-sg-id').textContent)[0];
+        const named = to.querySelector('.sp2-sg-to-c').textContent.split(' \u00b7 ')
+          .map(x => x.split(' into ')[0]);
+        named.forEach(pn => {
+          if (!sp2Lines(o3).some(l => l.p === pn) && !o3.prods.some(pr => pr.p === pn))
+            throw new Error(o3.id + ' does not carry ' + pn);
+        });
         if (!/compartment/i.test(to.title)) throw new Error('the hover does not spell it out');
       });
       // a suggestion is an act, not a label — each one carries its own Add
@@ -1459,16 +1486,21 @@
 
       // and taking one actually loads it, into the compartments it named
       const firstId = picks[0].querySelector('.sp2-sg-id').textContent;
-      const said = picks[0].querySelector('.sp2-sg-to-c').textContent.replace(/^Into /, '');
+      // "UNL87 into C2 \u00b7 UNL89 into C3" \u2014 every compartment it names, once
+      const saidRaw = picks[0].querySelector('.sp2-sg-to-c').textContent;
+      if (!/ into /.test(saidRaw))
+        throw new Error('the preview does not say which product goes where: ' + saidRaw);
+      const saidNames = saidRaw.split(' \u00b7 ').map(x => x.split(' into ')[1]);
+      const said = saidNames.length === 1 ? saidNames[0] : saidNames.join(', ');
       const was = sp2Cells(k).map(c => c.l.q);
       const before = sp2RigFill(k).pct;
       picks[0].querySelector('.sp2-sg-add').click();
       const grew = sp2Cells(k)
         .map((c, i) => (c.l.q > was[i] ? sp2CompName(c.u, c.i) : null)).filter(Boolean);
-      const told = /^\d+ compartments$/.test(said)
-        ? String(grew.length) + ' compartments' : sp2CompList(grew);
-      if (told !== said)
-        throw new Error('it said ' + said + ' and filled ' + told);
+      // what it named has to be what grew, however the names were grouped
+      const flat = x => x.replace(/ and /g, ', ').split(/,\s*/).filter(Boolean).sort().join(',');
+      if (!/\d+ compartments/.test(said) && flat(said) !== flat(sp2CompList(grew)))
+        throw new Error('it said ' + said + ' and filled ' + sp2CompList(grew));
       const o1 = SP2_ORDERS.filter(x => x.id === firstId)[0];
       if (o1.driver !== k) throw new Error(firstId + ' was offered but not planned');
       if (sp2RigFill(k).pct <= before) throw new Error('taking a suggestion did not load the rig');
@@ -1803,10 +1835,153 @@
       sp2RenderUnit();
     });
 
-    if (V2) step('an order that cannot be loaded says so', () => {
-      // 9,000 gal onto a 2,800 gal wagon: the order goes on the rig, because
-      // that is how a day is planned past capacity, but nothing is loaded \u2014 and
-      // that has to read as a refusal, not as a receipt.
+    if (V2) step('ranked by fit, the list answers what fills this rig', () => {
+      // One compartment half full of UNL87, one full of something else, three
+      // empty. The order that tops up the UNL87 and fills an empty tank should
+      // come first, and the card should say what it would do.
+      sp2SetDrvFilter('all');
+      const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => sp2Cells(x).length >= 4);
+      if (!k) throw new Error('no rig with four compartments');
+      sp2PickDriver(k);
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      unloadRig(k);
+      const cells = sp2Cells(k);
+      cells[0].l.p = 'UNL87'; cells[0].l.q = Math.round(cells[0].cap / 2);
+      sp2Render();
+
+      // with the list in time order the card says nothing about the rig
+      sp2SetSort('time');
+      if (document.querySelector('.sp2-card .sp2-fit'))
+        throw new Error('the fit reads out when the list is not ranked by it');
+
+      sp2SetSort('fit');
+      const cards = [...document.querySelectorAll('.sp2-card')];
+      if (!cards.length) throw new Error('nothing in the list');
+      const first = cards[0];
+      if (!first.querySelector('.sp2-fit'))
+        throw new Error('ranked by fit, the card does not say what the fit is');
+
+      // every reading is the model's, and it is a percentage
+      cards.slice(0, 8).forEach(c => {
+        const o = SP2_ORDERS.filter(x => x.id === c.dataset.id)[0];
+        if (!o || o.driver) return;
+        const f = sp2FitFor(k, o);
+        const said = c.querySelector('.sp2-fit');
+        if (!said) throw new Error(o.id + ' carries no fit');
+        if (said.textContent.indexOf(f.pct + '%') < 0)
+          throw new Error(o.id + ' says "' + said.textContent.trim() + '", the rig says ' + f.pct + '%');
+        if (said.closest('.sp2-card-top') === null)
+          throw new Error('the fit pill is not beside the order number');
+        // and the split is a sentence in gallons, not a second percentage
+        const sp = c.querySelector('.sp2-fitsplit');
+        if (!!sp !== !!f.splits)
+          throw new Error(o.id + (f.splits ? ' can be split and does not say so'
+                                           : ' cannot be split and says it can'));
+        if (sp) {
+          if (sp.tagName === 'SPAN' && /pill/.test(sp.className))
+            throw new Error('the split reads as a pill');
+          if (sp.textContent.indexOf(f.fits.toLocaleString() + ' gal') < 0)
+            throw new Error(o.id + '\u2019s split does not say the gallons: ' + sp.textContent);
+          if (sp.textContent.indexOf(f.over.toLocaleString() + ' gal') < 0)
+            throw new Error(o.id + '\u2019s split does not say what is left over');
+          if (/%/.test(sp.textContent))
+            throw new Error('the split is still a percentage: ' + sp.textContent);
+        }
+      });
+
+      // the pill is the sort: the list runs down from the highest percentage,
+      // and inside a band the order that leaves the rig fullest comes first
+      const fitOf = id => sp2FitFor(k, SP2_ORDERS.filter(x => x.id === id)[0]);
+      const seq = cards.map(c => c.dataset.id)
+        .filter(id => { const o = SP2_ORDERS.filter(x => x.id === id)[0]; return o && !o.driver; });
+      if (seq.length < 3) throw new Error('too few unplanned orders to judge the order');
+      if (fitOf(seq[0]).pct !== Math.max(...seq.map(id => fitOf(id).pct)))
+        throw new Error('the best fit in the list is not at the top');
+      for (let i = 1; i < seq.length; i++) {
+        const a = fitOf(seq[i - 1]), b2 = fitOf(seq[i]);
+        if (b2.pct > a.pct)
+          throw new Error(seq[i] + ' fits ' + b2.pct + '% and ranks below ' + seq[i - 1] +
+                          ' at ' + a.pct + '%');
+        if (b2.pct === a.pct && b2.rigPct > a.rigPct)
+          throw new Error(seq[i] + ' fills the rig more than ' + seq[i - 1] +
+                          ' at the same fit and ranks below it');
+      }
+
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      unloadRig(k);
+      sp2SetSort('time');
+      sp2SetDrvFilter('available');
+      sp2Render();
+    });
+
+    if (V2) step('a rig cannot be planned past its tanks', () => {
+      // Fill a rig to its capacity one order at a time, then try to add more.
+      // The planner does not take it and go red: it says what the room is, and
+      // the only way more goes on is a split.
+      sp2SetDrvFilter('all');
+      const k = [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
+      sp2PickDriver(k);
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
+      unloadRig(k);
+      const cap = sp2RigCap(k);
+      const planned = () => SP2_ORDERS.filter(o => o.driver === k).reduce((a, o) => a + sp2Gal(o), 0);
+      const put = id => {
+        sp2Drag = [id];
+        sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => id } },
+                'auto', -1, k);
+      };
+      // fill it as far as whole orders go
+      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
+        if (sp2Gal(o) <= cap - planned()) put(o.id);
+        if (planned() > cap) throw new Error('it planned ' + planned() + ' onto ' + cap);
+      });
+      const full = planned();
+      if (!full) throw new Error('nothing could be planned on an empty rig');
+      if (full > cap) throw new Error('the rig is planned past its tanks');
+
+      // now one that does not fit: it is not taken, and the room is stated
+      const left = cap - full;
+      const big = SP2_ORDERS.filter(o => !o.driver && sp2Gal(o) > left)[0];
+      if (!big) throw new Error('nothing left that the rig has no room for');
+      const t = document.getElementById('sp2Toast');
+      t.textContent = ''; t.className = '';
+      sp2CfmClose();
+      put(big.id);
+      if (big.driver === k) throw new Error(big.id + ' went on a rig with ' + left + ' gal of room');
+      if (planned() !== full) throw new Error('the rig took something anyway');
+      const dlg = document.getElementById('sp2CfmScrim').classList.contains('on');
+      const said = dlg ? document.getElementById('sp2CfmP').textContent : t.textContent;
+      if (!said) throw new Error('it refused the order and said nothing');
+      if (said.indexOf(cap.toLocaleString()) < 0)
+        throw new Error('it does not say what the rig holds: ' + said);
+
+      // and if a split is on offer, taking it fills the rig rather than
+      // overfilling it
+      if (dlg) {
+        if (!/Split/.test(document.getElementById('sp2CfmT').textContent))
+          throw new Error('the dialog is not the split offer');
+        document.getElementById('sp2CfmOk').click();
+        if (planned() > cap)
+          throw new Error('the split planned ' + planned() + ' onto ' + cap);
+        if (big.driver !== k) throw new Error('the split did not put any of it on');
+        const kid = SP2_ORDERS.filter(x => x.split && x.split.of === big.id)[0];
+        if (!kid) throw new Error('the remainder did not become an order');
+        if (kid.driver) throw new Error('the remainder went onto the rig too');
+        SP2_ORDERS.splice(SP2_ORDERS.indexOf(kid), 1);
+      }
+
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; delete o.split; });
+      unloadRig(k);
+      t.textContent = ''; t.className = ''; t.style.display = 'none';
+      sp2SetDrvFilter('available');
+      sp2RenderUnit();
+    });
+
+    if (V2) step('an order the rig has no room for is refused, not absorbed', () => {
+      // 9,000 gal onto a 2,800 gal wagon. The rig cannot be planned past its
+      // tanks, so the order is not taken at all: nothing loads, nothing is
+      // assigned, and the line says what the room is.
       sp2SetDrvFilter('available');
       // a rig with every compartment already spoken for: a new product has
       // nowhere to go, however much room is left inside those compartments
@@ -1829,21 +2004,20 @@
       sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => big.id } },
               'auto', -1, small);
       if (cells() !== was) throw new Error('it loaded fuel there was no room for');
+      if (big.driver === small) throw new Error('it took an order the rig cannot carry');
       const said = t.textContent;
       if (!said) throw new Error('nothing was said at all');
       if (/loaded onto/.test(said)) throw new Error('a refusal reads as a receipt: ' + said);
-      if (!/Nothing could be loaded/.test(said)) throw new Error('it does not say nothing went in: ' + said);
-      if (!/empty tanks/.test(said)) throw new Error('it does not say the order is on the rig regardless');
       if (!t.classList.contains('warn')) throw new Error('a refusal looks like any other toast');
       if (said.indexOf(sp2RigCap(small).toLocaleString()) < 0)
         throw new Error('it does not say what the rig holds');
-      // and the lane says it too, where the chips would be
-      const lane = document.querySelector('.sp2-ln[data-k="' + small + '"]');
-      if (!lane.querySelector('.sp2-over-warn'))
-        throw new Error('the lane does not flag the order it cannot carry');
-      if (!lane.querySelector('.sp2-over-row[data-id],.sp2-over-row'))
-        throw new Error('the banner does not list it');
-      sp2UnplanOrder({ stopPropagation(){} }, small, big.id);
+      if (!/holding another product|is full/.test(said))
+        throw new Error('it does not say why none of it can go on: ' + said);
+      // and nothing has been quietly planned past the tanks
+      const plannedNow = SP2_ORDERS.filter(o => o.driver === small)
+        .reduce((a, o) => a + sp2Gal(o), 0);
+      if (plannedNow > sp2RigCap(small))
+        throw new Error('the rig is planned to ' + plannedNow + ' on ' + sp2RigCap(small));
       t.textContent = ''; t.className = ''; t.style.display = 'none';
       sp2RenderUnit();
     });
@@ -1865,7 +2039,7 @@
         const o = SP2_ORDERS.filter(x => x.id === id)[0];
         const said = c.querySelector('.sp2-stop-fit');
         if (!said) throw new Error(id + ' does not say how well it fits');
-        if (said.textContent.trim() !== sp2OrderFit(k, o).pct + '% fit')
+        if (said.textContent.trim() !== sp2OrderFit(k, o).pct + '% of truck')
           throw new Error(id + ' says ' + said.textContent.trim() + ', the rig says ' +
                           sp2OrderFit(k, o).pct + '%');
       });
@@ -1899,12 +2073,28 @@
       if (other && cs.boxShadow === getComputedStyle(pillOf(other)).boxShadow)
         throw new Error('the best fit carries no rim the others lack');
 
+      // the share is of the WHOLE rig, not of the compartments it lands in:
+      // three orders on one truck cannot all read 100%
+      chips.forEach(c => {
+        const o = SP2_ORDERS.filter(x => x.id === c.dataset.id)[0];
+        const pct = sp2OrderFit(k, o).pct;
+        if (pct !== Math.round(sp2Gal(o) / sp2RigCap(k) * 100))
+          throw new Error(c.dataset.id + ' is not measured against the rig');
+      });
+      const hundreds = chips.filter(c => /^100%/.test(c.querySelector('.sp2-stop-fit').textContent));
+      if (hundreds.length > 1)
+        throw new Error(hundreds.length + ' orders on one truck each fill 100% of it');
+      const sum = SP2_ORDERS.filter(o => o.driver === k)
+        .reduce((a, o) => a + sp2OrderFit(k, o).pct, 0);
+      if (!sp2Overload(k) && sum > 105)
+        throw new Error('the shares add up to ' + sum + '% of a rig that is not over capacity');
+
       // and it is coloured by the verdict, not by nothing
       const bands = { low:0, mid:0, high:0 };
       chips.forEach(c => {
         const o = SP2_ORDERS.filter(x => x.id === c.dataset.id)[0];
         const pct = sp2OrderFit(k, o).pct;
-        const want = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+        const want = pct > 100 ? 'low' : pct >= 40 ? 'high' : pct >= 15 ? 'mid' : 'low';
         const t = c.querySelector('.sp2-stop-fit');
         if (!t.classList.contains(want))
           throw new Error(c.dataset.id + ' at ' + pct + '% is not read as ' + want);

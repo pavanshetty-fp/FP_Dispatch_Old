@@ -983,6 +983,22 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-fit.part{color:var(--status-caution);}
 .sp2-fit.part b{color:var(--status-caution);}
 .sp2-fit.none{color:var(--status-neutral);}
+/* ranked by fit, the reading is a pill beside the order number */
+.sp2-card-top .sp2-fit{margin-left:0;height:18px;padding:0 7px;border-radius:9999px;
+  display:inline-flex;align-items:center;background:var(--chip);}
+.sp2-card-top .sp2-fit.perfect{background:color-mix(in oklab,var(--status-success) 14%,var(--fp-surface-1b));}
+.sp2-card-top .sp2-fit.full{background:color-mix(in oklab,var(--status-success) 10%,var(--fp-surface-1b));}
+.sp2-card-top .sp2-fit.part{background:color-mix(in oklab,var(--status-caution) 16%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-caution) 72%,#0b0d12);}
+.sp2-card-top .sp2-fit.part b{color:inherit;}
+.sp2-card-top .sp2-fit.none{background:color-mix(in oklab,var(--status-failed) 12%,var(--fp-surface-1b));
+  color:color-mix(in oklab,var(--status-failed) 86%,#0b0d12);}
+.sp2-card-top .sp2-fit.none b{color:inherit;}
+/* what a split would put on: a sentence under the window, not a second pill */
+.sp2-fitsplit{margin-top:7px;font-size:12px;line-height:1.4;
+  color:color-mix(in oklab,var(--status-info) 82%,#0b0d12);
+  font-variant-numeric:tabular-nums;}
+.sp2-fitsplit b{font-weight:600;color:inherit;}
 .sp2-card-top .sp2-open{margin-left:0;}
 /* ranked by fit: no rail, no gaps — those are about time */
 .sp2-vt.ranked .sp2-vrow{gap:10px;}
@@ -1077,14 +1093,22 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 /* ── the trial middle: load left, truck right ──────────
    The table holds the numbers you change; the drawing beside it holds the
    picture. Together they take one band of the card instead of two. */
-/* The band is as tall as the table; the drawing sits on its baseline, so the
-   bottom of the truck lines up with the bottom of the compartment card. */
 /* Half each, whatever the screen is: the table and the drawing say the same
    thing two ways, so neither outranks the other. The ratio is fixed; the
    widths follow the column. */
+/* Two boxes of the same build, side by side. The drawing has a card of its own
+   now rather than floating beside the table's — it takes the band's height,
+   which is whichever of the two is taller, and the truck sits in the middle of
+   it both ways instead of standing on the bottom edge. */
 .sp2-two{display:flex;gap:12px;align-items:stretch;margin-top:10px;}
 .sp2-two-l{flex:1 1 0;min-width:0;}
-.sp2-two-r{flex:1 1 0;min-width:0;display:flex;align-items:flex-end;justify-content:center;}
+/* The column stays bare, as the table's does, and the card sits inside it:
+   a flex-basis of 0 takes the padding and border on top of the share it is
+   given, so a bordered column came out 22px wider than its neighbour. */
+.sp2-two-r{flex:1 1 0;min-width:0;display:flex;}
+.sp2-rig-box{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;
+  padding:10px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-md);overflow:hidden;}
 /* Comp and the readouts take what they need; the product name gets the rest.
    TM is the tank monitor, and the head has to fit at this width. */
 .sp2-two-l .sp2-ct{margin-top:0;grid-template-columns:46px minmax(0,1fr) 58px 68px;}
@@ -1100,7 +1124,9 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--fp-surface-base);
 .sp2-two-l .sp2-ct-pct{font-size:10px;}
 .sp2-two-l .sp2-ct-foot{padding:8px 9px;font-size:12px;flex-wrap:wrap;row-gap:7px;}
 .sp2-two-l .sp2-ct-btn{height:26px;padding:0 11px;font-size:12px;}
-.sp2-two-r .sp2-rig{margin-top:0;overflow:visible;min-width:0;max-width:100%;}
+/* the 2px under the drawing is room for a scrollbar it does not have in here,
+   and it put the truck 2px above the middle of its box */
+.sp2-two-r .sp2-rig{margin-top:0;padding-bottom:0;overflow:visible;min-width:0;max-width:100%;}
 /* the drawing scales to the column it is given rather than scrolling */
 .sp2-two-r .sp2-rig svg{max-width:100%;height:auto;}
 
@@ -2116,12 +2142,15 @@ function sp2ShiftBand(k) { return (SP2_SHIFTS[k] && SP2_SHIFTS[k].name === 'Earl
 // Worth-doing-first, against the chosen rig: an order that fills the truck
 // outright, then ones that go on whole (fuller rig first), then part loads by
 // how much of them lands.
+// The pill is the sort. Whatever number the card shows, the list runs down
+// from the highest of them \u2014 anything else reads as no order at all. Among
+// orders that fit equally (and there are many at 100%), the one that leaves
+// the rig fullest comes first, so "which of these fills the truck" is still
+// answered inside each band.
 function sp2FitScore(o) {
   var f = sp2FitFor(sp2Driver, o);
   if (!f) return -1;
-  if (f.pct >= 100 && f.rigPct >= 100) return 1e9;
-  if (f.pct >= 100) return 1e6 + f.rigPct * 1000 + f.fits;
-  return f.pct * 1000 + f.fits;
+  return f.pct * 1e6 + f.rigPct * 1000 + Math.min(999, Math.round(f.fits / 100));
 }
 
 // Orders the run does not reach inside the window the customer was given.
@@ -2288,13 +2317,18 @@ function sp2Suggest(k, max) {
 // A dry run of the packer \u2014 the same two passes on a copy of the cells \u2014 so a
 // suggestion can name the compartments the fuel will land in BEFORE it is
 // added. Anything else would be a guess that the Add button then contradicts.
+// Which product lands in which compartment, in the order the packer would do
+// it: a part-filled compartment takes more of its own product first, an empty
+// one takes anything. A product that matches nothing and has no empty tank to
+// go into places nothing \u2014 which is why the preview names the product and not
+// just the compartment.
 function sp2WouldFill(k, prods) {
   var cells = sp2Cells(k).map(function (c) {
     return { cap:c.cap, p:c.l.p, q:c.l.q, u:c.u, i:c.i };
   });
-  var hit = {}, names = [];
+  var plan = [];
   prods.forEach(function (pr) {
-    var left = pr.q;
+    var left = pr.q, hit = {}, names = [], put = 0;
     [1, 2].forEach(function (pass) {
       cells.forEach(function (c) {
         if (!left) return;
@@ -2303,37 +2337,54 @@ function sp2WouldFill(k, prods) {
         var take = Math.min(c.cap - c.q, left);
         if (!take) return;
         if (pass === 2) c.p = pr.p;
-        c.q += take; left -= take;
+        c.q += take; left -= take; put += take;
         var nm = sp2CompName(c.u, c.i);
         if (!hit[nm]) { hit[nm] = 1; names.push(nm); }
       });
     });
+    plan.push({ p:pr.p, names:names, q:put, short:left });
   });
-  return names;
+  return plan;
+}
+// every compartment the plan touches, once
+function sp2FillNames(plan) {
+  var hit = {}, out = [];
+  plan.forEach(function (x) {
+    x.names.forEach(function (n) { if (!hit[n]) { hit[n] = 1; out.push(n); } });
+  });
+  return out;
+}
+// "UNL87 into C2", or "UNL87 into C2 \u00b7 UNL89 into C3"
+function sp2FillSay(plan) {
+  return plan.filter(function (x) { return x.q; })
+    .map(function (x) { return x.p + ' into ' + sp2CompList(x.names); }).join(' \u00b7 ');
 }
 // What of this order the rig could take as it stands: the same two passes the
 // packer runs — room for the same product in a part-filled compartment first,
 // then an empty one — against a copy, so nothing moves. This is the question
 // behind a split: fit what fits, and the rest is a second order.
-function sp2SplitPlan(k, o) {
+function sp2SplitPlan(k, o, limit) {
   var cells = sp2Cells(k).map(function (c) { return { cap:c.cap, p:c.l.p, q:c.l.q }; });
+  // The compartments can have more free space than the rig has unplanned
+  // gallons \u2014 planned fuel is not loaded fuel \u2014 so a split onto a rig with
+  // room left is held to that room, or it would put the rig back over.
+  var cap = limit === undefined || limit === null ? Infinity : Math.max(0, limit);
   var take = [], req = 0, fits = 0;
   o.prods.forEach(function (pr) {
     var left = pr.q, got = 0;
     req += pr.q;
     [1, 2].forEach(function (pass) {
       cells.forEach(function (c) {
-        if (!left) return;
+        if (!left || fits >= cap) return;
         var same = c.p === pr.p, empty = !c.p || c.q === 0;
         if (pass === 1 ? !(same && c.q > 0) : !empty) return;
-        var t = Math.min(c.cap - c.q, left);
+        var t = Math.min(c.cap - c.q, left, cap - fits);
         if (!t) return;
         if (pass === 2) c.p = pr.p;
-        c.q += t; left -= t; got += t;
+        c.q += t; left -= t; got += t; fits += t;
       });
     });
     take.push({ p:pr.p, q:got });
-    fits += got;
   });
   return { req:req, fits:fits, left:req - fits, take:take };
 }
@@ -2370,11 +2421,38 @@ function sp2SplitAsk(e, k, id) {
     ', unplanned, for another truck — same ship-to, same window.',
     'Split order', function () { sp2SplitGo(k, id); });
 }
-function sp2SplitGo(k, id) {
+// An order the rig has no room for. The planner does not take it and then go
+// red: it says what the room is and offers the one thing that gets part of it
+// on \u2014 a split that lands the truck on full, never over.
+function sp2OfferSplit(k, o, room, pre, alsoN) {
+  var d = SP2_DRIVERS[k], cap = sp2RigCap(k);
+  var also = alsoN ? ' ' + alsoN + ' more had no room either.' : '';
+  var head = pre + o.id + ' is ' + sp2Gal(o).toLocaleString() + ' gal and ' + d.truck +
+    ' has ' + Math.max(0, room).toLocaleString() + ' gal of its ' + cap.toLocaleString() +
+    ' left.';
+  if (room <= 0)
+    return sp2Toast(head + '\n' + d.truck + ' is full — take an order off before adding one.' +
+      also, 1);
+  var plan = sp2SplitPlan(k, o, room);
+  if (!plan.fits)
+    return sp2Toast(head + '\nEvery compartment with room is holding another product, so none ' +
+      'of it can go on — take an order off first.' + also, 1);
+  var kid = sp2SplitId(o.id);
+  sp2Confirm('Split ' + o.id + ' onto ' + d.truck + '?',
+    head + ' Splitting puts ' + plan.fits.toLocaleString() + ' gal on, which takes ' + d.truck +
+    ' to ' + Math.round((cap - room + plan.fits) / cap * 100) + '% of its tanks. The other ' +
+    plan.left.toLocaleString() + ' gal becomes ' + kid + ', unplanned, for another truck.' + also,
+    'Split order',
+    function () {
+      o.driver = k;
+      sp2SplitGo(k, o.id, room);
+    });
+}
+function sp2SplitGo(k, id, limit) {
   var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
   var d = SP2_DRIVERS[k];
   if (!o || !d) return;
-  var plan = sp2SplitPlan(k, o);
+  var plan = sp2SplitPlan(k, o, limit);
   if (!plan.fits || !plan.left) return;
   var kid = sp2SplitId(o.id);
   var rest = [];
@@ -2394,41 +2472,24 @@ function sp2SplitGo(k, id) {
     plan.left.toLocaleString() + ' gal left as ' + kid + ', back in the orders column.', 1);
 }
 
-// How well an order sits in a rig, on its own: pack it into the empty rig the
-// way the real packer would, then ask how much of the compartments it took up
-// it actually fills. 100% is an order that leaves no air in the tanks it uses;
-// 50% is an order that half-fills one. It is a property of the order and the
-// rig, not of what else happens to be loaded, so it does not change as the day
-// is built.
+// How much of the truck one order fills: its gallons against the whole rig.
+//
+// This was measured against the compartments the order would land in, which
+// made three orders on one truck all read "100% fit" — each filled the tanks
+// it needed — and handed a 3,450 gal order on a 2,800 gal rig the best score
+// on the lane, because the 650 gal with nowhere to go was never counted. A
+// share of the rig cannot say that: 2,050 of 2,800 is 73%, and 3,450 is 123%,
+// which states plainly that it does not fit this truck at all.
 function sp2OrderFit(k, o) {
-  var cells = sp2Cells(k).map(function (c) {
-    return { cap:c.cap, p:'', q:0, u:c.u, i:c.i };
-  });
-  var placed = 0;
-  sp2Lines(o).forEach(function (pr) {
-    var left = pr.q;
-    [1, 2].forEach(function (pass) {
-      cells.forEach(function (c) {
-        if (!left) return;
-        var same = c.p === pr.p, empty = !c.p || c.q === 0;
-        if (pass === 1 ? !(same && c.q > 0) : !empty) return;
-        var take = Math.min(c.cap - c.q, left);
-        if (!take) return;
-        if (pass === 2) c.p = pr.p;
-        c.q += take; left -= take; placed += take;
-      });
-    });
-  });
-  var used = cells.filter(function (c) { return c.q > 0; });
-  var room = used.reduce(function (a, c) { return a + c.cap; }, 0);
-  return { pct: room ? Math.round(placed / room * 100) : 0,
-           placed:placed, room:room, comps:used.length };
+  var cap = sp2RigCap(k), gal = sp2Gal(o);
+  return { pct: cap ? Math.round(gal / cap * 100) : 0, gal:gal, cap:cap };
 }
-// How good a fit is, as a reading rather than a number: a compartment left
-// half empty is a tank of air driven around the state, so under half is poor,
-// and 80% is where a load stops wasting room worth another order.
+// What that share is worth reading as. A day of four or five stops puts each
+// order around a fifth of the rig, so the middle band is the ordinary case;
+// green is an order that is most of the load on its own, and red is either a
+// drop too small to be worth the stop or one the truck cannot hold at all.
 function sp2FitBand(pct) {
-  return pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+  return pct > 100 ? 'low' : pct >= 40 ? 'high' : pct >= 15 ? 'mid' : 'low';
 }
 // The orders that fill this rig best: the top fit, and anything within four
 // points of it \u2014 so a lane of four orders usually marks one or two. It is
@@ -2437,7 +2498,11 @@ function sp2FitBand(pct) {
 // on the screen; each chip still states its own number. Two points is a tie,
 // not a band \u2014 wider and most of the lane lights up, which marks nothing.
 function sp2BestFits(k, os) {
-  var fits = os.map(function (o) { return sp2OrderFit(k, o).pct; });
+  // an order the truck cannot hold is not a candidate for filling it best
+  var fits = os.map(function (o) {
+    var p = sp2OrderFit(k, o).pct;
+    return p > 100 ? 0 : p;
+  });
   var top = Math.max.apply(null, fits.concat([0]));
   if (os.length < 2 || !top) return {};
   var out = {};
@@ -2446,6 +2511,12 @@ function sp2BestFits(k, os) {
 }
 // "C1", "C1 and C3", "C1, C3 and C4", then a count \u2014 a list of five numbers
 // beside a button is not a read.
+// In a sentence there is room to name them all; the chip has to collapse.
+function sp2CompAll(ns) {
+  if (!ns.length) return '';
+  if (ns.length === 1) return ns[0];
+  return ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1];
+}
 function sp2CompList(ns) {
   if (!ns.length) return '';
   if (ns.length > 3) return ns.length + ' compartments';
@@ -2468,6 +2539,13 @@ function sp2TakeSuggestion(e, k, id) {
   var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
   var d = SP2_DRIVERS[k];
   if (!o || !d || o.driver) return;
+  var room = sp2RigCap(k) - SP2_ORDERS.filter(function (x) { return x.driver === k; })
+                                      .reduce(function (a, x) { return a + sp2Gal(x); }, 0);
+  if (sp2Gal(o) > room) {
+    sp2Driver = k;
+    sp2Render();
+    return sp2OfferSplit(k, o, room, '', 0);
+  }
   var r = sp2PackInto(k, o.prods, 'auto', -1);
   o.driver = k;
   sp2Driver = k;
@@ -2515,11 +2593,17 @@ function sp2SuggestHtml(k) {
             (rc ? '<span class="sp2-sep"></span>' + sp2ReachHtml(rc, o) : '') +
           '</div>' +
         '</div>' +
-        (function (into) {
+        (function (plan) {
+          var into = sp2FillNames(plan), say = sp2FillSay(plan);
+          var missed = plan.filter(function (x) { return x.short; })
+            .map(function (x) { return x.p + ' ' + x.short.toLocaleString() + ' gal'; });
           return '<span class="sp2-sg-to" title="' +
-              (into.length ? 'Goes into ' + sp2CompLong(into) + '. ' : '') +
+              (into.length ? say.replace(/ into /g, ' goes into ') + ' — ' +
+                sp2CompLong(into) + '. ' : '') +
+              (missed.length ? 'No compartment can take ' + missed.join(', ') +
+                ': a product goes in beside its own or into an empty tank. ' : '') +
               'The rig ends at ' + o.__after + '% full.">' +
-            (into.length ? '<span class="sp2-sg-to-c">Into ' + sp2CompList(into) + '</span>' : '') +
+            (say ? '<span class="sp2-sg-to-c">' + say + '</span>' : '') +
             '<span class="sp2-sg-to-p">Rig at ' + o.__after + '%</span>' +
           '</span>';
         })(sp2WouldFill(k, o.prods)) +
@@ -2596,9 +2680,17 @@ function sp2FitFor(k, o) {
     });
   });
   var after = cells.reduce(function (s, c) { return s + c.q; }, 0);
-  return { fits:fits, total:total, over:total - fits,
+  var room = cap - (after - fits);                 // space in the tanks before it
+  return { fits:fits, total:total, over:total - fits, cap:cap, room:room,
            pct: total ? Math.round(fits / total * 100) : 0,
-           rigPct: cap ? Math.round(after / cap * 100) : 0 };
+           // how much of the space left this order takes up \u2014 the number the
+           // fit sort ranks by, because a part-filled rig wants whatever brings
+           // it closest to full
+           roomPct: room ? Math.round(fits / room * 100) : 0,
+           rigPct: cap ? Math.round(after / cap * 100) : 0,
+           // more than the room, but some of it goes on: a split puts that part
+           // on and leaves the rest as an order of its own
+           splits: fits > 0 && fits < total };
 }
 
 // The chip that says it. "Fills the truck" is the one worth looking for: the
@@ -2705,12 +2797,23 @@ function sp2FitChip(o) {
   var d = SP2_DRIVERS[sp2Driver];
   var why = 'Against ' + d.name + ' · ' + d.truck + ' — ' + f.fits.toLocaleString() +
             ' of ' + f.total.toLocaleString() + ' gal would load, leaving the rig ' + f.rigPct + '% full';
-  var cls, text;
-  if (f.pct >= 100 && f.rigPct >= 100) { cls = 'perfect'; text = 'Fills the truck'; }
-  else if (f.pct >= 100)               { cls = 'full';    text = 'Fits \u00b7 rig <b>' + f.rigPct + '%</b>'; }
-  else if (f.pct > 0)                  { cls = 'part';    text = '<b>' + f.pct + '%</b> fits \u00b7 ' + f.over.toLocaleString() + ' gal over'; }
-  else                                 { cls = 'none';    text = 'No room'; }
-  return '<span class="sp2-fit ' + cls + '" title="' + why + '">' + text + '</span>';
+  // The pill is one reading and nothing else: how much of this order the rig
+  // can take as it stands.
+  var cls = f.pct >= 100 && f.rigPct >= 100 ? 'perfect'
+          : f.pct >= 100 ? 'full'
+          : f.pct > 0 ? 'part' : 'none';
+  return '<span class="sp2-fit ' + cls + '" title="' + why + '">' +
+    '<b>' + f.pct + '%</b> fit</span>';
+}
+// What splitting it would actually put on, in gallons and compartments. Not a
+// pill: a pill is a reading, and this is a sentence about what would happen.
+function sp2FitSplitLine(o) {
+  var f = sp2FitFor(sp2Driver, o);
+  if (!f || !f.splits) return '';
+  var into = sp2FillNames(sp2WouldFill(sp2Driver, o.prods));
+  return '<div class="sp2-fitsplit">Split it and <b>' + f.fits.toLocaleString() +
+    ' gal</b> goes in' + (into.length ? ' — ' + sp2CompAll(into) : '') +
+    '. ' + f.over.toLocaleString() + ' gal stays for another truck.</div>';
 }
 
 // The card is the same in every view; only where it sits changes.
@@ -2876,6 +2979,8 @@ function sp2CardV3(o, style) {
           'onclick="sp2TogglePick(event,\'' + o.id + '\')"></button>') +
       '<span class="sp2-ord">' + o.id + '</span>' +
       '<span class="sp2-kind" title="' + o.type + '">' + o.type.charAt(0) + '</span>' +
+      // ranked by fit, the reading belongs with the order number
+      (sp2Sort === 'fit' && !planned && SP2_DRIVERS[sp2Driver] ? sp2FitChip(o) : '') +
       (o.split
         ? '<span class="sp2-pill sp2-pill-split" title="' +
             (o.split.of
@@ -2909,6 +3014,12 @@ function sp2CardV3(o, style) {
         '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>' +
       '<span>' + sp2Clock(w.from) + ' \u2013 ' + sp2Clock(w.to) + '</span>' +
     '</div>' +
+
+    // and under the window, what splitting it would put on — a sentence,
+    // because it is a consequence rather than a reading
+    (sp2Sort === 'fit' && !planned && SP2_DRIVERS[sp2Driver]
+      ? sp2FitSplitLine(o)
+      : '') +
 
     // ── unit 2 · what was asked for, correctable in place ──
     // The DS lines table: flush to the card's edges, a tinted header band,
@@ -5079,7 +5190,15 @@ function sp2Drop(e, unit, idx, k) {
   // Several orders go on in the order they were given, each into the same rig.
   // Only the first one may name a compartment; the rest pack where they fit,
   // because a named compartment can only take one order's worth.
-  var loaded = [], gal = 0, shortOf = [], held = [], last = null;
+  //
+  // A rig cannot be planned past its tanks. An order with more gallons than
+  // the room left is not taken: it is offered as a split instead, which is the
+  // one way more can go on — what fits goes on, the remainder becomes an order
+  // of its own, and the truck lands on full rather than over.
+  var cap = sp2RigCap(k);
+  var room = cap - SP2_ORDERS.filter(function (o) { return o.driver === k; })
+                             .reduce(function (a, o) { return a + sp2Gal(o); }, 0);
+  var loaded = [], gal = 0, shortOf = [], held = [], over = [], last = null;
   ids.forEach(function (id, n) {
     var o = SP2_ORDERS.filter(function (x) { return x.id === id; })[0];
     if (!o) return;
@@ -5087,21 +5206,31 @@ function sp2Drop(e, unit, idx, k) {
     // their lane. Moving it across behind their back is how double-booking starts.
     if (o.driver && o.driver !== k) return held.push(o.id);
     if (o.driver === k) return;
+    if (sp2Gal(o) > room) return over.push(o);
     var r = sp2PackInto(k, o.prods, n === 0 ? unit : 'auto', n === 0 ? idx : -1);
     o.driver = k; last = o.id;
+    room -= sp2Gal(o);
     loaded.push(o.id); gal += r.put;
     r.short.forEach(function (x) { if (shortOf.indexOf(x) < 0) shortOf.push(x); });
     delete sp2Picked[o.id];
   });
 
+  if (loaded.length) { sp2Driver = k; sp2SelOrder = last; sp2Render(); }
+
+  // What there was no room for. One of them is offered as a split, because a
+  // dialog per order is a queue nobody asked for.
+  if (over.length) {
+    sp2Driver = k;
+    sp2Render();
+    return sp2OfferSplit(k, over[0], room,
+      loaded.length ? loaded.length + ' of ' + (loaded.length + over.length) + ' went on. ' : '',
+      over.length > 1 ? over.length - 1 : 0);
+  }
+
   if (!loaded.length)
     return sp2Toast(held.length
       ? held.join(', ') + ' is planned on another driver — take it off that lane first'
       : 'Nothing to load');
-
-  sp2Driver = k;
-  sp2SelOrder = last;
-  sp2Render();
 
   var what = loaded.length === 1 ? loaded[0] : loaded.length + ' orders';
   // Nothing went in. The order is on the rig — that is how a dispatcher plans
@@ -5594,15 +5723,17 @@ function sp2StopChips(k, mine, over) {
     return '<span class="sp2-stopw' + (sp2SelOrder === o.id ? ' sel' : '') +
         (best[o.id] ? ' fit' : '') + '" data-id="' + o.id + '" ' +
         'onclick="sp2PickOrder(\'' + o.id + '\')" ' +
-        'title="' + o.ship + ' · ' + sp2Gal(o).toLocaleString() + ' gal · fills ' + fit +
-          '% of the compartments it needs' + (best[o.id] ? ' — the best fit on this rig' : '') + '">' +
+        'title="' + o.ship + ' · ' + sp2Gal(o).toLocaleString() + ' gal · ' + fit +
+          '% of ' + d.truck + '’s ' + sp2RigCap(k).toLocaleString() + ' gal' +
+          (fit > 100 ? ' — more than the truck holds' : '') +
+          (best[o.id] ? ' — the most of this truck any one order fills' : '') + '">' +
         '<span class="sp2-stop" data-id="' + o.id + '">' +
           '<span class="sp2-stop-t">' + sp2Hhmm(o.t) + '</span>' + o.id +
           '<b>' + sp2Gal(o).toLocaleString() + ' gal</b>' +
           '<button class="sp2-stop-x" title="Take this order off ' + d.truck + '" ' +
             'onclick="sp2UnplanOrder(event,\'' + k + '\',\'' + o.id + '\')">×</button>' +
         '</span>' +
-        '<span class="sp2-stop-fit ' + band + '">' + fit + '% fit</span>' +
+        '<span class="sp2-stop-fit ' + band + '">' + fit + '% of truck</span>' +
       '</span>';
   }).join('');
 }
@@ -5735,7 +5866,8 @@ function sp2LaneHtml(k) {
         : k === sp2Driver
         ? '<div class="sp2-two">' +
             '<div class="sp2-two-l">' + sp2CompTable(k) + '</div>' +
-            '<div class="sp2-two-r">' + sp2RigBareArt(k, 300) + '</div>' +
+            '<div class="sp2-two-r"><div class="sp2-rig-box">' +
+              sp2RigBareArt(k, 300) + '</div></div>' +
           '</div>' + sp2SuggestHtml(k)
         : mine.length ? sp2SimpleBars(k) : '') +
 

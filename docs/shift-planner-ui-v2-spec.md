@@ -1842,3 +1842,199 @@ bigger than the rig — so it tests the case rather than hoping for it.
 scrolls the column to the top, calls what startup calls, and fails if the
 selected lane is not in view; the banner step checks the named order is the one
 where the running total crosses, by the clock.
+
+## Round 44 — the fit is a share of the truck
+
+The old number was the order against **the compartments it would land in**, on
+an empty rig. That is why three orders on one truck could each read "100% fit":
+each one filled the tanks it needed. Worse, on Priya Sharma's BT-34 a 3,450 gal
+order on a 2,800 gal rig scored **100%** — the best on the lane — because the
+650 gal with nowhere to go was never in the denominator.
+
+It is now the order against the whole rig:
+
+| order | gallons | was | now |
+|---|---|---|---|
+| D-5157060 | 550 | 46% | 20% of truck |
+| D-5157061 | 700 | 58% | 25% of truck |
+| D-5157062 | 2,050 | 98% | 73% of truck |
+| D-5157063 | 3,450 | **100%** | **123% of truck** |
+
+The chip reads "20% of truck" rather than "20% fit", because "fit" is the word
+that made 100% ambiguous in the first place. Over 100% is red whatever the
+other bands say, and an order the truck cannot hold is no longer a candidate
+for the violet best-fit mark.
+
+**The bands no longer carry much.** A day is four or five even stops, so the
+seeded day now reads **42 amber chips, 2 red, 0 green** — every order is 14–20%
+of its truck, because that is what five stops on one truck means. The three
+colours were meaningful when the number was about compartments; against the
+whole rig the share has no good or bad to it except "more than the truck
+holds". Left as asked, flagged for Pavan.
+
+### Cost
+
+73 steps green at 1512×950, archived V1 52, merged bundle 99. The step now
+recomputes each share against `sp2RigCap`, fails if two orders on one truck
+both read 100%, and fails if the shares on a rig that is not over capacity add
+up past 105%.
+
+## Round 45 — the drawing gets a box
+
+The truck floated beside the compartment card, standing on its bottom edge. It
+has a card of its own now, built the same way — surface, 1px rim, `--r-md` —
+and it takes the band's height, which is whichever of the two is taller. The
+truck sits in the middle of it, across and down.
+
+Two things the band taught:
+
+- **A bordered column came out 22px wider than its neighbour.** With
+  `flex:1 1 0` the padding and border are taken on top of the share the column
+  is given, not out of it, `box-sizing:border-box` notwithstanding. So the
+  column stays bare, exactly as the table's does, and the card sits inside it.
+- **The 2px under the drawing is room for a scrollbar it does not have here**,
+  and it put the truck 2px above the middle of its box. Zeroed inside the box.
+
+### Cost
+
+73 steps green at 1512×950, archived V1 52, merged bundle 99. The step reads
+the box's rim and radius, checks its height against the taller of the two, and
+measures the truck's centring both ways; the 50/50 check stands, which is what
+caught the 22px.
+
+## Round 46 — a rig cannot be planned past its tanks
+
+Adding was free and the planner cleaned up after: take the order, go over
+capacity, flag it red. Now the capacity is a ceiling. An order with more
+gallons than the room left is **not taken** — it is not assigned, nothing is
+loaded, and the line says what the room is:
+
+> D-5157060 is 550 gal and LT-46 has 0 gal of its 10,500 left.
+> LT-46 is full — take an order off before adding one.
+
+The one way more goes on is the split, offered at the moment of the drop:
+
+> **Split D-5157085 onto LT-61?**
+> D-5157085 is 10,500 gal and LT-61 has 10,000 gal of its 10,500 left.
+> Splitting puts 7,000 gal on, which takes LT-61 to 71% of its tanks. The other
+> 3,500 gal becomes D-5157085-2, unplanned, for another truck.
+
+Both the drag and the suggestion row's **Add** go through the ceiling.
+
+**Why the split does not always reach 100%.** What fits is compartment work,
+not arithmetic: that 10,500 gal order is 7,000 of UNL87 and 3,500 of UNL89, and
+with one compartment already holding 500 gal of dyed diesel there is no empty
+tank left for the UNL89. 7,000 is genuinely everything that can go on without
+mixing two products in one compartment, so the dialog says 71% rather than
+promising a full truck.
+
+**The plan is held to the room, not to the free space.** Compartments can have
+more space than the rig has unplanned gallons — planned fuel is not loaded fuel
+— so `sp2SplitPlan` now takes a limit, and the split stops at the room. Without
+it a split could put the rig straight back over.
+
+The red banner stays: a rig can still end up over by having an order's gallons
+edited upward on its card, and the day still seeds one so the state is on
+screen.
+
+### Cost
+
+74 steps green at 1512×950, archived V1 52, merged bundle 100. The new step
+fills a rig one order at a time, fails if anything is ever planned past the
+tanks, and then checks the refusal states the capacity and that taking the
+split leaves the rig at or under it.
+
+## Round 47 — fit sorting answers "what fills this rig"
+
+The fit was already measured against the rig **as it stands** — the packer's
+two passes, so a part-filled compartment is topped up with its own product
+first and an empty one is taken second. Both of the cases hold: an order for an
+empty compartment, and an order whose product matches what is already in a
+half-full one. What was wrong was the ranking and what the card said.
+
+**Ranked by where the rig lands, not by how much of the order went on.** A
+part-filled rig wants whatever brings it closest to full, and an order too big
+to take whole still gets it there by being split — so it ranks with the orders
+that fit, a shade behind the one that needs no splitting. With one compartment
+half full of UNL87 and one full of clear diesel:
+
+| rank | order | reads |
+|---|---|---|
+| 1 | D-5157085 (UNL87 + UNL89) | 64% fits · **rig 100% if split** |
+| 2 | D-5157083 | 63% fits · rig 95% if split |
+| 3 | D-5157076 (one product) | 61% fits · rig 88% if split |
+
+The top one is the only one that uses the half-full tank: its UNL87 tops that
+compartment up and its UNL89 fills an empty one. Everything below leaves 1,250
+gal of UNL87 space behind, and stops at 88%.
+
+**The card says the fit, and only when the list is ranked by it.** Two chips:
+how much of the order goes on as things stand, and — when part of it fits —
+what the truck would reach if it were split. The second says "rig", because two
+bare percentages side by side are two different denominators and read as a
+contradiction. `sp2FitChip` had been dead code since the V3 card replaced the
+old one; it is wired into the live card now, under the window.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step builds
+the part-filled rig, checks every card's two readings against the model, that
+the list is ordered by the rig's resulting fill, that the top order touches the
+part-filled compartment, and that nothing reads out when the list is in time
+order.
+
+### Not built
+
+Pairs. "A combination of two" — two orders that together fill the rig — is a
+different question from ranking one at a time, and the suggestion row's "Add
+all" is the nearest thing to it today.
+
+## Round 48 — the product, and the split as a sentence
+
+**The suggestion row names the product.** "Into C2" said where without saying
+what, and what is the thing that decides it: a product goes in beside its own
+or into an empty tank, and matches nothing otherwise. It now reads
+**"REC90 into C3 and C4"**, one clause per product line, and the hover adds the
+compartments spelled out plus, when a line cannot be placed at all, which
+product and how many gallons have nowhere to go.
+
+**The fit is one reading in one pill, beside the order number**, after the type
+initial: `64% fit`, tinted by band. It was carrying "· fills the truck" and
+"· rig 88%" as well, which is two facts in a pill.
+
+**What a split would do is a sentence, not a second pill.** It was a percentage
+beside a percentage — two different denominators reading as a contradiction.
+Now, in blue, under the window:
+
+> Split it and **6,750 gal** goes in — C1, C3, C4 and C5. 3,750 gal stays for
+> another truck.
+
+Gallons and compartments, which is what the question was.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step checks
+the pill sits in the card's head, that the split line states both figures in
+gallons and carries no percentage at all, and that every product the preview
+names is one the order actually carries.
+
+## Round 49 — the pill is the sort
+
+Fit sorting ranked by where the rig would land, which is a good question but
+not the one the card answers. The pill says a percentage, so the list runs down
+from the highest of them:
+
+> 100% · 10% · 8% · 7% · 3% · 0% · 0% …
+
+Among orders that fit equally — and there are many at 100% — the one that
+leaves the rig fullest still comes first, so "which of these fills the truck"
+is answered inside each band rather than across the whole list.
+
+Round 47's ranking is the thing this replaces: a visible number that the order
+of the list contradicts reads as no order at all.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step now
+checks the top card carries the best fit in the list, that no card out-fits the
+one above it, and that equal fits are broken by the rig's resulting fill.
