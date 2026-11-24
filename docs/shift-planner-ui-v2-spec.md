@@ -1808,3 +1808,37 @@ remainder order, the numbers and the `-2` suffix are as round 39 left them.
 72 steps green at 1512×950, archived V1 52, merged bundle 100. The step checks
 every chip's band against the computed fit, that no two bands share an ink or a
 fill, and that the split icon forks from one stem rather than crossing.
+
+## Round 43 — one order named, and the lane you are looking at
+
+**The banner names the order that broke it, and nothing else.** The day fills a
+rig stop by stop, so one stop is where the running total crosses capacity; that
+order is listed, and the ones behind it are not. Listing everything downstream
+read as "all five of these are over capacity" when one order was the problem.
+Take it off and the banner comes back pointing at whatever breaks it next, if
+anything does.
+
+**Why the split "still was not implemented".** It was, and it was on screen —
+600px below the fold. The planner opens with a driver selected, and that
+driver's lane was **the eleventh of twenty** in a 622px column, so the planner
+opened on Yusuf Demir, Jenny Kwon and Diego Fuentes while the outline, the red
+banner and both split icons sat under 1,277px of other lanes. Three rounds of
+"where is it" were all this.
+
+Startup now brings the selected lane into view (`sp2ShowSelected`, once; after
+that the scroll is the dispatcher's). The planner opens on Arpita Shah / BT-4
+with `Tank capacity: 2,800 gal · Exceeded by: 1,500 gal`, the breaching order
+`D-5157202 · 2,800 gal` and its split, and the red capacity line in the route.
+Splitting it loads 550 gal, leaves 2,250 as `D-5157202-2`, and clears the
+banner.
+
+The split step no longer inherits whatever the run has done to the day: it
+builds its own rig — one compartment part-filled, one order of that product
+bigger than the rig — so it tests the case rather than hoping for it.
+
+### Cost
+
+73 steps green at 1512×950, archived V1 52, merged bundle 99. The new step
+scrolls the column to the top, calls what startup calls, and fails if the
+selected lane is not in view; the banner step checks the named order is the one
+where the running total crosses, by the clock.

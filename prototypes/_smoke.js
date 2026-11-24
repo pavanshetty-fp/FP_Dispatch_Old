@@ -1664,6 +1664,25 @@
         throw new Error('expanding did not put the lanes back');
     });
 
+    if (V2) step('the planner opens on the lane it has selected', () => {
+      // the selected lane was the eleventh of twenty: the outline said one
+      // thing and the screen showed ten other rigs
+      const sel = document.querySelector('.sp2-ln.on');
+      if (!sel) throw new Error('no lane is selected');
+      const host = document.getElementById('sp2V2');
+      if (typeof sp2ShowSelected !== 'function')
+        throw new Error('nothing brings the selected lane into view');
+      host.scrollTop = 0;
+      sp2ShowSelected();                       // what startup does
+      const a = sel.getBoundingClientRect(), b = host.getBoundingClientRect();
+      if (a.top > b.bottom - 40 || a.bottom < b.top + 40)
+        throw new Error('the selected lane opens ' + Math.round(a.top - b.top) + 'px from the top of a ' +
+                        Math.round(b.height) + 'px column');
+      // and since that lane is the one over capacity, so is its banner
+      if (sp2Overload(sel.dataset.k) && !sel.querySelector('.sp2-over-warn'))
+        throw new Error('the lane is over capacity and draws no banner');
+    });
+
     if (V2) step('the day shows a rig planned past its tanks', () => {
       // the banner, its readings and the split are all behind one state; a day
       // that never reaches it hides the lot
@@ -1681,14 +1700,24 @@
       // fill a rig past its capacity, then split the one order the rig could
       // take part of: what fits stays, the rest becomes its own order
       sp2SetDrvFilter('available');
+      // Build the state outright rather than inheriting whatever the run has
+      // done to the day: one rig, one compartment part-filled with a product,
+      // and one order of that product bigger than the rig. The order breaks
+      // capacity AND the rig has room for part of it, which is the case a
+      // split is for.
       const k = [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
       sp2PickDriver(k);
-      const cap = sp2RigCap(k);
-      let run = SP2_ORDERS.filter(o => o.driver === k).reduce((a, o) => a + sp2Gal(o), 0);
-      SP2_ORDERS.filter(o => !o.driver).forEach(o => {
-        if (run > cap * 1.3) return;
-        o.driver = k; run += sp2Gal(o); sp2PackInto(k, o.prods, 'auto', -1);
-      });
+      SP2_ORDERS.filter(x => x.driver === k).forEach(x => { x.driver = ''; });
+      unloadRig(k);
+      const cells0 = sp2Cells(k);
+      const P = cells0[0].l.p || 'UNL87';
+      cells0[0].l.p = P;
+      cells0[0].l.q = Math.round(cells0[0].cap / 2);
+      const grow = SP2_ORDERS.filter(x => !x.driver && x.prods.length === 1)[0];
+      if (!grow) throw new Error('no unplanned order to work with');
+      const wasProds = JSON.parse(JSON.stringify(grow.prods));
+      grow.prods = [{ p:P, q: sp2RigCap(k) + 500 }];
+      grow.driver = k;
       sp2RenderUnit();
       const lane = () => document.querySelector('.sp2-ln[data-k="' + k + '"]');
       const btn = lane().querySelector('.sp2-over-s');
@@ -1765,7 +1794,10 @@
           throw new Error('the pill does not account for ' + n.toLocaleString() + ' gal');
       });
       // put the day back
-      SP2_ORDERS.filter(x => x.driver === k).forEach(x => { x.driver = ''; });
+      SP2_ORDERS.splice(SP2_ORDERS.indexOf(kid), 1);
+      grow.prods = wasProds;
+      grow.driver = '';
+      delete grow.split;
       unloadRig(k);
       sp2SetQuick('unplanned');
       sp2RenderUnit();
@@ -2982,11 +3014,20 @@
       if (typeof window.sp2SwapOrder === 'function')
         throw new Error('the swap is still reachable');
 
-      // the orders past capacity are listed whole \u2014 id, gallons, and a remove
+      // one order broke it, and that is the one named \u2014 listing everything
+      // behind it read as "all five of these are over capacity"
       const rows = [...warn.querySelectorAll('.sp2-over-row')];
-      if (!rows.length) throw new Error('nothing says which orders are over');
-      if (rows.length !== over.past.length)
-        throw new Error('it lists ' + rows.length + ' of ' + over.past.length + ' orders past capacity');
+      if (!rows.length) throw new Error('nothing says which order is over');
+      if (rows.length !== 1)
+        throw new Error('it lists ' + rows.length + ' orders, not the one that broke it');
+      if (over.past.length !== 1)
+        throw new Error('the model holds ' + over.past.length + ' orders past capacity, not one');
+      // and it is the stop where the running total crosses, by the clock
+      const byTime = SP2_ORDERS.filter(o => o.driver === k).sort((a, b) => a.t - b.t);
+      let run2 = 0, want2 = null;
+      byTime.forEach(o => { run2 += sp2Gal(o); if (run2 > sp2RigCap(k) && !want2) want2 = o.id; });
+      if (over.past[0].id !== want2)
+        throw new Error('it names ' + over.past[0].id + ', but ' + want2 + ' is where it crosses');
       rows.forEach((r, i) => {
         const id = r.querySelector('.sp2-over-id').textContent.trim();
         if (id !== over.past[i].id) throw new Error('row ' + i + ' names ' + id);

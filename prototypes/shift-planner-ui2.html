@@ -5148,13 +5148,15 @@ function sp2Overload(k) {
   var want = mine.reduce(function (s, o) { return s + sp2Gal(o); }, 0);
   if (want <= cap) return null;
   var over = want - cap;
-  // The day fills the rig stop by stop, so the orders past capacity are the
-  // ones from the stop where the running total crosses it — those are what
-  // there is no room for, and what comes off.
+  // The day fills the rig stop by stop, so one stop is where the running total
+  // crosses capacity. That order is what broke it, and it is the only one the
+  // banner names — listing everything behind it read as "all five of these
+  // are over capacity" when one order was the problem. Take it off and the
+  // banner comes back pointing at whatever breaks it next, if anything does.
   var run = 0, past = [];
   mine.slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (o) {
     run += sp2Gal(o);
-    if (run > cap) past.push(o);
+    if (run > cap && !past.length) past.push(o);
   });
   return { over:over, cap:cap, want:want, past:past, first:past[0] };
 }
@@ -5821,6 +5823,16 @@ function sp2ShiftDay(n) {
 }
 function sp2Today() { sp2Cursor = new Date(2026, 10, 19); document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor); sp2Render(); }
 
+// The planner opens with a driver selected. Their lane was the eleventh of
+// twenty, 650px below the fold, so the selection — and anything that lane is
+// flagging — opened out of sight. Called once, at startup: after that the
+// scroll is the dispatcher's.
+function sp2ShowSelected() {
+  var sel = document.querySelector('.sp2-ln.on');
+  var host = document.getElementById('sp2V2');
+  if (!sel || !host) return;
+  host.scrollTop += sel.getBoundingClientRect().top - host.getBoundingClientRect().top - 12;
+}
 function sp2Toast(msg, warn) {
   var t = document.getElementById('sp2Toast');
   t.textContent = msg;
@@ -5833,6 +5845,7 @@ function sp2Toast(msg, warn) {
 (function () {
   document.getElementById('sp2Date').value = sp2Fmt(sp2Cursor);
   sp2Render();
+  sp2ShowSelected();
 })();
 
 
