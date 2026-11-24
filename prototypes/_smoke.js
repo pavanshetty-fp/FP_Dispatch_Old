@@ -479,9 +479,24 @@
           if (qty[i].value !== load[i].q.toLocaleString())
             throw new Error('row ' + (i + 1) + ' reads ' + qty[i].value + ', not ' + load[i].q.toLocaleString());
         });
-        // and the drawing does NOT repeat them
-        if (svg.querySelectorAll('.sp2-sv-p, .sp2-sv-q').length)
-          throw new Error('the drawing repeats what the table already says');
+        // the drawing names the product \u2014 a coloured compartment with no word in
+        // it is a colour nobody can read \u2014 but leaves the numbers to the table
+        if (svg.querySelectorAll('.sp2-sv-q, .sp2-sv-s').length)
+          throw new Error('the drawing repeats the numbers the table already carries');
+        const drawn = [...svg.querySelectorAll('.sp2-sv-p')].map(e => e.textContent);
+        const holding = load.filter(l => l.q > 0).map(l => l.p);
+        if (drawn.length !== holding.length)
+          throw new Error('the drawing names ' + drawn.length + ' products for ' +
+                          holding.length + ' loaded compartments');
+        holding.forEach((pn, i) => {
+          if (drawn[i] !== pn) throw new Error('the drawing says ' + drawn[i] + ', the tank holds ' + pn);
+        });
+        // and every one of them is drawn in a fill of its own, never as nothing
+        [...svg.querySelectorAll('.sp2-sv-liq')].forEach(e => {
+          const f = e.getAttribute('fill');
+          if (!f || f === 'transparent' || f === 'none')
+            throw new Error('fuel in a tank is drawn as nothing');
+        });
         return;
       }
       if (svg.querySelectorAll('.sp2-sv-p').length !== caps.length)
@@ -802,9 +817,11 @@
         if (parseFloat(cs2.borderRadius) <= 0) throw new Error('the drawing\u2019s box has square corners');
         const tbl = document.querySelector('.sp2-ln.on .sp2-two-l .sp2-ct');
         if (!tbl) throw new Error('there is no compartment card to measure against');
-        const cb = card.getBoundingClientRect(), tb = tbl.getBoundingClientRect();
-        if (Math.abs(cb.height - Math.max(tb.height, svg.getBoundingClientRect().height)) > 2)
-          throw new Error('the box is ' + Math.round(cb.height) + 'px against a ' +
+        const mid = card.querySelector('.sp2-rig-mid') || card;
+        const cb = mid.getBoundingClientRect(), tb = tbl.getBoundingClientRect();
+        const outer = card.getBoundingClientRect();
+        if (Math.abs(outer.height - Math.max(tb.height, svg.getBoundingClientRect().height)) > 2)
+          throw new Error('the box is ' + Math.round(outer.height) + 'px against a ' +
                           Math.round(tb.height) + 'px table');
         // and the truck sits in the middle of it, both ways
         const sb = svg.getBoundingClientRect();
@@ -898,13 +915,12 @@
       const cards = [...document.querySelectorAll('.sp2-card')];
       if (!cards.length) throw new Error('no cards to measure');
       cards.forEach(c => {
-        // V2 took the fit off the card; where it goes instead is still open
-        if (V2) {
-          if (c.querySelector('.sp2-fit,.sp2-who'))
-            throw new Error('an order card still carries a fit');
-          return;
-        }
-        if (!c.querySelector('.sp2-fit')) throw new Error('an unplanned card has no fit on it');
+        // the reading lives in the card's head now, as a pill beside the order
+        // number, and it is there whatever the list is sorted by
+        if (V2 && !c.querySelector('.sp2-card-top .sp2-fit'))
+          throw new Error('an unplanned card carries no reading against the rig');
+        if (!V2 && !c.querySelector('.sp2-fit'))
+          throw new Error('an unplanned card has no fit on it');
       });
       // a planned order is already on a truck; fit means nothing for it
       sp2SetQuick('planned');
@@ -930,6 +946,18 @@
         throw new Error('said ' + said.fits + ' gal would fit, ' + loaded + ' actually went on');
       sp2UnplanOrder({ stopPropagation(){} }, k, o.id);
     });
+    if (V2) step('every product the catalogue carries can be drawn', () => {
+      // a compartment whose product has no colour was drawn empty, which is
+      // how a truck holding 7,750 gal of REC90 looked bare
+      const missing = SP2_PRODS.concat(Object.keys(SP2_BLENDS))
+        .filter(p => !SP2_PROD_COLORS[p]);
+      if (missing.length)
+        throw new Error(missing.length + ' products have no fill: ' + missing.slice(0, 4).join(', '));
+      if (typeof sp2ProdCol !== 'function') throw new Error('there is no fallback fill');
+      if (sp2ProdCol('nothing like a product') === 'transparent')
+        throw new Error('an unknown product still draws as nothing');
+    });
+
     step('every grade of fit is reachable', () => {
       const seen = {};
       Object.keys(SP2_DRIVERS).forEach(k => {
@@ -1696,6 +1724,26 @@
         throw new Error('expanding did not put the lanes back');
     });
 
+    if (V2) step('the planner opens on a rig that can still be planned', () => {
+      // It opened on the one rig the day plans past its tanks, where nothing
+      // can be added: every order read "No room" and no split was on offer,
+      // because none is possible there.
+      const k0 = sp2Driver;
+      const r0 = sp2RigRoom(k0);
+      if (r0.over)
+        throw new Error('the planner opens on a rig that is ' + r0.over + ' gal over capacity');
+      if (!r0.free)
+        throw new Error('the planner opens on a rig with no room to plan into');
+      // and the over-committed rig is still there, with its banner and its split
+      const over = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .filter(x => sp2RigRoom(x).over);
+      if (!over.length) throw new Error('no rig in the day is over capacity any more');
+      const lane0 = document.querySelector('.sp2-ln[data-k="' + over[0] + '"]');
+      if (!lane0.querySelector('.sp2-over-warn')) throw new Error('it draws no banner');
+      if (!lane0.querySelector('.sp2-over-s'))
+        throw new Error('the order that broke it cannot be split');
+    });
+
     if (V2) step('the planner opens on the lane it has selected', () => {
       // the selected lane was the eleventh of twenty: the outline said one
       // thing and the screen showed ten other rigs
@@ -1850,10 +1898,11 @@
       cells[0].l.p = 'UNL87'; cells[0].l.q = Math.round(cells[0].cap / 2);
       sp2Render();
 
-      // with the list in time order the card says nothing about the rig
+      // the reading is about the rig, not about the sort: a driver is selected,
+      // so it stands in time order too
       sp2SetSort('time');
-      if (document.querySelector('.sp2-card .sp2-fit'))
-        throw new Error('the fit reads out when the list is not ranked by it');
+      if (!document.querySelector('.sp2-card .sp2-fit'))
+        throw new Error('the reading vanishes when the list is not ranked by it');
 
       sp2SetSort('fit');
       const cards = [...document.querySelectorAll('.sp2-card')];
@@ -1869,19 +1918,29 @@
         const f = sp2FitFor(k, o);
         const said = c.querySelector('.sp2-fit');
         if (!said) throw new Error(o.id + ' carries no reading');
-        // what the truck would be utilized at \u2014 not how much of the order fits,
-        // which read 100% for a small order onto a nearly full rig
+        // Read against the capacity that is actually free. Only an order that
+        // goes on whole is a percentage of anything: one that would have to be
+        // split is not 100% of the free space, and one no compartment can take
+        // is not a percentage at all.
         if (!f.fits) {
           if (!/No room/.test(said.textContent))
             throw new Error(o.id + ' can load nothing and does not say so: ' + said.textContent);
+          if (/%/.test(said.textContent))
+            throw new Error(o.id + ' can load nothing and still shows a percentage');
+        } else if (f.splits) {
+          if (!/Needs a split/.test(said.textContent))
+            throw new Error(o.id + ' cannot go on whole and does not say so: ' + said.textContent);
+          if (/%/.test(said.textContent))
+            throw new Error(o.id + ' needs a split and still shows a percentage');
         } else {
-          if (said.textContent.indexOf(f.rigPct + '%') < 0)
-            throw new Error(o.id + ' says "' + said.textContent.trim() + '", the truck would reach ' +
-                            f.rigPct + '%');
-          if (!/utilization/.test(said.textContent))
-            throw new Error('the reading does not say what it is: ' + said.textContent);
-          if (f.pct >= 100 && f.rigPct < 100 && /\b100%/.test(said.textContent))
-            throw new Error(o.id + ' fits whole and claims the truck is full');
+          const want = Math.round(f.total / f.room * 100);
+          if (said.textContent.indexOf(want + '%') < 0)
+            throw new Error(o.id + ' says "' + said.textContent.trim() + '", it takes ' + want +
+                            '% of the free space');
+          if (!/free space/.test(said.textContent))
+            throw new Error('the reading does not say what it is of: ' + said.textContent);
+          if (want > 100)
+            throw new Error(o.id + ' takes more than the free space and reads as whole');
         }
         if (said.closest('.sp2-card-top') === null)
           throw new Error('the fit pill is not beside the order number');
@@ -1902,29 +1961,155 @@
         }
       });
 
-      // the pill is the sort: the list runs down from the highest utilization,
-      // and within a percent the one that puts more gallons on comes first
+      // a rig with room still offers splits \u2014 further down, after the matches
+      if (sp2RigRoom(k).free > 0) {
+        const anySplit = [...cards].some(c => c.querySelector('.sp2-fitsplit'));
+        const anyBig = SP2_ORDERS.some(o2 => !o2.driver && sp2Gal(o2) > sp2RigRoom(k).free &&
+                                             sp2FitFor(k, o2).fits > 0);
+        if (anyBig && !anySplit)
+          throw new Error('orders too big for the room left carry no split line');
+      }
+
+      // the list runs: what goes on whole, by how much of the free space it
+      // takes; then what would need splitting; then what no tank can take
       const fitOf = id => sp2FitFor(k, SP2_ORDERS.filter(x => x.id === id)[0]);
+      const tier = f2 => !f2.fits ? 0 : f2.splits ? 1 : 2;
       const seq = cards.map(c => c.dataset.id)
         .filter(id => { const o = SP2_ORDERS.filter(x => x.id === id)[0]; return o && !o.driver; });
       if (seq.length < 3) throw new Error('too few unplanned orders to judge the order');
-      if (fitOf(seq[0]).rigPct !== Math.max(...seq.map(id => fitOf(id).rigPct)))
-        throw new Error('the order that leaves the truck fullest is not at the top');
       for (let i = 1; i < seq.length; i++) {
         const a = fitOf(seq[i - 1]), b2 = fitOf(seq[i]);
-        if (b2.rigPct > a.rigPct)
-          throw new Error(seq[i] + ' would leave the truck at ' + b2.rigPct + '% and ranks below ' +
-                          seq[i - 1] + ' at ' + a.rigPct + '%');
-        if (b2.rigPct === a.rigPct && b2.fits > a.fits)
-          throw new Error(seq[i] + ' puts more on than ' + seq[i - 1] +
-                          ' at the same utilization and ranks below it');
+        if (tier(b2) > tier(a))
+          throw new Error(seq[i] + ' is a better match than ' + seq[i - 1] + ' and ranks below it');
+        if (tier(a) === 2 && tier(b2) === 2) {
+          const pa = Math.round(a.total / a.room * 100), pb = Math.round(b2.total / b2.room * 100);
+          if (pb > pa)
+            throw new Error(seq[i] + ' takes ' + pb + '% of the free space and ranks below ' +
+                            seq[i - 1] + ' at ' + pa + '%');
+        }
       }
+
+      // nothing may be offered that the rig has no room to be committed to
+      const sg3 = document.querySelector('.sp2-ln.on .sp2-sg');
+      if (sg3) {
+        const rr = sp2RigRoom(k);
+        const offered = [...sg3.querySelectorAll('.sp2-sg-id')].map(e => e.textContent);
+        const sum = offered.reduce((a, id) =>
+          a + sp2Gal(SP2_ORDERS.filter(x => x.id === id)[0] || { prods: [] }), 0);
+        if (sum > rr.free)
+          throw new Error('the row offers ' + sum + ' gal onto ' + rr.free + ' gal of room');
+        if (rr.over && offered.length)
+          throw new Error('an over-committed rig is still offered orders');
+      }
+
+      // and the rig states what is committed, what is in the tanks, and what
+      // may still be added \u2014 which is the number every pill is read against
+      const foot = document.querySelector('.sp2-ln.on .sp2-rig-foot');
+      if (!foot) throw new Error('the rig does not say what is planned, loaded and free');
+      const room = sp2RigRoom(k);
+      // two readings, not three \u2014 loaded said the same as planned on every rig
+      // whose orders fit, and the tanks are read in the compartment table
+      if (/loaded/.test(foot.textContent))
+        throw new Error('the truck box still carries a third reading');
+      [[room.plan, 'planned']].forEach(([gal, word]) => {
+        const el = [...foot.querySelectorAll('span')].find(x => x.textContent.indexOf(word) >= 0);
+        if (!el) throw new Error('nothing says what is ' + word);
+        if (el.textContent.indexOf(gal.toLocaleString() + ' gal') < 0)
+          throw new Error(word + ' reads "' + el.textContent.trim() + '", the rig has ' +
+                          gal.toLocaleString());
+      });
+      const lastEl = [...foot.querySelectorAll('span')].pop();
+      if (room.over) {
+        if (lastEl.textContent.indexOf('over capacity') < 0)
+          throw new Error('a rig planned past its tanks does not say so: ' + lastEl.textContent);
+        if (lastEl.textContent.indexOf(room.over.toLocaleString() + ' gal') < 0)
+          throw new Error('it does not say by how much');
+        if (/free/.test(foot.textContent))
+          throw new Error('a rig with nothing to give still offers free space');
+      } else {
+        if (lastEl.textContent.indexOf(room.free.toLocaleString() + ' gal') < 0)
+          throw new Error('free reads "' + lastEl.textContent.trim() + '", the rig has ' +
+                          room.free.toLocaleString());
+        if (room.plan + room.free !== room.cap)
+          throw new Error('planned and free do not add up to the rig');
+      }
+      // the one number the column and the drop gate must agree on
+      const gate = sp2RigCap(k) - SP2_ORDERS.filter(o => o.driver === k)
+        .reduce((a, o) => a + sp2Gal(o), 0);
+      if (room.free !== Math.max(0, gate))
+        throw new Error('the column sees ' + room.free + ' gal free and the drop gate sees ' + gate);
 
       SP2_ORDERS.filter(o => o.driver === k).forEach(o => { o.driver = ''; });
       unloadRig(k);
       sp2SetSort('time');
       sp2SetDrvFilter('available');
       sp2Render();
+    });
+
+    if (V2) step('every compartment says whose gallons are in it', () => {
+      // Four orders of one grade pour into the same tanks, so the table has to
+      // name them or the card can say C1 holds 2,500 gal and never say who put
+      // them there.
+      const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => SP2_ORDERS.filter(o => o.driver === x).length >= 3 && sp2RigRoom(x).used > 0);
+      if (!k) throw new Error('no loaded rig with three orders on it');
+      sp2PickDriver(k);
+
+      // the books balance: every compartment's owners sum to its gallons, and
+      // every order's gallons are somewhere
+      sp2Cells(k).forEach(c => {
+        const sum = (c.l.by || []).reduce((a, x) => a + x.q, 0);
+        if (sum !== c.l.q)
+          throw new Error(sp2CompName(c.u, c.i) + ' holds ' + c.l.q + ' gal and accounts for ' + sum);
+        (c.l.by || []).forEach(x => {
+          const o = SP2_ORDERS.filter(y => y.id === x.id)[0];
+          if (!o) throw new Error(sp2CompName(c.u, c.i) + ' names ' + x.id + ', which is not an order');
+          if (o.driver !== k) throw new Error(x.id + ' is in the tanks and not on this rig');
+        });
+      });
+      SP2_ORDERS.filter(o => o.driver === k).forEach(o => {
+        const held = sp2Cells(k).reduce((a, c) =>
+          a + (c.l.by || []).filter(x => x.id === o.id).reduce((b, x) => b + x.q, 0), 0);
+        if (held > sp2Gal(o))
+          throw new Error(o.id + ' has ' + held + ' gal in the tanks and ordered ' + sp2Gal(o));
+      });
+
+      // and the table shows it, compartment by compartment
+      const rows = [...document.querySelectorAll('.sp2-ln.on .sp2-ct-row')];
+      if (!rows.length) throw new Error('the open lane has no compartment table');
+      rows.forEach((r, i) => {
+        const c = sp2Cells(k)[i];
+        if (!c) return;
+        const who = r.querySelector('.sp2-ct-who');
+        const ids = sp2ByIds(c.l);
+        if (!ids.length) {
+          if (who) throw new Error(sp2CompName(c.u, c.i) + ' names orders it does not hold');
+          return;
+        }
+        if (!who) throw new Error(sp2CompName(c.u, c.i) + ' does not say whose gallons it holds');
+        ids.forEach(id => {
+          if (who.textContent.indexOf(id) < 0)
+            throw new Error(sp2CompName(c.u, c.i) + ' holds ' + id + ' and does not name it');
+        });
+      });
+
+      // taking an order off takes its own gallons, not someone else's
+      const first = SP2_ORDERS.filter(o => o.driver === k)[0];
+      const others = SP2_ORDERS.filter(o => o.driver === k && o.id !== first.id).map(o => o.id);
+      const before = {};
+      others.forEach(id => {
+        before[id] = sp2Cells(k).reduce((a, c) =>
+          a + (c.l.by || []).filter(x => x.id === id).reduce((b, x) => b + x.q, 0), 0);
+      });
+      sp2UnplanOrder({ stopPropagation(){} }, k, first.id);
+      others.forEach(id => {
+        const now = sp2Cells(k).reduce((a, c) =>
+          a + (c.l.by || []).filter(x => x.id === id).reduce((b, x) => b + x.q, 0), 0);
+        if (now !== before[id])
+          throw new Error('taking ' + first.id + ' off moved ' + id + '\u2019s gallons too');
+      });
+      if (sp2Cells(k).some(c => (c.l.by || []).some(x => x.id === first.id)))
+        throw new Error(first.id + ' came off the rig and its gallons are still in a tank');
     });
 
     if (V2) step('a rig cannot be planned past its tanks', () => {
@@ -2825,7 +3010,7 @@
       if (chev.left <= pill.right) throw new Error('the chevron is not last');
       if (head.getBoundingClientRect().right - chev.right > 4)
         throw new Error('the chevron is not against the card edge');
-      if (c.querySelector('.sp2-fit,.sp2-who')) throw new Error('the fit is still on the card');
+      if (c.querySelector('.sp2-who')) throw new Error('the old who-has-it chip is back');
       if (c.querySelector('.sp2-trip')) throw new Error('the run from the hub is still on the card');
 
       // where it goes: a pin, the name, and the address one hover away

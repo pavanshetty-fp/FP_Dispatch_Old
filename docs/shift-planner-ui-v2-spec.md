@@ -2074,3 +2074,256 @@ pill read "100%utilization" until the gap was put back as `gap:3px`.
 75 steps green at 1512×950, archived V1 52, merged bundle 101. The step checks
 the pill against `rigPct`, that an order which can place nothing says No room,
 and specifically that an order which fits whole never claims the truck is full.
+
+## Round 51 — read against the free capacity, and say what it is
+
+Round 50 measured what the truck would be utilized at **once the order was
+on** — and an order that cannot go on still reached 100%, because the dry run
+pours in whatever fits and the rest simply vanishes. On BT-4, D-5157083 is
+10,000 gal; 750 fits the two part-filled compartments and 9,250 has nowhere to
+go, and the pill said 100%.
+
+**The chain, straightened out.** Free capacity first, then what the packer can
+place, then one of three readings:
+
+| state | reading |
+|---|---|
+| it goes on whole | `73% of free space` — its gallons against what is free |
+| part of it places | `Needs a split` — no percentage; the blue sentence says the gallons |
+| nothing places | `No room` — every compartment with room holds another product |
+
+A percentage is only ever a percentage of something that can happen. BT-4, 750
+gal free:
+
+| order | gallons | round 50 | now |
+|---|---|---|---|
+| D-5157060 | 550 | 93% utilization | **73% of free space** |
+| D-5157083 | 10,000 | **100% utilization** | Needs a split |
+| D-5157062 | 2,050 | 80% utilization | Needs a split |
+| D-5157100 | 5,700 | No room | No room |
+
+Empty LT-61 reads what it should: `0 gal utilized · 0%` / `10,500 gal
+unutilized · 100%`, and the list runs 100%, 100%, 95%, 95%, 86% — on an empty
+truck 100% is an order that fills it, which is the case that always made sense.
+
+**The sort** runs matches first by their share of the free space, then what
+would need splitting, then what no tank can take.
+
+**Under the truck**, two readings: `2,050 gal utilized · 73%` and
+`750 gal unutilized · 27%`. They are what the whole orders column is measured
+against, so they are on the screen rather than inferred.
+
+Both cards now take the band's height, since the readings made the drawing's
+card the taller of the two; the table keeps its row heights with
+`align-content:start`, or the grid would share the spare height across every
+row.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step checks
+each of the three readings against the model, that neither "No room" nor
+"Needs a split" carries a percentage, that the sort runs match → split → none,
+and that the two readings under the truck add up to its capacity.
+
+## Round 52 — one definition of free capacity
+
+Pavan tried to pull D-5157060 onto Arpita Shah / BT-4, where the card said
+"73% of free space", and the planner refused it. Both were working correctly
+from different numbers:
+
+| | how it worked out free | BT-4 |
+|---|---|---|
+| the card, the sort, the suggestion row | capacity − **loaded** | 2,800 − 2,050 = **750** |
+| the drop gate and the split | capacity − **planned** | 2,800 − 4,300 = **−1,500** |
+
+On every rig whose orders all fit, the two are the same number. BT-4 is the one
+the day plans past its tanks: 4,300 gal is committed to a truck that holds
+2,800, so **2,250 gal of it is in no compartment at all** — and reading the
+tanks reported that as space going spare.
+
+**Free now means one thing everywhere: what the rig may still be committed to
+carry**, `capacity − planned`, floored at zero. It has to be the commitment
+rather than the air in the tanks, because a rig already planned past its
+capacity has nothing to give, which is the ceiling of round 46. `sp2FitFor`
+holds its dry run to that room, the way the split already did, so a card can
+never promise what the gate would refuse.
+
+**Three readings under the truck**, since planned and loaded are the pair that
+makes the difference legible:
+
+> ■ 4,300 gal planned · 154%  ■ 2,050 gal loaded · 73%  ■ 1,500 gal over capacity
+
+and on a rig whose day fits:
+
+> ■ 7,750 gal planned · 74%  ■ 7,750 gal loaded · 74%  ■ 2,750 gal free · 26%
+
+**The suggestion row was the third place with its own arithmetic.** It was
+still offering an order and an Add button on a truck the gate refuses; it now
+reads "1,500 gal more is planned onto BT-4 than it can carry. Nothing more can
+go on until an order comes off", and no suggestion may exceed the room however
+much space the compartments show.
+
+On BT-4 every order now reads **No room**, which is the truth: the rig is
+1,500 gal over-committed.
+
+### Cost
+
+75 steps green at 1512×950, archived V1 52, merged bundle 101. The step now
+compares the column's free against the drop gate's own arithmetic and fails if
+they differ by a gallon, checks the three readings add up, and fails if the
+suggestion row offers more than the room.
+
+## Round 53 — the split line came back by opening somewhere plannable
+
+Round 52's one definition of free is right, and it had a consequence nobody
+chose: the planner opened on BT-4, **the only rig in the day planned past its
+tanks**. There free is zero, so every order read "No room" and no split line
+could appear — splitting an order *onto* a rig that is already 1,500 gal
+over-committed is not a thing the planner should offer.
+
+So the opening lane is now a rig that can still be planned: **Ivan Petrov /
+LT-31**, 7,750 of 10,500 planned, 2,750 free. Sorted by utilization it reads
+
+> 100% · 47% · 29% · 25% · 20% · 18% of free space, then **Needs a split**
+> — "Split it and 2,750 gal goes in — C4 and C5. 6,150 gal stays for another
+> truck."
+
+which is the list he was looking for. BT-4 is still in the column with its red
+banner and the split icon on the order that broke it, so that path is one click
+away rather than in the way.
+
+An order against an over-committed rig also says why in its hover now: "BT-4 is
+1,500 gal over capacity, so nothing can be added until an order comes off it."
+
+One slip worth recording: `sp2FitChip` has no `k` in scope — the driver it
+reads is `sp2Driver` — and the first version of that hover threw
+`ReferenceError: k is not defined` on every card. 24 steps failed at once,
+which is what a suite is for.
+
+### Cost
+
+76 steps green at 1512×950, archived V1 52, merged bundle 102. The new step
+fails if the planner opens on an over-committed rig or one with no room, checks
+the over-committed rig still carries its banner and split, and the ranking step
+now fails if a rig with room shows no split line while orders too big for it
+exist.
+
+## Round 54 — a compartment says whose gallons it holds
+
+Pavan circled the four chips at the foot of Ivan Petrov's card — "20% of
+truck", "17%", "20%", "17%" — and asked what they were and why the compartments
+looked empty of them.
+
+Nothing was wrong. The chips are his four stops, 2,150 + 1,750 + 2,050 + 1,800
+= **7,750 gal = 74%** of LT-31, which is exactly what C1–C4 are holding. But
+all four orders are REC90, and the load recorded only product and gallons, so
+the fuel merged: C1's 2,500 gal is D-5157223's 2,150 plus 350 of D-5157224's.
+Four chips, four tanks, and no line between them.
+
+**The load now records who put the fuel there.** Every compartment is
+`{ p, q, by: [{ id, q }] }`, with `by` always summing to `q`. The table reads:
+
+| Comp | Product | Gallons | TM |
+|---|---|---|---|
+| C1 | REC90 · *D-5157223 · D-5157224* | 2,500 | 100% |
+| C2 | REC90 · *D-5157224 · D-5157225* | 2,500 | 100% |
+| C3 | REC90 · *D-5157225 · D-5157226* | 2,000 | 100% |
+| C4 | REC90 · *D-5157226* | 750 | 38% |
+| C5 | Empty | 0 | 0% |
+
+and the hover gives the gallons per order. Each chip's hover now says where its
+fuel is: "loaded in C1 and C2".
+
+Every path that moves fuel keeps the books: the packer attributes what it
+places, taking an order off removes **its own** gallons first and only then
+anything else of that product, a hand edit trims the owners and hands them to
+the fuel waiting to be placed, moving between compartments carries them across,
+and unloading clears them. The day builder lays the seeded load order by order
+rather than by product total, which is what made the attribution possible at
+all.
+
+### Cost
+
+77 steps green at 1512×950, archived V1 52, merged bundle 103. The new step
+checks every compartment's owners sum to its gallons, that no order holds more
+in the tanks than it ordered, that the table names what each tank holds, and
+that taking one order off leaves every other order's gallons where they were.
+Rows went 34px to 42px for the second line.
+
+## Round 55 — the truck was drawn empty because the fuel had no colour
+
+LT-31 held 7,750 gal across four compartments and the drawing showed a bare
+tanker. The cause is one line:
+
+```js
+var col = SP2_PROD_COLORS[l.p] || 'transparent';
+```
+
+**REC90 is not in the colour map** — nor are 16 of the other products the
+catalogue has carried since round 27. A compartment holding one of them painted
+its liquid transparent, which is indistinguishable from an empty tank. The
+table's dot had the same gap and fell back to grey, which is why the table read
+right and the picture did not.
+
+Every product now has a fill, grouped by family so a tanker reads at a glance:
+gasolines gold, clear diesel and its grades blue, dyed and off-road their own
+red and orange, heating oils brown, kerosene pale, DEF teal, Avgas blue, Jet A
+straw. An unknown product draws in neutral ink (`sp2ProdCol`) — fuel in a tank
+is never drawn as nothing again.
+
+**The drawing also names the product now.** Beside the table it had been
+reduced to "C1…C5" on the grounds that the table carries the words; a coloured
+compartment with no word in it is a colour nobody can read. It still leaves the
+gallons and the percentage to the table.
+
+So the picture answers the question it is there for: C1 REC90 full, C2 REC90
+full, C3 REC90 full, C4 REC90 part, C5 empty.
+
+### Cost
+
+78 steps green at 1512×950, archived V1 52, merged bundle 104. A new step fails
+if any product in the catalogue has no fill or if the fallback is transparent;
+the drawing step now requires a product name on every loaded compartment and
+still refuses the numbers.
+
+## Round 56 — the rules written down, and the readings stop hiding
+
+Three things, the third being the point of the other two.
+
+**The reading was gated on the sort.** The pill and the split sentence rendered
+only while the list was ranked by utilization — so in time order, which is how
+the list opens, a rig was selected and the cards said nothing about it. That is
+why "how much can I add if I split" had vanished: it was never computed, let
+alone drawn. They now render whenever a driver is selected, in any order.
+
+**The truck box carries two readings**, planned and free. Loaded was the third
+and said the same thing as planned on every rig whose orders fit; the
+compartment table is where the tanks are read.
+
+**`docs/compartment-rules.md`** — the rules, once, in one place: the model, the
+atomic rule (empty takes anything, part-filled takes its own grade, nothing
+else takes anything), the seven cases of one order against one rig with what
+each must read, splitting, blends, what every surface shows and must never
+show, and a five-step procedure for checking a screen against the page. Every
+case was then read off the live screen and recorded in §8; all seven agree.
+
+The cross-check turned up one more thing: **the horizontal lane was sized by
+constants** written before the pill and the sentence existed, so cards hung 30px
+out of their lanes. The lane now takes its height from the cards after render
+(`sp2FitLanes`), so the next thing added to a card cannot break it.
+
+### Why this round exists
+
+Pavan: "I tell something, something else goes away. One thing is added, another
+thing is removed." He is right, and the cause is mine: across rounds 44–52 the
+meaning of the reading was redefined three times — share of the order, then
+utilization of the truck, then share of the free space — and each redefinition
+dropped something already agreed. Settling the rules in a document and checking
+the screen against it, rather than re-deciding the metric each round, is the
+fix.
+
+### Cost
+
+78 steps green at 1512×950, archived V1 52, merged bundle 104. Two stale
+assertions retired: the card no longer hides its reading, and "V2 took the fit
+off the card" is settled — it lives in the head.
