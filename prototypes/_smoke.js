@@ -9,8 +9,8 @@
     catch (e) { out.steps.push('FAIL ' + name + ': ' + e.message); }
   };
   const fire = (el, ev) => el.dispatchEvent(new Event(ev, { bubbles: true }));
-  // V2 asks before it empties a rig; V1 does not. Tests want the act itself.
-  const unloadRig = k => (window.sp2UnloadGo || window.sp2Unload)(k);
+  // V2 asks before it clears a rig; V1 does not. Tests want the act itself.
+  const unloadRig = k => (window.sp2ClearGo || window.sp2UnloadGo || window.sp2Unload)(k);
 
   if (out.page.startsWith('create-order')) {
     step('pick customer', () => {
@@ -183,6 +183,18 @@
     // the table does. Checks that read those read the table instead.
     const compNames = () =>
       [...document.querySelectorAll('.sp2-ln.on .sp2-ct-p')].map(e => e.innerText.trim());
+    // V2 pins the rig being planned to the top of the column, so the ordering
+    // underneath is only legible with nothing chosen. Checks that are about
+    // the ordering read it through this; checks about the pinning do not.
+    const laneKeys = () => [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+    const laneOrder = () => {
+      if (!V2) return laneKeys();
+      const was = sp2Driver;
+      sp2Driver = null; sp2RenderUnit();
+      const keys = laneKeys();
+      sp2Driver = was; sp2RenderUnit();
+      return keys;
+    };
     // A hand-set column width is remembered and beats the per-view widths — which
     // is right in use and wrong for a test run, so start every run without one.
     // The column width a person dragged for themselves lives in this key. The
@@ -280,6 +292,192 @@
       if (w.scrollWidth <= w.clientWidth) throw new Error('nothing to scroll');
       sp2SetView('v');
       if (w.scrollWidth > w.clientWidth + 2) throw new Error('the vertical view scrolls sideways too');
+    });
+    step('a driver\u2019s orders are one block, named once', () => {
+      // Sorting by driver already put a driver's orders together; grouping is
+      // what makes that readable — one card names the driver and the rig, and
+      // the cards under it stop repeating either.
+      const keepF = JSON.parse(JSON.stringify(sp2Facet)), keepS = sp2Sort, keepQ = sp2Quick;
+      try {
+        sp2SetQuick('all');
+        sp2SetSort('driver');
+        if (sp2View === 'h') throw new Error('the driver sort left the time axis in place');
+        const blocks = [...document.querySelectorAll('.sp2-dg')];
+        if (blocks.length < 3) throw new Error('only ' + blocks.length + ' blocks in the whole day');
+        if (document.querySelectorAll('.sp2-dg .sp2-ord-drv').length)
+          throw new Error('a card inside a block still carries its own driver line');
+        if (document.querySelector('.sp2-vt-rail'))
+          throw new Error('the grouped list still draws the ungrouped rail');
+        let planned = 0;
+        blocks.forEach(g => {
+          const head = g.querySelector('.sp2-dg-hd');
+          if (!head) throw new Error('a block with no head card');
+          const name = head.querySelector('.sp2-dg-n').textContent;
+          const ids = [...g.querySelectorAll('.sp2-card')].map(c => c.dataset.id);
+          if (!ids.length) throw new Error('an empty block: ' + name);
+          // every card in a block is that driver's, and nobody else's
+          const whose = [...new Set(ids.map(id => {
+            const o = SP2_ORDERS.find(x => x.id === id);
+            return o.driver ? SP2_DRIVERS[o.driver].name : 'Not planned yet';
+          }))];
+          if (whose.length !== 1 || whose[0] !== name)
+            throw new Error('the block headed "' + name + '" holds ' + whose.join(' + '));
+          if (name !== 'Not planned yet') {
+            planned++;
+            // the head card carries the rig, so the cards below do not have to
+            if (!head.querySelector('.sp2-dg-t').textContent.trim())
+              throw new Error('the head card for ' + name + ' names no truck');
+          }
+          // and it counts what is under it
+          const said = Number((head.querySelector('.sp2-dg-m').textContent.match(/^(\d+)/) || [])[1]);
+          if (said !== ids.length)
+            throw new Error('"' + name + '" says ' + said + ' orders and holds ' + ids.length);
+        });
+        if (planned < 2) throw new Error('only ' + planned + ' blocks have a driver');
+        if (!document.querySelector('.sp2-dg.none'))
+          throw new Error('the orders nobody has taken are not a block of their own');
+        // inside a block the cards sit 12px apart, with nothing between them
+        if (document.querySelector('.sp2-dg .sp2-vgap'))
+          throw new Error('a gap label came back inside a block');
+        const twoRows = [...blocks.find(g => g.querySelectorAll('.sp2-vrow').length > 1)
+          .querySelectorAll('.sp2-vrow')].slice(0, 2).map(r => r.getBoundingClientRect());
+        const apart = Math.round(twoRows[1].top - twoRows[0].bottom);
+        if (apart !== 12) throw new Error('the cards in a block sit ' + apart + 'px apart, not 12');
+        // the head card is the only thing marking the block: no tray around it
+        const tray = getComputedStyle(blocks[0]);
+        if (parseFloat(tray.borderTopWidth) >= 1 || tray.backgroundColor !== 'rgba(0, 0, 0, 0)')
+          throw new Error('a box came back around the block');
+        const hcs = getComputedStyle(blocks[0].querySelector('.sp2-dg-hd'));
+        if (parseFloat(hcs.borderTopWidth) < 1) throw new Error('the head card has no edge of its own');
+        // and it stays named while its own orders scroll past
+        if (hcs.position !== 'sticky')
+          throw new Error('the head card scrolls away with the cards: ' + hcs.position);
+      } finally {
+        sp2Quick = keepQ;
+        sp2Facet = keepF;
+        sp2SetSort(keepS);
+      }
+      // back in time order the day is one list again
+      if (document.querySelector('.sp2-dg')) throw new Error('blocks outlived the driver sort');
+      if (!document.querySelector('.sp2-vt-rail')) throw new Error('the ungrouped rail did not come back');
+    });
+    step('one box searches the whole filter menu', () => {
+      sp2FpClear();
+      const fp = document.getElementById('sp2Fp');
+      if (getComputedStyle(fp).display === 'none') sp2FpToggle();
+      sp2FpTabs('orders');
+      const box = () => document.getElementById('sp2FpSAll');
+      if (!box()) throw new Error('the filter panel has no search box');
+      if (!document.querySelector('#sp2Fp .sp2-fp-menu'))
+        throw new Error('the menu is away before anything has been typed');
+      // typing keeps the caret: the panel redraws itself on every keystroke
+      box().focus();
+      box().value = 'morris';
+      box().dispatchEvent(new Event('input', { bubbles:true }));
+      if (document.activeElement !== box())
+        throw new Error('the box lost focus on the first letter');
+      if (box().selectionStart !== 'morris'.length)
+        throw new Error('the caret jumped to ' + box().selectionStart);
+      // the box is what the menu is for, so the menu stands down
+      if (document.querySelector('#sp2Fp .sp2-fp-menu'))
+        throw new Error('the menu is still taking the width while searching');
+      // and the results say which group and which dimension each came from
+      const secs = [...document.querySelectorAll('#sp2Fp .sp2-fp-sec')].map(e => e.textContent);
+      if (!secs.length) throw new Error('a word on the board matched nothing');
+      if (secs.some(t => t.indexOf(' \u00b7 ') < 0))
+        throw new Error('a result does not say where it came from: ' + secs.join(' | '));
+      if (new Set(secs.map(t => t.split(' \u00b7 ')[0])).size < 2)
+        throw new Error('the search only reached one group: ' + secs.join(' | '));
+      // it is the DS search field, not a box of its own making
+      const wrap = document.getElementById('sp2FpSrchWrap');
+      if (!wrap || !wrap.classList.contains('sp2-srch'))
+        throw new Error('the search is not the design system field');
+      if (box().type !== 'search') throw new Error('the input is not type="search"');
+      if (Math.round(wrap.getBoundingClientRect().width) !== 320)
+        throw new Error('the field is ' + Math.round(wrap.getBoundingClientRect().width) +
+                        'px, not the 320 every list search is');
+      const x = wrap.querySelector('.sp2-srch-x');
+      if (!x || getComputedStyle(x).display === 'none')
+        throw new Error('the clear button is missing with a value in the box');
+      // a dimension answers to its own name too, range or not
+      sp2FpTabs('drivers');
+      sp2FpAllSearch('room left');
+      if (!document.querySelector('#sp2Fp .sp2-fp-sec'))
+        throw new Error('naming a dimension finds nothing');
+      if (!document.querySelector('#sp2Fp .sp2-rng'))
+        throw new Error('a range dimension found by name draws no slider');
+      // ticking a result stages it, exactly as it would inside the group
+      sp2FpTabs('orders');
+      sp2FpAllSearch('morris');
+      const first = document.querySelector('#sp2Fp .sp2-fp-o');
+      first.click();
+      if (!Object.keys(sp2FpStage).some(k => (sp2FpStage[k] || []).length))
+        throw new Error('ticking a result staged nothing');
+      // nothing found says so, in the reader's own words
+      sp2FpAllSearch('qqzz');
+      const none = document.querySelector('#sp2Fp .sp2-fp-none');
+      if (!none || none.textContent.indexOf('qqzz') < 0)
+        throw new Error('an empty search does not say what was looked for');
+      // and clearing it brings the menu back
+      sp2FpAllClear();
+      if (!document.querySelector('#sp2Fp .sp2-fp-menu'))
+        throw new Error('the menu did not come back when the search was cleared');
+      const wrap2 = document.getElementById('sp2FpSrchWrap');
+      if (getComputedStyle(wrap2.querySelector('.sp2-srch-x')).display !== 'none')
+        throw new Error('the clear button is still showing with an empty box');
+      sp2FpClear();
+      sp2FpClose();
+    });
+    step('a whole block goes onto a rig in one drag', () => {
+      // The point of the block: a driver's orders are planned onto their rig
+      // together, not one card at a time, and corrected on the rig afterwards.
+      const key = Object.keys(SP2_DRIVERS)
+        .find(k => SP2_ORDERS.filter(o => o.driver === k).length >= 2);
+      if (!key) throw new Error('no driver is carrying two orders');
+      const d = SP2_DRIVERS[key];
+      const keepF = JSON.parse(JSON.stringify(sp2Facet)), keepS = sp2Sort, keepQ = sp2Quick;
+      const keepL = JSON.parse(JSON.stringify(d.load)), keepT = JSON.parse(JSON.stringify(d.tload));
+      try {
+        sp2PickDriver(key);
+        sp2SetQuick('all'); sp2SetSort('driver');
+        sp2ClearGo(key, 'all');
+        const block = [...document.querySelectorAll('.sp2-dg')].find(g => {
+          const n = g.querySelector('.sp2-dg-n');
+          return n && n.textContent === d.name;
+        });
+        if (!block) throw new Error('no block for ' + d.name);
+        const ids = [...block.querySelectorAll('.sp2-card')].map(c => c.dataset.id);
+        const head = block.querySelector('.sp2-dg-hd');
+        if (head.getAttribute('draggable') !== 'true')
+          throw new Error('the head card cannot be dragged');
+        const dt = new DataTransfer();
+        const fire = (el, type) => { const e = new DragEvent(type, { bubbles:true, cancelable:true, dataTransfer:dt });
+          el.dispatchEvent(e); return e; };
+        fire(head, 'dragstart');
+        if (!document.getElementById('sp2Body').classList.contains('dragging'))
+          throw new Error('dragging the block never started');
+        if ((sp2Drag || []).join(',') !== ids.join(','))
+          throw new Error('the drag carries ' + (sp2Drag || []).length + ' of ' + ids.length + ' orders');
+        const rig = document.querySelector('.sp2-ln.on .sp2-rig') || document.querySelector('.sp2-rig');
+        if (!fire(rig, 'dragover').defaultPrevented) throw new Error('the rig refuses the block');
+        fire(rig, 'drop');
+        // every order in the block is on that rig, and its gallons are placed
+        const want = ids.reduce((a, id) => a + sp2Gal(SP2_ORDERS.find(o => o.id === id)), 0);
+        const cap = sp2RigRoom(key).cap;
+        const held = sp2Held(key, 'all');
+        if (!held) throw new Error('the block dropped and nothing was planned');
+        if (want <= cap && held !== want)
+          throw new Error('the rig holds ' + held + ' gal of the block\u2019s ' + want);
+        if (ids.some(id => SP2_ORDERS.find(o => o.id === id).driver !== key))
+          throw new Error('an order in the block did not land on the rig');
+        if (document.getElementById('sp2Body').classList.contains('dragging'))
+          throw new Error('drag state left hanging');
+      } finally {
+        sp2ClearGo(key, 'all');
+        d.load = keepL; d.tload = keepT;
+        sp2Quick = keepQ; sp2Facet = keepF;
+        sp2SetSort(keepS);
+      }
     });
     step('an order follows to its driver', () => {
       const card = [...document.querySelectorAll('.sp2-card.planned')][0];
@@ -508,18 +706,89 @@
       const k = document.querySelector('.sp2-ln.on').dataset.k;
       const had = SP2_DRIVERS[k].trailer;
       const sel = V2 ? '.sp2-sv-c' : '.sp2-sv-p';
-      const before = document.querySelector('.sp2-sv').querySelectorAll(sel).length;
+      // V2 draws a vehicle per SVG, so the rig is however many of them there are
+      const drawn = q => [...document.querySelectorAll('.sp2-ln.on .sp2-sv, .sp2-sv')]
+        .reduce((n, s2) => n + s2.querySelectorAll(q).length, 0);
+      const before = drawn(sel);
       const rowsBefore = V2 ? compNames().length : 0;
       sp2AddTrailer('TR-660', k);
       const svg = document.querySelector('.sp2-sv');
       if (!svg) throw new Error('the tanker vanished when a trailer was hitched');
-      if (svg.querySelectorAll(sel).length !== before + SP2_TRAILERS['TR-660'].caps.length)
+      if (drawn(sel) !== before + SP2_TRAILERS['TR-660'].caps.length)
         throw new Error('the trailer compartments were not drawn');
       // the table beside it grows with the rig
       if (V2 && compNames().length !== rowsBefore + SP2_TRAILERS['TR-660'].caps.length)
         throw new Error('the trailer compartments are not in the table');
-      if (svg.querySelectorAll('clipPath').length < 2) throw new Error('the two tanks share one clip');
+      if (drawn('clipPath') < 2) throw new Error('the two tanks share one clip');
+      if (V2) {
+        // The trailer is drawn UNDER the truck, each at the width it would have
+        // had alone: one SVG per vehicle, so the box can space them. Nose to
+        // tail they shared one line and both came out half the size, in a box
+        // with air above and below to spare.
+        const rig = document.querySelector('.sp2-ln.on .sp2-rig');
+        const arts = [...rig.querySelectorAll('.sp2-sv')];
+        if (arts.length !== 2)
+          throw new Error('a hitched rig is drawn as ' + arts.length + ' thing(s), not two');
+        // one scale for both, or the shorter trailer comes out looking bigger
+        // than the truck pulling it
+        if (arts[0].getAttribute('viewBox') !== arts[1].getAttribute('viewBox'))
+          throw new Error('the two vehicles are drawn at different scales');
+        const tanks = arts.map(a => +a.querySelector('clipPath rect').getAttribute('x'));
+        if (Math.abs(tanks[0] - tanks[1]) > 1)
+          throw new Error('the two units do not share a left edge');
+        // air above the truck, between the two, and below the trailer, equal
+        const rb = rig.getBoundingClientRect();
+        const b = arts.map(a => a.getBoundingClientRect());
+        const air = [b[0].top - rb.top, b[1].top - b[0].bottom, rb.bottom - b[1].bottom];
+        if (Math.max.apply(null, air) - Math.min.apply(null, air) > 2)
+          throw new Error('the air above, between and below is ' +
+                          air.map(x => x.toFixed(1)).join(' / '));
+        if (air[1] < 8) throw new Error('the two vehicles are drawn ' + air[1].toFixed(1) + 'px apart');
+        // and each vehicle's name is in the clear, under its own wheels
+        arts.forEach((a, n) => {
+          const tag = a.querySelector('.sp2-sv-tag');
+          if (!tag) throw new Error('vehicle ' + (n + 1) + ' is not named');
+          const tb = tag.getBoundingClientRect(), ab = a.getBoundingClientRect();
+          if (!tb.width) throw new Error('the name of vehicle ' + (n + 1) + ' has no box');
+          if (tb.bottom > ab.bottom + 0.5 || tb.top < ab.top)
+            throw new Error('the name of vehicle ' + (n + 1) + ' runs outside its drawing');
+          const wheels = [...a.querySelectorAll('circle')]
+            .reduce((y, c) => Math.max(y, c.getBoundingClientRect().bottom), 0);
+          if (tb.top < wheels - 0.5)
+            throw new Error('the name of vehicle ' + (n + 1) + ' sits across its wheels');
+        });
+        // and the table beside it breaks where the truck's tank ends
+        const ct = document.querySelector('.sp2-ln.on .sp2-ct');
+        const kids = [...ct.children];
+        const at = kids.findIndex(e => e.classList.contains('sp2-ct-split'));
+        if (at < 0) throw new Error('the table runs the two tanks together');
+        if (kids.filter(e => e.classList.contains('sp2-ct-split')).length !== 1)
+          throw new Error('the table breaks more than once');
+        const nTruck = SP2_TRUCKS[SP2_DRIVERS[k].truck].comps.length;
+        const rowsBefore2 = kids.slice(0, at).filter(e => e.classList.contains('sp2-ct-row')).length;
+        if (rowsBefore2 !== nTruck)
+          throw new Error('the break falls after ' + rowsBefore2 + ' rows, the truck has ' + nTruck);
+        if (!parseFloat(getComputedStyle(kids[at]).height))
+          throw new Error('the break has no air in it');
+
+        // hitching reads on the readings' line, never in the drawing's box
+        const lane = document.querySelector('.sp2-ln.on');
+        const cta = lane.querySelector('.sp2-rig-foot .sp2-rig-act .sp2-trl-btn');
+        if (!cta) throw new Error('hitching is not on the rig\u2019s own bar');
+        if (lane.querySelector('.sp2-rig-box .sp2-trl-btn'))
+          throw new Error('the hitch control is still inside the drawing\u2019s box');
+        if (lane.querySelector('.sp2-ln-truck .sp2-trl-btn, .sp2-ln-truck .sp2-link'))
+          throw new Error('the hitch control is still up in the lane head');
+        if (!/Unhitch/.test(cta.textContent))
+          throw new Error('a hitched rig does not offer to unhitch: ' + cta.textContent);
+      }
       if (!had) sp2DropTrailer(k); else sp2AddTrailer(had, k);
+      // and with no trailer on it, the same place offers to hitch one
+      if (!SP2_DRIVERS[k].trailer && V2) {
+        const cta2 = document.querySelector('.sp2-ln.on .sp2-rig-act .sp2-trl-btn');
+        if (!cta2 || !/Trailer/.test(cta2.textContent))
+          throw new Error('a rig with no trailer is not offered one on its bar');
+      }
     });
     step('bars show the level without the truck', () => {
       const lane = [...document.querySelectorAll('.sp2-ln')].find(l => !l.classList.contains('on'));
@@ -707,6 +976,7 @@
 
       // fit needs a rig; without one it is offered but not usable
       const keep = sp2Driver;
+      sp2Worked = {};                            // not what this step is about
       sp2LaneClick(keep);                        // clicking the open lane lets go
       if (sp2Driver) throw new Error('the lane did not let go');
       if (!spop.querySelector('[data-o="fit"]').disabled)
@@ -924,7 +1194,18 @@
       if (!cards.length) throw new Error('no cards to measure');
       cards.forEach(c => {
         // the reading lives in the card's head now, as a pill beside the order
-        // number, and it is there whatever the list is sorted by
+        // number, and it is there whatever the list is sorted by — except for
+        // an order that would have to be split, which carries the sentence
+        // under the window instead, since splitting is a choice, not a verdict
+        const o2 = V2 ? SP2_ORDERS.filter(x => x.id === c.dataset.id)[0] : null;
+        const sp2 = o2 && !o2.driver && sp2Driver ? sp2FitFor(sp2Driver, o2) : null;
+        if (sp2 && sp2.splits) {
+          if (c.querySelector('.sp2-card-top .sp2-fit'))
+            throw new Error(c.dataset.id + ' can be split and still wears a pill');
+          if (!c.querySelector('.sp2-fitsplit'))
+            throw new Error(c.dataset.id + ' can be split and the card says nothing');
+          return;
+        }
         if (V2 && !c.querySelector('.sp2-card-top .sp2-fit'))
           throw new Error('an unplanned card carries no reading against the rig');
         if (!V2 && !c.querySelector('.sp2-fit'))
@@ -1294,7 +1575,7 @@
       });
       // and they are what Available offers first
       sp2SetDrvFilter('available');
-      const lead = [...document.querySelectorAll('.sp2-ln')].slice(0, 6).map(l => l.dataset.k);
+      const lead = laneOrder().slice(0, 6);
       lead.forEach(k => {
         if (yard.indexOf(k) < 0)
           throw new Error(SP2_DRIVERS[k].name + ' is above a yard rig in Available');
@@ -1303,7 +1584,7 @@
     });
     step('Available holds its order while you work in it', () => {
       sp2SetDrvFilter('available');
-      const before = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const before = laneOrder();
       if (before.length < 4) throw new Error('too few available drivers');
       const k = before[0];
       sp2PickDriver(k);
@@ -1314,8 +1595,8 @@
         sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
       });
       if (sp2RigFill(k).pct <= was) throw new Error('nothing actually loaded');
-      const after = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
-      if (after[0] !== k) throw new Error('the card you were working on slid down the list');
+      const after = laneOrder();
+      if (laneKeys()[0] !== k) throw new Error('the card you were working on slid down the list');
       if (after.join() !== before.join()) throw new Error('the list re-sorted under you');
       // fill it right up: it still must not vanish mid-job
       SP2_ORDERS.filter(o => !o.driver).forEach(o => {
@@ -1328,7 +1609,7 @@
       // leaving and coming back is the ask for a fresh order, and only then
       sp2SetDrvFilter('all');
       sp2SetDrvFilter('available');
-      const fresh = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const fresh = laneOrder();
       if (sp2RigFill(k).pct >= 100 && fresh.indexOf(k) >= 0)
         throw new Error('a full rig is still offered as available after a fresh ask');
       unloadRig(k);
@@ -1337,7 +1618,7 @@
     });
     step('a card moves only when asked', () => {
       sp2SetDrvFilter('available');
-      const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const lanes = laneOrder();
       const k = lanes[0];
       sp2PickDriver(k);
       // V2 swapped the Move link for six dots beside the driver — the shape a
@@ -1355,10 +1636,10 @@
         sp2Drag = o.id;
         sp2Drop({ preventDefault(){}, stopPropagation(){}, dataTransfer:{ getData: () => o.id } }, 'auto', -1, k);
       });
-      if ([...document.querySelectorAll('.sp2-ln')][0].dataset.k !== k)
+      if (laneOrder()[0] !== k)
         throw new Error('it moved before being asked');
       sp2MoveLane({ stopPropagation(){} }, k);
-      const moved = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const moved = laneOrder();
       if (moved[0] === k) throw new Error('asking it to move did nothing');
       // and where it landed is where its space puts it
       const at = moved.indexOf(k);
@@ -1370,7 +1651,7 @@
     });
     step('Available leads with the emptiest rig', () => {
       sp2SetDrvFilter('available');
-      const lanes = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const lanes = laneOrder();
       if (lanes.length < 3) throw new Error('too few available drivers to order');
       const fill = lanes.map(k => +sp2RigFill(k).pct.toFixed(2));
       for (let i = 1; i < fill.length; i++)
@@ -1379,7 +1660,7 @@
       if (fill[0] >= fill[fill.length - 1]) throw new Error('the ordering did nothing');
       // and the other tabs are left in their own order
       sp2SetDrvFilter('all');
-      const byKey = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const byKey = laneOrder();
       if (byKey.join() !== Object.keys(SP2_DRIVERS).filter(k => byKey.indexOf(k) >= 0).join())
         throw new Error('All is no longer in roster order');
     });
@@ -1431,6 +1712,11 @@
       const art = open.querySelector('.sp2-sv');
       if (art && sg.getBoundingClientRect().top < art.getBoundingClientRect().bottom - 2)
         throw new Error('the suggestions are not under the drawing');
+      // and under the chips: what is already on the rig, and how much of it
+      // each order takes, is read before deciding to put more on
+      const stops = open.querySelector('.sp2-ln-stops');
+      if (stops && sg.getBoundingClientRect().top < stops.getBoundingClientRect().bottom - 2)
+        throw new Error('the fill section is above the order chips again');
 
       // the table and the drawing split the band in half, whatever the width
       const band = open.querySelector('.sp2-two');
@@ -1696,6 +1982,151 @@
       sp2SetQuick('unplanned');
     });
 
+    if (V2) step('a view says what it is for, and the row shows what it narrows', () => {
+      // every preset carries words of its own, and the tab wears them
+      sp2Views.forEach(v => {
+        if (!v.desc || v.desc.length < 20)
+          throw new Error('the preset "' + v.name + '" says nothing about itself');
+        if (/^[a-z]/.test(v.desc)) throw new Error(v.name + '\u2019s description is not a sentence');
+      });
+      const tab = [...document.querySelectorAll('.sp2-vr-tab')]
+        .find(b => b.textContent.trim() === sp2Views[0].name);
+      if (!tab) throw new Error('the first view has no tab');
+      // the description reads on hover, in the design system's own tooltip -
+      // not the browser's title, which arrives late and in the OS's type
+      if (tab.getAttribute('title'))
+        throw new Error('the tab is back on the browser\u2019s own tooltip');
+      const tip = tab.parentElement.querySelector('.sp2-vr-tip');
+      if (!tip || tip.textContent !== sp2Views[0].desc)
+        throw new Error('the tab does not carry its own description');
+      if (getComputedStyle(tip).display !== 'none')
+        throw new Error('the description is showing before the tab is hovered');
+      // and a rule shows it on hover of the tab, since :hover cannot be fired
+      const shows = [...document.styleSheets].flatMap(sh => {
+        try { return [...sh.cssRules]; } catch (x) { return []; }
+      }).some(r => r.selectorText && /:hover\s+\.sp2-vr-tip$/.test(r.selectorText) &&
+                   r.style.display === 'block');
+      if (!shows) throw new Error('nothing shows the description on hover');
+
+      // ONE switch, at the end of the row — not one per view
+      const vr = document.getElementById('sp2Vr');
+      const b = document.getElementById('sp2VrFltB');
+      if (!b) throw new Error('the row has no way to show the applied filters');
+      if (vr.querySelectorAll('.sp2-vr-flt-b').length !== 1)
+        throw new Error('there is more than one filter switch on the row');
+      if (vr.querySelector('.sp2-vr-wrap .sp2-vr-flt-b'))
+        throw new Error('a view still carries its own filter button');
+      const add = vr.querySelector('.sp2-vr-add');
+      if (b.getBoundingClientRect().left < add.getBoundingClientRect().right)
+        throw new Error('the switch is not at the end of the row');
+      if (vr.getBoundingClientRect().right - b.getBoundingClientRect().right > 16)
+        throw new Error('the switch is not against the end of the row');
+      if (!/Show applied filters/.test(b.textContent))
+        throw new Error('the switch does not say what it does');
+      // it shows a narrowing, it does not make one: its mark cannot be the
+      // mark Filters already wears, or the row says the same thing twice
+      const fpSvg = document.getElementById('sp2FpBtn').querySelector('svg');
+      const bSvg = b.querySelector('svg');
+      if (!bSvg) throw new Error('the switch has no mark at all');
+      if (bSvg.innerHTML.replace(/\s+/g, '') === fpSvg.innerHTML.replace(/\s+/g, ''))
+        throw new Error('the switch wears the Filters mark');
+      // but it does carry both halves: the narrowing lines, and an eye
+      if (bSvg.querySelectorAll('line').length < 3)
+        throw new Error('the mark does not carry the narrowing lines');
+      if (!bSvg.querySelector('circle') || !bSvg.querySelector('path'))
+        throw new Error('the mark does not carry an eye');
+
+      // off, a preset showing unchanged keeps the shelves clear.
+      // Every press redraws the row, so the switch is read fresh each time.
+      const btn = () => document.getElementById('sp2VrFltB');
+      sp2VrPick('vAvail');
+      if (sp2ShowFilters) btn().click();
+      const so = () => document.getElementById('sp2ShelfO');
+      const sd = () => document.getElementById('sp2ShelfD');
+      if (getComputedStyle(so()).display !== 'none' || getComputedStyle(sd()).display !== 'none')
+        throw new Error('the shelves are up before the switch is turned on');
+      if (Math.round(btn().getBoundingClientRect().width) > 32)
+        throw new Error('the switch does not start shut to its icon');
+      if (getComputedStyle(btn().querySelector('span')).display !== 'none')
+        throw new Error('the words are laid out before it is hovered or on');
+
+      // on, the SELECTION puts its narrowing up as pills, on both columns
+      btn().click();
+      const on = document.getElementById('sp2VrFltB');
+      if (!on.classList.contains('on') || on.getAttribute('aria-pressed') !== 'true')
+        throw new Error('the switch does not read as on');
+      if (getComputedStyle(on.querySelector('span')).display === 'none')
+        throw new Error('a switch that is on still hides its words');
+      if (getComputedStyle(so()).display === 'none' || getComputedStyle(sd()).display === 'none')
+        throw new Error('the switch is on and the shelves are still empty');
+      // the pills are the DS's own chip shelf, under the search and filters
+      const tb = document.querySelector('.sp2-tools');
+      if (so().getBoundingClientRect().top < tb.getBoundingClientRect().bottom - 1)
+        throw new Error('the pills are not under the search and filters');
+      const view = sp2Views.filter(v => v.id === sp2ViewOn)[0];
+      Object.keys(view.state.facet).forEach(key => {
+        const f = SP2_FACETS.filter(x => x.k === key)[0];
+        const el = f.c === 'orders' ? so() : sd();
+        view.state.facet[key].forEach(val => {
+          if (el.textContent.indexOf(f.label) < 0 || el.textContent.indexOf(val) < 0)
+            throw new Error('no pill says ' + f.label + ': ' + val);
+        });
+      });
+      if (!so().querySelector('.sp2-chipf') || !sd().querySelector('.sp2-chipf'))
+        throw new Error('the narrowing is not shown as pills');
+
+      // it follows the selection, whichever view that is
+      sp2VrPick('vPlanned');
+      if (so().textContent.indexOf('Planned') < 0)
+        throw new Error('the pills did not follow the selection');
+      if (sd().textContent.indexOf('Available') >= 0)
+        throw new Error('the pills still show the view before it');
+      sp2VrPick('vAvail');
+
+      // and off again puts them away
+      document.getElementById('sp2VrFltB').click();
+      if (getComputedStyle(so()).display !== 'none' || getComputedStyle(sd()).display !== 'none')
+        throw new Error('turning it off left the pills up');
+
+      // saving a view takes a description, and keeps it
+      const n0 = sp2Views.length;
+      sp2VrNew();
+      document.getElementById('sp2DlgI').value = 'Smoke view';
+      document.getElementById('sp2DlgD').value = 'Everything this run narrowed to.';
+      sp2DlgSave();
+      if (sp2Views.length !== n0 + 1) throw new Error('the view was not saved');
+      const mineV = sp2Views[sp2Views.length - 1];
+      if (mineV.desc !== 'Everything this run narrowed to.')
+        throw new Error('the description was not kept');
+      const myTab = [...document.querySelectorAll('.sp2-vr-tab')]
+        .find(x => x.textContent.trim() === 'Smoke view');
+      const myTip = myTab && myTab.parentElement.querySelector('.sp2-vr-tip');
+      if (!myTip || myTip.textContent !== mineV.desc)
+        throw new Error('a saved view does not carry its own description');
+      // and renaming can change both
+      sp2VrRename(mineV.id);
+      if (document.getElementById('sp2DlgD').value !== mineV.desc)
+        throw new Error('renaming does not open with the description it has');
+      document.getElementById('sp2DlgD').value = 'Changed.';
+      sp2DlgSave();
+      if (mineV.desc !== 'Changed.') throw new Error('the description cannot be changed');
+      // the description is optional: a name on its own still saves
+      sp2VrNew();
+      document.getElementById('sp2DlgI').value = 'Smoke view 2';
+      sp2DlgSave();
+      const bare = sp2Views[sp2Views.length - 1];
+      if (bare.name !== 'Smoke view 2') throw new Error('a view without a description did not save');
+      const bareTab = [...document.querySelectorAll('.sp2-vr-tab')]
+        .find(x => x.textContent.trim() === 'Smoke view 2');
+      if (bareTab && bareTab.parentElement.querySelector('.sp2-vr-tip'))
+        throw new Error('a view with no description still hangs an empty tooltip');
+      // hand the row back as it was found
+      sp2VrDelete(bare.id);
+      sp2VrDelete(mineV.id);
+      if (sp2Views.length !== n0) throw new Error('the run left its own views behind');
+      sp2VrPick('vAvail');
+    });
+
     if (V2) step('the presets each ask a question of both columns', () => {
       // a preset narrows the orders and the rigs together; an order list means
       // nothing without the rigs it could go on
@@ -1924,6 +2355,109 @@
         throw new Error('nothing in the day can be split, so the split cannot be seen');
     });
 
+    if (V2) step('a rig with nothing left to fill says so in green', () => {
+      // Reached the way a dispatcher reaches it: split an order so that what
+      // goes on lands the rig exactly on full — never over.
+      sp2SetDrvFilter('available');
+      // any rig in the day whose free space one order can be split to fill
+      // exactly — whichever rig that turns out to be
+      let k = null, room = 0, pick = null;
+      [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k).some(x => {
+        const r = sp2RigRoom(x);
+        if (!(r.free > 0) || r.over) return false;
+        const o = SP2_ORDERS.filter(y => !y.driver && sp2Gal(y) > r.free)
+          .find(y => { const pl = sp2SplitPlan(x, y, r.free); return pl && pl.fits === r.free; });
+        if (!o) return false;
+        k = x; room = r.free; pick = o;
+        return true;
+      });
+      if (!pick) throw new Error('nothing in the day would land a rig on full');
+
+      // the day is handed back exactly as it was found: later steps read the
+      // same rigs, orders and routes this one borrows
+      const wasDrv = sp2Driver;
+      const rig = SP2_DRIVERS[k];
+      const keep = {
+        load: JSON.parse(JSON.stringify(rig.load || [])),
+        tload: JSON.parse(JSON.stringify(rig.tload || [])),
+        prods: JSON.parse(JSON.stringify(pick.prods)),
+        n: SP2_ORDERS.length,
+      };
+      const giveBack = () => {
+        SP2_ORDERS.length = keep.n;
+        pick.prods = JSON.parse(JSON.stringify(keep.prods));
+        pick.driver = '';
+        delete pick.split;
+        rig.load = JSON.parse(JSON.stringify(keep.load));
+        rig.tload = JSON.parse(JSON.stringify(keep.tload));
+        sp2Worked[k] = false;
+        sp2Driver = wasDrv;
+        sp2Render();
+      };
+
+      sp2PickDriver(k);
+      const was = document.querySelector('.sp2-ln.on .sp2-sg');
+      if (!was) throw new Error('the open lane offers nothing to fill');
+      if (was.classList.contains('full'))
+        throw new Error('a rig with ' + room + ' gal free already reads as full');
+      if (was.querySelector('.sp2-sg-tick'))
+        throw new Error('a rig with room still carries the tick');
+
+      pick.driver = k;
+      sp2SplitGo(k, pick.id, room);
+      try {
+      const r = sp2RigRoom(k);
+      if (r.free !== 0 || r.over) throw new Error('the split did not land the rig on full');
+
+      const sg = document.querySelector('.sp2-ln.on .sp2-sg');
+      if (!sg || !sg.classList.contains('full'))
+        throw new Error('a full rig does not wear the full banner');
+      const ttl = sg.querySelector('.sp2-sg-ttl').textContent;
+      if (ttl !== 'The compartments are full')
+        throw new Error('the heading still reads: ' + ttl);
+      // the same banner, in the green that means done: a tenth of green behind
+      // it, green all the way round
+      const cs = getComputedStyle(sg);
+      // read the token where the banner reads it: in the merged bundle every
+      // screen's :root is scoped to its own container, so the document element
+      // carries none of the planner's tokens
+      const scope = sg.closest('.sp2') || document.documentElement;
+      const green = getComputedStyle(scope).getPropertyValue('--status-success').trim();
+      if (cs.borderTopColor !== getComputedStyle(sg).borderBottomColor)
+        throw new Error('the stroke is not the same all the way round');
+      const probe = document.createElement('i');
+      probe.style.color = green; scope.appendChild(probe);
+      const want = getComputedStyle(probe).color; probe.remove();
+      if (cs.borderTopColor !== want)
+        throw new Error('the stroke is not the green we use: ' + cs.borderTopColor);
+      if (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === want)
+        throw new Error('the ground is not a tint of green: ' + cs.backgroundColor);
+
+      // a filled green disc with a white mark in it, not an outline
+      const tick = sg.querySelector('.sp2-sg-tick');
+      if (!tick) throw new Error('the full banner carries no tick');
+      const ts = getComputedStyle(tick);
+      if (ts.backgroundColor !== want)
+        throw new Error('the disc is not filled green: ' + ts.backgroundColor);
+      if (!/rgb\(255, 255, 255\)/.test(ts.color))
+        throw new Error('the mark is not white: ' + ts.color);
+      const box = tick.getBoundingClientRect();
+      if (Math.abs(box.width - box.height) > 1 || box.width < 12)
+        throw new Error('the disc is not a circle of a readable size');
+      if (parseFloat(ts.borderTopLeftRadius) < box.width / 2 - 0.5)
+        throw new Error('the disc is not round');
+      if (!tick.querySelector('svg')) throw new Error('the disc holds no mark');
+
+      // one fact, once: the heading says it, so the sentence under it goes
+      if (sg.querySelector('.sp2-sg-none'))
+        throw new Error('the banner says the rig is full twice');
+      if (sg.querySelector('.sp2-sg-item'))
+        throw new Error('a full rig is still offered orders');
+      } finally { giveBack(); }
+      if (sp2RigRoom(k).free !== room)
+        throw new Error('the run did not give the rig back as it found it');
+    });
+
     if (V2) step('an order too big for the room left can be split', () => {
       // fill a rig past its capacity, then split the one order the rig could
       // take part of: what fits stays, the rest becomes its own order
@@ -2049,14 +2583,14 @@
       // the reading is about the rig, not about the sort: a driver is selected,
       // so it stands in time order too
       sp2SetSort('time');
-      if (!document.querySelector('.sp2-card .sp2-fit'))
+      if (!document.querySelector('.sp2-card .sp2-fit, .sp2-card .sp2-fitsplit'))
         throw new Error('the reading vanishes when the list is not ranked by it');
 
       sp2SetSort('fit');
       const cards = [...document.querySelectorAll('.sp2-card')];
       if (!cards.length) throw new Error('nothing in the list');
       const first = cards[0];
-      if (!first.querySelector('.sp2-fit'))
+      if (!first.querySelector('.sp2-fit, .sp2-fitsplit'))
         throw new Error('ranked by fit, the card does not say what the fit is');
 
       // every reading is the model's, and it is a percentage
@@ -2065,7 +2599,13 @@
         if (!o || o.driver) return;
         const f = sp2FitFor(k, o);
         const said = c.querySelector('.sp2-fit');
-        if (!said) throw new Error(o.id + ' carries no reading');
+        // An order that would have to be split wears no pill: a split is a
+        // possibility the dispatcher may take, not a requirement, so the
+        // sentence under the window is the whole of what is said about it.
+        if (f.fits && f.splits) {
+          if (said)
+            throw new Error(o.id + ' can be split and still wears a pill: ' + said.textContent);
+        } else if (!said) throw new Error(o.id + ' carries no reading');
         // Read against the capacity that is actually free. Only an order that
         // goes on whole is a percentage of anything: one that would have to be
         // split is not 100% of the free space, and one no compartment can take
@@ -2076,10 +2616,7 @@
           if (/%/.test(said.textContent))
             throw new Error(o.id + ' can load nothing and still shows a percentage');
         } else if (f.splits) {
-          if (!/Needs a split/.test(said.textContent))
-            throw new Error(o.id + ' cannot go on whole and does not say so: ' + said.textContent);
-          if (/%/.test(said.textContent))
-            throw new Error(o.id + ' needs a split and still shows a percentage');
+          /* no pill at all — asserted above */
         } else {
           const want = Math.round(f.total / f.room * 100);
           if (said.textContent.indexOf(want + '%') < 0)
@@ -2090,28 +2627,45 @@
           if (want > 100)
             throw new Error(o.id + ' takes more than the free space and reads as whole');
         }
-        if (said.closest('.sp2-card-top') === null)
+        if (said && said.closest('.sp2-card-top') === null)
           throw new Error('the fit pill is not beside the order number');
-        // and the split is a sentence in gallons, not a second percentage
+        // Every card against a chosen rig carries a line as well as a pill:
+        // what a split would put on, or why nothing places at all.
         const sp = c.querySelector('.sp2-fitsplit');
-        if (!!sp !== !!f.splits)
-          throw new Error(o.id + (f.splits ? ' can be split and does not say so'
-                                           : ' cannot be split and says it can'));
-        if (sp) {
+        if (f.splits) {
+          if (!sp) throw new Error(o.id + ' can be split and does not say so');
+          if (sp.classList.contains('none'))
+            throw new Error(o.id + ' can be split and the line reads as no room');
           if (sp.tagName === 'SPAN' && /pill/.test(sp.className))
             throw new Error('the split reads as a pill');
           if (sp.textContent.indexOf(f.fits.toLocaleString() + ' gal') < 0)
             throw new Error(o.id + '\u2019s split does not say the gallons: ' + sp.textContent);
           if (sp.textContent.indexOf(f.over.toLocaleString() + ' gal') < 0)
             throw new Error(o.id + '\u2019s split does not say what is left over');
+          // the share belongs to what the split PUTS ON, against the free
+          // space \u2014 never to the whole order, which does not go on whole
+          const share = Math.round(f.fits / f.room * 100);
+          if (sp.textContent.indexOf(share + '%') < 0)
+            throw new Error(o.id + '\u2019s split does not say how much of the free space it ' +
+                            'fills: ' + sp.textContent);
+          const whole = Math.round(f.total / f.room * 100);
+          if (whole !== share && sp.textContent.indexOf(whole + '%') >= 0)
+            throw new Error('the split reads the whole order as a share of the free space');
+        } else if (!f.fits) {
+          if (!sp || !sp.classList.contains('none'))
+            throw new Error(o.id + ' places nothing and the card does not say why');
+          if (!/over capacity|another product/.test(sp.textContent))
+            throw new Error('it does not give the reason: ' + sp.textContent);
           if (/%/.test(sp.textContent))
-            throw new Error('the split is still a percentage: ' + sp.textContent);
+            throw new Error('a card that places nothing still shows a percentage');
+        } else if (sp) {
+          throw new Error(o.id + ' goes on whole and still carries a split line');
         }
       });
 
       // a rig with room still offers splits \u2014 further down, after the matches
       if (sp2RigRoom(k).free > 0) {
-        const anySplit = [...cards].some(c => c.querySelector('.sp2-fitsplit'));
+        const anySplit = [...cards].some(c => c.querySelector('.sp2-fitsplit:not(.none)'));
         const anyBig = SP2_ORDERS.some(o2 => !o2.driver && sp2Gal(o2) > sp2RigRoom(k).free &&
                                              sp2FitFor(k, o2).fits > 0);
         if (anyBig && !anySplit)
@@ -2154,19 +2708,94 @@
       // may still be added \u2014 which is the number every pill is read against
       const foot = document.querySelector('.sp2-ln.on .sp2-rig-foot');
       if (!foot) throw new Error('the rig does not say what is planned, loaded and free');
+      // the bar reads left to right: the pair at the near end, and emptying
+      // the rig at the far end of the same line
+      const read = foot.querySelector('.sp2-rig-read');
+      if (!read) throw new Error('planned and free are not grouped');
+      const fb = foot.getBoundingClientRect(), rb = read.getBoundingClientRect();
+      if (rb.left - fb.left > 14)
+        throw new Error('planned and free start ' + (rb.left - fb.left).toFixed(1) +
+                        'px in, not at the bar\'s near edge');
+      // the acts sit at the far end of the same line: hitching, then the menu
+      const act = foot.querySelector('.sp2-rig-act');
+      if (!act) throw new Error('the bar carries nothing to act with');
+      const hitch = [...act.querySelectorAll('button')]
+        .find(b => /Trailer|Unhitch/.test(b.textContent));
+      if (!hitch) throw new Error('hitching is not on the readings\' line');
+      const kebab = act.querySelector('.sp2-rig-more');
+      if (!kebab) throw new Error('the rig has no menu of its own');
+      if (kebab.getBoundingClientRect().left < hitch.getBoundingClientRect().right)
+        throw new Error('the menu is not after the hitch button');
+      const ab = kebab.getBoundingClientRect();
+      if (fb.right - ab.right > 14)
+        throw new Error('the acts stop ' + (fb.right - ab.right).toFixed(1) +
+                        'px short of the bar\'s far edge');
+      [hitch, kebab].forEach(e2 => {
+        const eb = e2.getBoundingClientRect();
+        if (Math.abs(((eb.top + eb.bottom) / 2) - ((rb.top + rb.bottom) / 2)) > 2)
+          throw new Error('an act is not on the readings\' line');
+      });
+      // nothing is loaded yet — this is a plan — so nothing says "unload"
+      if (/unload/i.test(foot.textContent) || /unload/i.test(act.innerHTML))
+        throw new Error('the bar still talks about unloading');
+      // it behaves like every other menu: shut until it is pressed, and the
+      // bar does not read out its contents while it is shut
+      const menu = document.getElementById('sp2RigM' + k);
+      if (!menu) throw new Error('the rig menu is not there at all');
+      if (getComputedStyle(menu).display !== 'none')
+        throw new Error('the menu is laid out before it is opened');
+      if (/Clear/.test(foot.innerText))
+        throw new Error('the bar reads the menu out while it is shut: ' + foot.innerText);
+
+      // what the menu offers: the truck alone, or all three with a trailer on
+      kebab.click();
+      if (!menu.classList.contains('on') || getComputedStyle(menu).display === 'none')
+        throw new Error('the menu did not open');
+      if (menu.getBoundingClientRect().bottom > kebab.getBoundingClientRect().top + 1)
+        throw new Error('the menu does not hang off the button');
+      const items = [...menu.querySelectorAll('.sp2-rig-mi')];
+      const trlOn = !!SP2_DRIVERS[k].trailer;
+      if (items.length !== (trlOn ? 3 : 1))
+        throw new Error('the menu offers ' + items.length + ' ways to clear, not ' +
+                        (trlOn ? 3 : 1));
+      if (!/Clear the truck/.test(items.map(i => i.textContent).join(' ')))
+        throw new Error('the menu does not offer to clear the truck');
+      if (trlOn && !/trailer only/.test(menu.textContent))
+        throw new Error('a hitched rig is not offered its trailer on its own');
+      if (!trlOn && /trailer/i.test(menu.textContent))
+        throw new Error('a rig with no trailer is offered one to clear');
+      items.forEach(i => {
+        const what = /trailer/.test(i.textContent) ? 'trailer'
+          : /truck only|the truck$/.test(i.textContent.trim()) ? 'truck' : 'all';
+        if (!sp2Held(k, what) !== i.disabled)
+          throw new Error('"' + i.textContent + '" is ' + (i.disabled ? 'off' : 'on') +
+                          ' with ' + sp2Held(k, what) + ' gal in it');
+      });
+      // one under another, left edges lined up — never a row of buttons
+      const boxes = items.map(i => i.getBoundingClientRect());
+      boxes.forEach((bx, n) => {
+        if (!n) return;
+        if (bx.top < boxes[n - 1].bottom - 1)
+          throw new Error('the choices are laid out side by side, not one under another');
+        if (Math.abs(bx.left - boxes[0].left) > 1)
+          throw new Error('the choices do not share a left edge');
+      });
+      kebab.click();
+      if (menu.classList.contains('on') || getComputedStyle(menu).display !== 'none')
+        throw new Error('pressing it again did not close it');
       const room = sp2RigRoom(k);
       // two readings, not three \u2014 loaded said the same as planned on every rig
       // whose orders fit, and the tanks are read in the compartment table
       if (/loaded/.test(foot.textContent))
         throw new Error('the truck box still carries a third reading');
       [[room.plan, 'planned']].forEach(([gal, word]) => {
-        const el = [...foot.querySelectorAll('span')].find(x => x.textContent.indexOf(word) >= 0);
+        const el = [...read.querySelectorAll('span')].find(x => x.textContent.indexOf(word) >= 0);
         if (!el) throw new Error('nothing says what is ' + word);
         if (el.textContent.indexOf(gal.toLocaleString() + ' gal') < 0)
           throw new Error(word + ' reads "' + el.textContent.trim() + '", the rig has ' +
                           gal.toLocaleString());
       });
-      const lastEl = [...foot.querySelectorAll('span')].pop();
+      const lastEl = [...read.querySelectorAll('span')].pop();
       if (room.over) {
         if (lastEl.textContent.indexOf('over capacity') < 0)
           throw new Error('a rig planned past its tanks does not say so: ' + lastEl.textContent);
@@ -2543,41 +3172,168 @@
         throw new Error('removing from the route left the order on the rig');
     });
 
-    if (V2) step('a rig is only emptied on purpose', () => {
+    if (V2) step('a rig is only cleared on purpose', () => {
       sp2SetDrvFilter('available');
       const k = [...document.querySelectorAll('.sp2-ln')][0].dataset.k;
       sp2PickDriver(k);
       unloadRig(k);
       sp2RenderUnit();
-      const btn = () => [...document.querySelectorAll('.sp2-ln.on .sp2-link')]
-        .find(b => /Unload/.test(b.textContent));
-      if (btn()) throw new Error('an empty rig still offers to be unloaded');
+      const item = () => [...document.querySelectorAll('.sp2-ln.on .sp2-rig-mi')]
+        .find(b => /Clear the truck/.test(b.textContent));
+      // the menu is always there — what changes is whether it can be used
+      if (!item()) throw new Error('the rig has no way to clear its compartments');
+      if (!item().disabled) throw new Error('an empty rig still offers to be cleared');
 
-      // put something in it and the button comes back, named for what it does
+      // put something in it and the choice comes alive
       const d = SP2_DRIVERS[k];
       d.load[0].p = 'UNL87';
       d.load[0].q = Math.min(500, SP2_TRUCKS[d.truck].comps[0].cap);
       sp2RenderUnit();
-      const b = btn();
-      if (!b) throw new Error('a loaded rig does not offer to be unloaded');
-      if (b.textContent.trim() !== 'Unload all')
-        throw new Error('the button reads "' + b.textContent.trim() + '"');
+      const b = item();
+      if (!b || b.disabled) throw new Error('a rig with fuel placed in it cannot be cleared');
+      // and it sits with the gallons it clears, not up in the lane head
+      if (!b.closest('.sp2-rig-foot'))
+        throw new Error('clearing is not in the rig\'s own bar');
+      if (/Clear|Unload/.test(document.querySelector('.sp2-ln.on .sp2-ln-truck').textContent))
+        throw new Error('the lane head still carries the act');
 
       // it asks before it throws the morning away
       b.click();
       const dlg = document.getElementById('sp2CfmScrim');
-      if (!dlg.classList.contains('on')) throw new Error('it emptied the rig without asking');
-      if (d.load[0].q === 0) throw new Error('it emptied the rig before the answer');
-      if (!/Unload all/.test(document.getElementById('sp2CfmOk').textContent))
+      if (!dlg.classList.contains('on')) throw new Error('it cleared the rig without asking');
+      if (d.load[0].q === 0) throw new Error('it cleared the rig before the answer');
+      if (!/Clear/.test(document.getElementById('sp2CfmOk').textContent))
         throw new Error('the confirm does not name the act');
+      if (/unload/i.test(document.getElementById('sp2CfmT').textContent +
+                         document.getElementById('sp2CfmP').textContent))
+        throw new Error('the confirm still talks about unloading');
       if (!/stay planned/.test(document.getElementById('sp2CfmP').textContent))
         throw new Error('the confirm does not say what survives it');
       sp2CfmClose();
-      if (d.load[0].q === 0) throw new Error('cancelling emptied it anyway');
-      b.click();
+      if (d.load[0].q === 0) throw new Error('cancelling cleared it anyway');
+      const planned = SP2_ORDERS.filter(o => o.driver === k).length;
+      item().click();
       document.getElementById('sp2CfmOk').click();
-      if (sp2Cells(k).some(c => c.l.q)) throw new Error('confirming did not empty it');
+      if (sp2Cells(k).some(c => c.l.q)) throw new Error('confirming did not clear it');
       if (dlg.classList.contains('on')) throw new Error('the dialog stayed up');
+      // clearing throws away where the fuel was going, never the plan itself
+      if (SP2_ORDERS.filter(o => o.driver === k).length !== planned)
+        throw new Error('clearing took the orders off the rig as well');
+    });
+
+    if (V2) step('the rig being planned leads the column and holds its top', () => {
+      sp2Worked = {};
+      const host = document.getElementById('sp2V2');
+      const keys = () => [...host.querySelectorAll('.sp2-ln')].map(l => l.dataset.k);
+      const all = keys();
+      // a rig from further down the list, so leading is not where it already sat
+      const k = all[Math.min(3, all.length - 1)];
+      if (!k) throw new Error('the column has no lanes');
+      sp2PickDriver(k);
+      if (keys()[0] !== k)
+        throw new Error('the chosen rig is at ' + keys().indexOf(k) + ', not the top');
+
+      // the card itself scrolls with the list — what holds at the top once it
+      // has gone is the folded strip
+      const on = host.querySelector('.sp2-ln.on');
+      if (getComputedStyle(on).position === 'sticky')
+        throw new Error('the chosen card is still pinned instead of scrolling');
+
+      const fold = document.getElementById('sp2Fold');
+      if (!fold) throw new Error('the chosen rig has no folded strip');
+      if (fold.classList.contains('on'))
+        throw new Error('it is folded before anything has been scrolled');
+      // it takes no space in the list while it is away, and it trips at the
+      // foot of the compartments band — where the rig itself has gone past
+      const two = host.querySelector('.sp2-ln.on .sp2-two');
+      if (!two) throw new Error('the chosen rig draws no compartments band');
+      const away = () => two.getBoundingClientRect().bottom - host.getBoundingClientRect().top;
+      if (host.scrollHeight < host.clientHeight + away() + 40)
+        throw new Error('the column is too short to scroll the card away');
+
+      // folds exactly when that section reaches the top of the column
+      const trip = host.scrollTop + away();
+      host.scrollTop = trip - 20; sp2FoldSync();
+      if (fold.classList.contains('on'))
+        throw new Error('it folded ' + Math.round(away()) + 'px early');
+      host.scrollTop = trip; sp2FoldSync();
+      if (!fold.classList.contains('on'))
+        throw new Error('the section reached the top and the card did not fold');
+      // showing it moved nothing: its own height is cancelled
+      if (Math.abs(away()) > 1)
+        throw new Error('folding shifted the list by ' + away().toFixed(1) + 'px');
+      if (Math.abs(parseFloat(fold.style.marginBottom) + fold.offsetHeight) > 1)
+        throw new Error('the strip takes up room in the list');
+
+      // and it holds at the top while the rest goes under it
+      host.scrollTop = trip + 300; sp2FoldSync();
+      const fb = fold.getBoundingClientRect(), hb = host.getBoundingClientRect();
+      if (Math.abs(fb.top - hb.top) > 1)
+        throw new Error('the strip slid to ' + (fb.top - hb.top).toFixed(1) + 'px');
+      if (!fold.classList.contains('on')) throw new Error('it let go on the way down');
+
+      // the banner sits against the card, with the fill of the tanks in it
+      const card = fold.querySelector('.sp2-fold-card');
+      const bn = fold.querySelector('.sp2-fold-bn');
+      if (!card || !bn) throw new Error('the strip is not a card and a banner');
+      const gap = bn.getBoundingClientRect().top - card.getBoundingClientRect().bottom;
+      if (Math.abs(gap) > 1)
+        throw new Error('the banner sits ' + gap.toFixed(1) + 'px off the card');
+      if (!/Load planning in progress/.test(bn.textContent))
+        throw new Error('the banner does not say what is going on: ' + bn.textContent);
+      const pct = sp2RigRoom(k).usedPct;
+      if (bn.textContent.indexOf(pct + '%') < 0)
+        throw new Error('the banner reads "' + bn.textContent.trim() + '", the tanks are ' +
+                        pct + '% full');
+
+      // scrolling back up brings the card back
+      host.scrollTop = 0; sp2FoldSync();
+      if (fold.classList.contains('on'))
+        throw new Error('the strip stayed up with the card back on screen');
+    });
+
+    if (V2) step('leaving a rig you loaded with room to spare asks first', () => {
+      sp2Worked = {};
+      const host = document.getElementById('sp2V2');
+      const k = [...host.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => sp2RigRoom(x).free > 0);
+      if (!k) throw new Error('no rig in the column has room');
+      sp2PickDriver(k);
+      const other = [...host.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => x !== k);
+      const dlg = document.getElementById('sp2CfmScrim');
+
+      // a rig you only looked at is not a rig you worked on
+      sp2LaneClick(other);
+      if (dlg.classList.contains('on')) throw new Error('an untouched rig asked on the way out');
+      if (sp2Driver !== other) throw new Error('it did not move on');
+
+      // load it, and leaving it is worth a word
+      sp2PickDriver(k);
+      sp2PackInto(k, [{ p: 'UNL87', q: 200 }], 'auto', -1, 'SMOKE');
+      sp2RenderUnit();
+      sp2LaneClick(other);
+      if (!dlg.classList.contains('on'))
+        throw new Error('it left a part-filled rig without a word');
+      if (sp2Driver !== k) throw new Error('it moved on before the answer');
+      const said = document.getElementById('sp2CfmP').textContent;
+      const room = sp2RigRoom(k);
+      if (!/previous load plan will be drafted/.test(said))
+        throw new Error('it does not say what becomes of the plan: "' + said + '"');
+      if (said.indexOf(room.free.toLocaleString() + ' gal') < 0)
+        throw new Error('it does not say how much room is left: "' + said + '"');
+      if (said.indexOf(SP2_DRIVERS[other].truck) < 0)
+        throw new Error('it does not say where you are going');
+      document.getElementById('sp2CfmOk').click();
+      if (sp2Driver !== other) throw new Error('confirming did not move on');
+
+      // and it is asked once, not every time you step back
+      sp2LaneClick(k);
+      sp2LaneClick(other);
+      if (dlg.classList.contains('on')) throw new Error('it asked about the same rig twice');
+      sp2TakeOut(k, [{ p: 'UNL87', q: 200 }], 'SMOKE');
+      sp2Worked = {};
+      sp2PickDriver(k);
     });
 
     if (V2) step('the tank monitor reads top-down, with room of its own', () => {
@@ -3123,6 +3879,19 @@
       if (sp2SelOrder !== run[0].o.id) throw new Error('a stop does not select its order');
       sp2PickOrder(sp2SelOrder);
       if (sel) sp2Render();
+    });
+
+    if (V2) step('picking an order says nothing it has not already said', () => {
+      sp2SetQuick('all');
+      const toast = document.getElementById('sp2Toast');
+      toast.style.display = 'none';
+      const un = SP2_ORDERS.find(o => !o.driver);
+      if (!un) throw new Error('nothing unplanned to pick');
+      sp2PickOrder(un.id);
+      // the card already says Unplanned, and the pill beside it says what the
+      // order would do to the rig — a toast repeating either is noise
+      if (toast.style.display === 'block')
+        throw new Error('picking an order raised a toast: "' + toast.textContent + '"');
     });
 
     if (V2) step('every order card is the round-3 card', () => {
@@ -3798,6 +4567,125 @@
         if (!l.querySelector('.sp2-ln-stops')) throw new Error('a lane has no stops row');
       });
     });
+    if (V2) step('the foot states the day, and opens out', () => {
+      const sum = document.getElementById('sp2Day');
+      const bar = document.getElementById('sp2DayBar');
+      if (!sum || !bar) throw new Error('the planner has no summary bar');
+
+      // it is the last thing in the planner, under BOTH columns, and it is
+      // not inside either scroller — so nothing scrolls it away
+      const body = document.getElementById('sp2Body');
+      if (sum.parentElement !== body.parentElement || sum.previousElementSibling !== body)
+        throw new Error('the bar is not the last thing under the two columns');
+      if (sum.closest('#sp2V2') || sum.closest('#sp2TlWrap'))
+        throw new Error('the bar lives inside a scroller');
+      const br = bar.getBoundingClientRect();
+      if (Math.abs(br.right - br.left - body.getBoundingClientRect().width) > 2)
+        throw new Error('the bar does not span both columns');
+      if (br.bottom > innerHeight + 1 || br.bottom < innerHeight - 1)
+        throw new Error('the bar does not sit at the foot of the screen');
+      const host = document.getElementById('sp2V2');
+      const was = br.top;
+      host.scrollTop = 400;
+      if (Math.abs(bar.getBoundingClientRect().top - was) > 1)
+        throw new Error('the bar moved when the lanes scrolled');
+      host.scrollTop = 0;
+
+      // the six readings, in the order they were asked for
+      const reads = [...bar.querySelectorAll('.sp2-day-i')];
+      if (reads.length !== 6)
+        throw new Error('the bar carries ' + reads.length + ' readings, not six');
+      const want = [/load plans done/, /trucks available/, /planned orders pending/,
+                    /unplanned orders pending/, /gal.*pending/, /gal.*compartment space free/];
+      reads.forEach((r, i) => {
+        if (!r.querySelector('b')) throw new Error('a reading has no number');
+        if (!want[i].test(r.textContent))
+          throw new Error('reading ' + (i + 1) + ' is "' + r.textContent.trim() + '"');
+      });
+      if (bar.querySelectorAll('.sp2-day-sep').length !== 5)
+        throw new Error('the readings are not kept apart');
+      if (bar.scrollWidth - bar.clientWidth > 1)
+        throw new Error('the bar overflows its own line');
+
+      // every number is the model's, counted over the whole day
+      const t = sp2DayTotals();
+      const onDuty = Object.keys(SP2_DRIVERS).filter(k => SP2_DRIVERS[k].state !== 'off-duty');
+      if (t.rigs !== onDuty.length) throw new Error('the rig count is not the roster on duty');
+      if (t.avail !== onDuty.filter(k => sp2Avail(SP2_DRIVERS[k])).length)
+        throw new Error('available is not what the facet means by available');
+      if (t.done !== onDuty.filter(k => { const r = sp2RigRoom(k);
+            return !r.over && !r.free && SP2_ORDERS.some(o => o.driver === k); }).length)
+        throw new Error('done is not "planned to capacity"');
+      if (t.unplanned !== SP2_ORDERS.filter(o => !o.driver).length)
+        throw new Error('the unplanned count is wrong');
+      if (t.planned !== SP2_ORDERS.filter(o => !!o.driver).length)
+        throw new Error('the planned count is wrong');
+      if (t.galUnplanned !== SP2_ORDERS.filter(o => !o.driver).reduce((a, o) => a + sp2Gal(o), 0))
+        throw new Error('the gallons pending are wrong');
+      if (t.free !== onDuty.reduce((a, k) => a + sp2RigRoom(k).free, 0))
+        throw new Error('the free space is not the sum of the rigs');
+      if (!bar.textContent.includes(t.galUnplanned.toLocaleString()))
+        throw new Error('the bar does not print the gallons it counted');
+
+      // the day is the day: narrowing the list does not change it
+      const before = bar.textContent;
+      sp2SetQuick('planned');
+      if (bar.textContent !== before)
+        throw new Error('the bar followed the filter instead of stating the day');
+      sp2SetQuick('unplanned');
+
+      // but planning an order does change it
+      const k2 = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => { const r = sp2RigRoom(x);
+          return r.free > 0 && SP2_ORDERS.some(o => !o.driver && sp2Gal(o) <= r.free &&
+                                                    sp2FitFor(x, o).fits === sp2Gal(o)); });
+      if (k2) {
+        const o2 = SP2_ORDERS.filter(o => !o.driver && sp2Gal(o) <= sp2RigRoom(k2).free &&
+                                          sp2FitFor(k2, o).fits === sp2Gal(o))[0];
+        const n0 = sp2DayTotals();
+        sp2Drag = o2.id;
+        sp2Drop({ preventDefault(){}, stopPropagation(){},
+                  dataTransfer:{ getData: () => o2.id } }, 'auto', -1, k2);
+        if (o2.driver !== k2) throw new Error('the drop did not take');
+        const n1 = sp2DayTotals();
+        if (n1.unplanned !== n0.unplanned - 1 || n1.planned !== n0.planned + 1)
+          throw new Error('planning an order did not move it from pending to planned');
+        if (n1.galUnplanned !== n0.galUnplanned - sp2Gal(o2))
+          throw new Error('the gallons pending did not come down by the order');
+        if (n1.free >= n0.free)
+          throw new Error('the free space did not come down');
+        sp2UnplanOrder({ stopPropagation(){} }, k2, o2.id);
+        const n2 = sp2DayTotals();
+        if (n2.unplanned !== n0.unplanned || n2.galUnplanned !== n0.galUnplanned)
+          throw new Error('taking it back off did not give the day back');
+      }
+
+      // pressing it opens the same facts, broken out, above the bar
+      const more = document.getElementById('sp2DayMore');
+      if (!more.hidden) throw new Error('the breakdown is open before it is asked for');
+      bar.click();
+      if (more.hidden) throw new Error('pressing the bar opened nothing');
+      if (bar.getAttribute('aria-expanded') !== 'true')
+        throw new Error('the bar does not say it is open');
+      const groups = [...more.querySelectorAll('.sp2-day-g')];
+      if (groups.length < 3) throw new Error('the breakdown has nothing in it');
+      const all = more.textContent;
+      ['In progress', 'Not started', 'Over capacity', 'Compartments with room',
+       'outside the window', 'Loaded in the tanks'].forEach(w2 => {
+        if (all.indexOf(w2) < 0) throw new Error('the breakdown never says "' + w2 + '"');
+      });
+      const t2 = sp2DayTotals();
+      if (t2.done + t2.going + t2.none + t2.over !== t2.rigs)
+        throw new Error('the plan states do not add up to the roster on duty');
+      // it sits ABOVE the bar and never covers it
+      if (more.getBoundingClientRect().bottom > bar.getBoundingClientRect().top + 1)
+        throw new Error('the breakdown covers the bar');
+      if (document.documentElement.scrollWidth > innerWidth + 2)
+        throw new Error('the breakdown made the page scroll sideways');
+      bar.click();
+      if (!more.hidden) throw new Error('pressing it again did not close it');
+    });
+
     step('the run gives back the column width it borrowed', () => {
       sp2GiveWidthBack();
       let now = null;

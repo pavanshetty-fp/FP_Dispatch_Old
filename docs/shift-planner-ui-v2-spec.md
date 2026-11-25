@@ -2479,3 +2479,697 @@ small button inside it, so "100%" landed 4.75px low.
 
 81 steps green at 1512×950, archived V1 52, merged bundle 109. The filter step
 measures the gap from the button and fails if it is not 4.
+
+## Round 63 — the bar reads left to right, Unload all at its far end
+
+Centring the pair (tried first) left the bar with a hole at both ends and no
+home for the one thing the planner does to a loaded rig. The bar now reads the
+way the eye does: **planned and free at the near edge, Unload all at the far
+edge of the same line.**
+
+Unload all used to sit in the lane head, up beside the truck id, a long way
+from the gallons it throws away. It is now in the rig's own bar, grouped with
+the other things that act on the load — "still to place", "Put it where it
+fits", "Undo" — all of them pushed to the right with one `margin-left:auto`.
+The gate is unchanged: no load, no button, and it still asks before it empties.
+
+### Cost
+
+81 steps green at 1512×950, clip check clean at rest and with a pending load.
+The bar's step now measures both ends — the pair within 14px of the near edge,
+Unload all within 14px of the far edge and on the same line — and the unload
+step fails if the button is anywhere but the bar, or if the lane head still
+carries it. Two assertions that read the pair out of the whole bar had to read
+it out of the pair's own group instead, or they picked up the new button.
+
+## Round 64 — the rig you are planning leads the column and stays there
+
+Two changes, both about not losing the rig you are working on.
+
+**It leads the column.** Whatever the sort or the Available freeze would have
+done with it, the chosen rig is moved to the head of the lane list. You scroll
+back up to find the rig you are planning, not whoever sorts first. Letting go
+of it puts it back where the ordering says.
+
+**It stays at the top while the rest scrolls under it.** The lane is `position:
+sticky`. A card taller than the column would pin its own bottom out of reach,
+so the top offset is set per render to `min(0, port − card)`: a card that fits
+holds from the first pixel, and a taller one is let up by exactly its overflow
+and then holds, so its own last line is always reachable. The lane paints its
+own ground, because a lane is two cards with air between them and the list
+would otherwise show through. Recomputed on resize alongside the fit pass.
+
+**Leaving a rig you loaded, with tank to spare, asks first.** Switching lanes
+away from a rig this session has loaded or emptied, when it still has free
+capacity, puts up the usual small confirmation: "LT-31 still has room — it is
+74% planned, so 2,750 gal of its tanks is still free. Anything you meant for it
+stays unplanned. Move to BT-4?" Cancel stays on the rig.
+
+It is deliberately narrow:
+
+| | asks |
+|---|---|
+| A rig you only looked at | no — arriving with orders is not working on it |
+| A rig you filled to capacity | no — there is nothing left to say |
+| A rig planned past its tanks | no — it has no free room either |
+| Dropping an order onto another lane | no — that is planning, not leaving |
+| The same rig, a second time | no — answering settles it |
+
+The gate sits on the lane click, which is what switching rigs is. Picking a rig
+from code or from a route chip does not ask.
+
+### Cost
+
+83 steps green at 1512×950 (two new), archived V1 52, clip check clean at rest,
+scrolled, and with the dialog up. Four ordering steps had been reading the
+column's order straight out of the DOM; with a rig pinned to the top that is no
+longer the ordering, so they now read it through one helper that lets the rig
+go, reads, and puts it back. The pinning has its own step.
+
+## Round 65 — the toast goes, and the line speaks in every case
+
+**The toast is gone.** Picking an unplanned order raised "D-5157060 has no
+driver yet — it sits unplanned". The card already carries an Unplanned pill and
+a reading of what the order would do to the chosen rig; a toast on every single
+click repeated both and covered the column while it did it.
+
+**Every card against a chosen rig now carries a line as well as a pill.** The
+utilization and split messaging used to go quiet in two of its three cases:
+
+| what the order does | pill | line |
+|---|---|---|
+| goes on whole | **N%** of free space | — (the pill is the reading) |
+| needs a split | Needs a split | Split it and **1,500 gal** goes in — C5, filling **55%** of the 2,750 gal free. 4,200 gal stays for another truck. |
+| places nothing | No room | No compartment on **TW-7** can take it — every one with room is holding another product. |
+| places nothing, rig over | No room | **BT-4** is 1,500 gal over capacity. Take an order off it before adding this one. |
+
+The split line now carries the share of free space it fills, which is the
+utilization reading the whole order cannot be given — a split order does not go
+on whole, so a percentage **of the order** would still be a lie. The reasons for
+No room were in a tooltip only, where the decision they drive (take an order
+off, or try another rig) could not be read.
+
+The no-room line reads in the No room pill's red, not the blue that means a
+split would work.
+
+### Cost
+
+84 steps green at 1512×950 (one new), archived V1 52, clip check clean at rest
+and on an over-capacity rig. The reading step's split assertions were written
+when the line existed only for splittable orders and banned every percentage in
+it; they now check each of the three cases, and that the percentage in a split
+line is the share that goes on, never the whole order's.
+
+## Round 66 — the trailer goes under the truck, and the table breaks in two
+
+**The drawing stacks.** A hitched rig was drawn nose to tail, the two vehicles
+sharing one line's width. The box is ~293px across and 362px tall, so sharing
+the width halved both of them — a truck 40px tall in a box with 200px of air
+above and below it.
+
+The trailer is now drawn **below** the truck, each unit given the whole width
+budget rather than half of it, and both starting at the same left edge so the
+rig reads downwards as one thing. The tractor stays on the first row, because
+that is what it pulls. The drawing goes from 40px tall to 148px — each vehicle
+drawn at roughly twice the size, in the space that was empty.
+
+It is still width-bound: five compartments at the floor width plus the tractor
+is 709 design units against a 293px box, so the rows cannot grow further
+without taking width from the table. The slack above and below is what is left
+of 362px after that.
+
+**The table breaks where the tank does.** The truck's compartments and the
+trailer's were one list of eight rows. They keep the one set of column headers
+and now break into two units under it: 14px of air across the full width,
+closed by a rule, then the trailer's rows. The Comp column already names them
+(C1 … C5, then Trailer C1 …), so the break adds no labels of its own.
+
+### Cost
+
+84 steps green at 1512×950, archived V1 52, clip check clean on a plain rig and
+a hitched one. The trailer step now also checks the viewBox is two rows deep,
+that both units share a left edge, and that the table breaks exactly once,
+after the truck's last compartment, with air in it.
+
+## Round 67 — a drawing per vehicle, named in the clear, spaced evenly
+
+Round 66 stacked the trailer under the truck inside one SVG. Two faults came
+with it:
+
+- **The names.** A unit's name was drawn at `TK.H - 4`, which is 4px above the
+  bottom of its own tyres — it had always sat across the wheels, and the box's
+  air hid it. Stacked, the truck's name landed on the trailer's roof and the
+  trailer's name fell off the bottom edge of the drawing altogether.
+- **The spacing.** One SVG is scaled to the box's width, so air added inside it
+  shrinks the vehicles. The pair could only fill the height by getting smaller.
+
+**Each vehicle is now its own drawing.** The box is a flex column with
+`space-evenly`, so the air above the truck, between the two, and below the
+trailer is equal and measured — 67.6px each on a hitched rig at 1512×950 —
+without either vehicle giving up a pixel. Both drawings carry the **same
+viewBox width**, or the shorter trailer would be scaled up to the box and come
+out looking bigger than the truck pulling it.
+
+**The name sits under the wheels**, in a 20-unit band the row now reserves
+(`TK_TAG`), so it can never be clipped and never lands on anything.
+
+`sp2FitRig` redraws every vehicle on a resize, not just the first.
+
+### Cost
+
+84 steps green at 1512×950, archived V1 52, clip check clean on a plain rig and
+a hitched one. The trailer step now counts the drawings, checks they share a
+viewBox and a left edge, measures the three gaps against each other, and
+checks each name is inside its own drawing and below its own wheels.
+
+## Round 68 — the card scrolls, then folds and holds
+
+Round 64 pinned the chosen card to the top of the column at full size. It still
+leads the column, but it now **scrolls with everything else** until a point, and
+then folds.
+
+**The fold point.** When the "Fill the compartments with room left" section
+reaches the top of the column — the border just under the Driver & truck header
+— the card folds into a strip that holds there while the rest of the list
+scrolls under it. Scroll back up and the card comes back.
+
+**The strip** is the chosen rig's card, collapsed: the driver's face, their
+name, the rig, and what is planned against what is free. Directly against it,
+with no air between, a banner: **"Load planning in progress"** and **N% of
+compartments filled** — the fill of the tanks, not what is promised to the rig.
+Clicking the strip takes you back to the card.
+
+**It takes no room.** The strip is the first thing in the scroller, with its own
+height cancelled by a negative bottom margin. Showing it therefore moves
+nothing — otherwise it would shift the very section that triggers it and
+flicker on and off. 8px of slack on the way back up is hysteresis, so a
+trackpad cannot land between the two states.
+
+**Leaving a rig** now says what becomes of the plan: "The previous load plan
+will be drafted, and you'll be working on a new load plan. LT-31 is 74%
+planned, so 2,750 gal of its tanks is still free. Move to BT-4?" The gate is
+unchanged — a rig you loaded this session, that still has room.
+
+### Cost
+
+84 steps green at 1512×950, archived V1 52, clip check clean open and folded.
+The step that checked the pinning now checks the card is NOT pinned, that it
+folds exactly at the section (not 20px early), that folding shifts the list by
+nothing, that the strip holds at 0px while the list moves, that the banner sits
+flush against the card and carries the tank fill, and that scrolling back up
+brings the card back.
+
+## Round 69 — a split is an option, and a full rig says so in green
+
+**Asked for.** Remove the "Needs a split" pill from the order card — the
+sentence at the bottom is enough, because a split is not a requirement, only
+something the dispatcher may choose. And when the compartments are full, the
+"Fill the compartments with room left" banner reads "The compartments are full"
+instead, with a white tick in a filled green circle, on 10% green with a green
+stroke.
+
+**The pill goes.** An order that cannot go on whole now carries no pill at all.
+The card's head shows a reading only where there is a verdict to give: a
+percentage of the free space for an order that goes on whole, "No room" for one
+no compartment can take. Between those two sits the split, which is a choice,
+and a choice belongs in a sentence, not a label. The sentence under the window
+is unchanged: "Split it and 1,500 gal goes in — C5, filling 55% of the 2,750 gal
+free. 4,200 gal stays for another truck."
+
+**The full banner** is the same banner, re-coloured: a tenth of green behind it,
+the success green all the way round the stroke, the heading in that green, and a
+16px green disc with a white tick ahead of the words. It replaces the heading
+rather than adding to it, and the sentence that used to read "The rig is full."
+is gone with it — the heading says that now, and one fact is said once.
+
+**Not the same as over.** A rig planned past its tanks keeps the reason it had:
+nothing green, because nothing is done. Green is only for free space at zero
+with nothing over.
+
+### Cost
+
+85 steps green at 1512×950 (create order 16, edit order 10), clip check clean on
+a full rig. The pill assertions now expect no pill for a splittable order, and a
+new step reaches the full state the way a dispatcher does — splitting an order
+so what goes on lands the rig exactly on full — then checks the heading, the
+filled green disc with its white mark, the tint and stroke, that the duplicate
+sentence is gone, that a rig with room wears none of it, and hands the day back
+as it found it.
+
+## Round 70 — the day at the foot, in one line
+
+**Asked for.** Show the number of load plans completed, the number of available
+trucks, pending planned orders, pending unplanned orders, the total gallons
+pending and the compartment capacity still free — a sticky bar at the bottom
+with all of it in one line, opening out to a detailed overview of the same.
+
+**Where it lives.** The last thing in the planner, under both columns and
+outside both scrollers, so it is always on screen without being pinned over
+anything: the body already takes the height that is left, so the bar simply
+holds the foot of it. Pressing the bar opens the breakdown directly above it;
+pressing again closes it.
+
+**The six readings**, in the order they were asked for: `0 of 20 load plans
+done · 20 trucks available · 45 planned orders pending · 54 unplanned orders
+pending · 333,000 gal pending · 81,050 gal compartment space free`.
+
+**What the words mean**, so the numbers can be trusted:
+
+- **Load plans done** — a rig planned to its capacity, with nothing over. That
+  is the only finish the day knows; over capacity is not done, it is broken, and
+  it is counted apart in the breakdown.
+- **Trucks available** — the planner's own Availability facet: on the roster
+  today and the rig still has room. The bar does not get a second definition.
+- **Planned / unplanned orders pending** — pending a delivery, pending a truck.
+- **Gallons pending** — the gallons of the unplanned orders, which is what the
+  free space beside it has to absorb. The planned gallons are in the breakdown.
+- **Compartment space free** — the same free the card, the drop gate and the
+  split work to, summed over the rigs on duty. Off-duty rigs are not the day's
+  capacity.
+
+**It states the day, not the list.** Every number is counted over the whole
+roster and the whole order book, whatever the head is narrowing to: a filter
+changes what you are looking at, never what the day is. Planning an order does
+move it — one off unplanned, one onto planned, the gallons and the free space
+with it.
+
+**The breakdown** is the same facts grouped, with what the line had no room
+for: load plans (done, in progress, not started, over capacity, rigs on the
+roster), trucks (available, driving, on duty, off duty or on leave,
+compartments with room), orders (planned, unplanned, planned but outside the
+window, orders in the day) and gallons (pending, planned onto rigs, loaded in
+the tanks, space free, fleet capacity on duty with the share planned). Colour
+is kept for the two that are problems — over capacity, and planned but outside
+the window — and for a day where every plan is done.
+
+### Cost
+
+86 steps green at 1512×950 (create order 16, edit order 10), clip check clean
+with the panel shut and open. The new step checks where the bar sits, that the
+lanes scroll under it, the six readings in order, that each number answers to
+the model and not to the filters, that planning and unplanning an order moves
+them, and that the panel opens above the bar without covering it or pushing the
+page sideways.
+
+**One collision found.** `.sp2-sum` was already the record sheet's summary card
+— a 14px radius and 4px of padding — so the bar wore them until the new unit
+was renamed `.sp2-day`.
+
+## Round 71 — a view says what it is for, and shows what it narrows
+
+**Asked for.** Let a saved view carry a description, so the saver can write
+what they are looking at. And on the right of each view, an icon that opens out
+on hover to "Show applied filters", which when pressed gives the view's filters
+as chips.
+
+**The description.** The save dialog takes a second field under the name,
+marked Optional, three lines, with a placeholder that shows the kind of thing
+to write. Rename opens with the description it already has, so both can be
+changed from one box — its button now says "Save changes". Every preset in the
+row was written up too, since a feature nobody can see is a feature nobody
+uses: "Orders nobody has taken yet, against the rigs that are on duty and still
+have room for them." The tab carries its own description as its tooltip.
+
+**The funnel.** A 24px icon sits to the right of each view's name. Hovering it
+opens the pill out to the words **Show applied filters**; pressing it hangs a
+304px card under the row with the view's description and one chip per filter —
+`Status: Unplanned`, `Availability: Available`. Shut, the label is not laid out
+at all rather than clipped to nothing, so the clip check stays honest.
+
+**One chip per value, and the view's own state.** A count would hide the very
+thing the reader opened the card to see, so every value gets its chip. The
+chips read the view's SAVED state, never what is applied now — a view you are
+not on would otherwise describe somebody else's narrowing. A view that narrows
+nothing says so in words.
+
+**Only one open at a time**, and the row's own ⋯ menu closes it; the card flips
+to the right edge of its view when it would otherwise hang off the screen.
+
+### Cost
+
+87 steps green at 1512×950 (create order 16, edit order 10), clip check clean
+with the card shut, the card open and the save dialog open. The new step checks
+that every preset describes itself in a sentence, that the tab carries it, that
+the funnel is right of the name and starts shut, that its chips are the view's
+own saved filters and not what is applied, that the card stays on screen and
+only one opens at a time, and that saving keeps a description, renaming can
+change it, and a name on its own still saves.
+
+## Round 72 — one switch at the end of the row, and the pills go on the shelves
+
+**Asked for.** Applied filters belongs at the end of the view row, not on every
+saved view. Turned on, whatever is selected puts its filters up as pills below
+the search and filters — the unit the design system already has.
+
+**What changed.** The funnel came off the seven view tabs. One switch now sits
+at the end of the row, pushed right past "+ View": shut to its icon, opening
+out on hover to **Show applied filters**, and held open and tinted while it is
+on. It reads `aria-pressed`, because it is a switch, not a menu.
+
+**Where the pills go.** Nowhere new: the chip shelf under each column's name,
+which the planner already uses for a narrowing you applied yourself. The rule
+was that a preset showing unchanged keeps the shelves clear, since its own tab
+says what it is. The switch suspends that rule — turned on, the selection puts
+its narrowing up as pills too, `Status: Unplanned` on the orders and
+`Availability: Available` on the rigs, each with its ✕ and Clear all, exactly as
+a filter of your own behaves. It follows the selection: pick another view and
+the pills are that view's.
+
+**The card is gone**, and with it the only place the description was printed.
+A view still carries its description as its tooltip on the tab.
+
+### Cost
+
+87 steps green at 1512×950 (create order 16, edit order 10), clip check clean
+with the switch off and on. The round-71 step was rewritten: it now checks
+there is exactly one switch, that no view carries its own, that it sits at the
+end of the row, that the shelves stay clear until it is on, that the pills are
+the selection's own narrowing and follow a change of view, and that turning it
+off puts them away. The descriptions, the save box and renaming are unchanged
+and still checked.
+
+**One trap.** Every press redraws the row, so a reference to the switch taken
+before a press is detached — and `getComputedStyle` on a detached node answers
+with blanks, not with "none". The step reads the switch fresh each time.
+
+## Round 73 — the switch gets a mark that says what it does
+
+**Asked for.** A more appropriate and communicative icon for "Show applied
+filters" — simple, but effective.
+
+**The funnel was wrong twice.** It is the shape everything else uses for
+narrowing, and this switch narrows nothing: it shows what the narrowing already
+is. Worse, the row's Filters trigger stands a few pixels below it, so two marks
+on one head both read "filters".
+
+**An eye**, 14px, the standard outline with its pupil: the one thing an eye
+says is show and hide, which is exactly the switch's whole job. The words still
+open out beside it on hover, and the tint still says when it is on, so the mark
+only has to carry show — it never has to carry which.
+
+### Cost
+
+87 steps green at 1512×950, clip check clean with the switch off and on. The
+step now also refuses a mark that is the Filters trigger's own, so the row
+cannot end up saying the same thing twice again.
+
+## Round 74 — the mark carries both halves
+
+**Asked for.** The eye alone does not say enough. Use the filter mark from the
+Filters box, with an eye alongside it.
+
+**One glyph, two halves.** The three narrowing lines Filters itself wears, then
+a gap, then an eye: 20×14 in a 34×24 box, drawn in one SVG so the pair scales
+as a single mark and reads as a single control. Because the box is taller-mapped
+the same way as every other icon on the head, the stroke still lands at the same
+weight as its neighbours. The lines say which filters; the eye says this only
+shows them.
+
+**Spacing was the whole job.** Drawn first, the eye's leading point touched the
+middle line and the mark read as one smudged shape. The box was widened to 34
+and the eye moved right, leaving 4 units — about 2.5px at size — of air between
+the lines and the eye.
+
+### Cost
+
+87 steps green at 1512x950, clip check clean with the switch off and on. The
+step now also checks the mark carries both halves: three narrowing lines and an
+eye, and still refuses a mark identical to the Filters trigger's own.
+
+## Round 75 - hitching moves into the drawing's box
+
+**Asked for.** Move the trailer CTA inside the box the truck is drawn in, at
+the bottom right.
+
+**Where it was.** Up in the lane head, beside the truck number: "+ Trailer" as
+a small button, and once a trailer was on, "Unhitch" as a link somewhere else
+in the same row. Two looks for one control, in a row that is about what the rig
+IS, not what you can do to it.
+
+**Where it is.** The last thing in the drawing's box, right-aligned under the
+art: "+ Trailer" when there is none, "Unhitch trailer" when there is - the same
+button in both states, since it is one control. Hitching is about the drawing,
+so it reads in the drawing's own box.
+
+**In the flow, not over the art.** The button is a row after the drawing, not
+an absolute corner: the art keeps whatever room is left and the two can never
+overlap, whatever the lane's height. The vehicles still take their equal share
+of the air above, between and below - measured 30 / 29 / 30 - because that
+spacing is computed inside the drawing area, which the button is no longer part
+of.
+
+### Cost
+
+87 steps green at 1512x950 (create order 16, edit order 10), clip check clean
+with one vehicle and with two. The trailer step now also checks the control is
+in the drawing's box within 12px of its right and bottom edges, never over a
+vehicle, gone from the lane head, and reads Unhitch with a trailer on and
+Trailer without one.
+
+**One trap.** Taking the old block out left `''` with no `+` after it, which
+ended the whole concatenation: the lane rendered its head and nothing else - no
+band, no table, no drawing - rather than failing loudly.
+
+## Round 76 - the acts move onto the readings' line, and nothing is unloaded
+
+**Asked for.** Put the trailer CTA in line with the planned and free gallons.
+After it, a vertical three-dot button holding Unload all / truck only /
+trailer only - and truck only when there is no trailer. And find a better word
+than "unload": this is planning, nothing is in a truck yet.
+
+**The word.** Nothing is loaded; the gallons are PLACED into compartments on
+paper. So the act is **clearing** a compartment, not unloading a truck. The
+menu reads "Clear the whole rig", "Clear the truck only", "Clear the trailer
+only", or, with nothing hitched, the single "Clear the truck". The confirm says
+"Clear LT-31 + TR-200?" and keeps the line that matters - the orders stay
+planned on the rig, so the load can be built again - and the toast says
+"cleared, the orders stay planned". Unhitching a trailer with fuel placed in it
+now says "clear it first". "Unplan" stays free to mean what it has always meant:
+taking an order off the rig.
+
+**The line.** The bar reads: planned, free, then at the far end what can be done
+about them - hitch or unhitch, then the three-dot. Both acts sit on the
+readings' own line, which is where the gallons they change are read. The
+drawing's box is for the drawing again.
+
+**The menu opens upward.** The bar is the last line of the band, so a menu
+below it would hang over the suggestions. Items that have nothing to clear are
+disabled rather than hidden: the control is the only place the act lives now, so
+it must not come and go.
+
+### Cost
+
+87 steps green at 1512x950 (create order 16, edit order 10), clip check clean
+with the menu shut, open, and open on a hitched rig. The foot step now checks
+the hitch button and the menu are both on the readings' line, in that order,
+against the bar's far edge, that the bar says nothing about unloading, and that
+the menu offers one choice without a trailer and three with one, each live only
+when there are gallons behind it. The emptying step became the clearing step:
+it checks the confirm names the act, never says unload, and that clearing keeps
+every order planned.
+
+## Round 77 - the rig menu behaves like a menu
+
+**Reported.** The three-dot menu was never shut and its choices sat in a row
+across the bar.
+
+**One line of CSS did both.** The readings bar carries
+`.sp2-rig-foot span{display:inline-flex}` so the pairs and their swatches line
+up. The menu is a span inside that bar, and `.sp2-rig-foot span` is more
+specific than `.sp2-rig-menu` on its own - so the bar's rule won: `display:none`
+never applied, and the card was laid out as an inline flex ROW. Hence both
+symptoms at once, from one selector.
+
+**The fix** is two rules at the same specificity as the bar's, after it:
+`.sp2-rig-foot .sp2-rig-menu{display:none}` and `...on{display:block}`. Shut by
+default, opens on a press, closes on the next press or a click anywhere else,
+choices one under another with their left edges lined up.
+
+**Why the suite missed it.** Every assertion about the menu read class names
+and element boxes, both of which were correct; nothing read the computed
+`display`. The step now checks `getComputedStyle(menu).display` is `none`
+before it is pressed and not `none` after, that the bar's own text carries no
+"Clear" while it is shut, that the card hangs off the button, and that each
+choice sits below the one before it on a shared left edge.
+
+### Cost
+
+87 steps green at 1512x950, clip check clean with the menu shut, open, and open
+on a hitched rig.
+
+## Round 78 - a driver's orders are one block
+
+**Asked for.** With All or Planned showing, a run of orders belonging to one
+driver repeated that driver's name, avatar and truck on every card. One card at
+the head of the run should say it instead, with the orders grouped under it.
+
+**Half of it already existed.** The sort menu's "Driver" option put a driver's
+orders next to each other and dropped the unplanned ones to the bottom - it just
+drew no header, so the only thing marking a driver change was the name on the
+cards. Grouping is what makes that sort legible, so it IS that sort now rather
+than a new control: pick Driver and the list comes in blocks, pick Time and the
+day is one list again. Being a sort and not a filter, it works in All and
+Planned alike, and costs no new button.
+
+**A block is a tray.** `.sp2-dg` is a tinted, rimmed container; at its top a
+white head card (`.sp2-dg-hd`) with the avatar, the name, the truck + trailer,
+and what the orders under it come to - `4 orders - 7,750 gal`. Under it the same
+rows as before, time gutter, node and rail, on the tray's own rail so the
+geometry does not change. Three planes, which is the whole of the grouping:
+grey tray, white cards, white head card.
+
+**The head card is sticky** to the top of the list, so an order in the middle of
+a long block is never anonymous. Measured pinned at the scroller's top edge with
+the block scrolled 210px.
+
+**The cards stop repeating it.** `sp2OrderDriver` is dropped from the card
+whenever `sp2Grouped()` - the one place the driver line was rendered, so there
+is no second copy to keep in step. Ungrouped, the line is back on the card.
+
+**Orders nobody has taken** are a block of their own at the foot, headed "Not
+planned yet" with the same count and gallons. In Planned there is no such block,
+because there is nothing in it.
+
+**The gaps on the rail** ("1h later") are measured inside a block. Across a
+driver change the gap is not a wait, so it is not drawn.
+
+The horizontal timeline cannot group - its cards are positioned by the clock -
+and picking Driver already moves the column to the vertical list, so nothing
+there changed.
+
+### Cost
+
+88 steps green at 1512x950, clip check clean on the grouped list. The new step
+checks every card in a block is that driver's, that each head card names a rig
+and counts what is under it, that no card inside a block carries its own driver
+line, that the head is sticky and the tray is a different surface from the cards
+with an edge of its own, and that time order puts the day back to one list.
+
+## Round 79 - the block is a handle, and the box comes off
+
+**No box.** `.sp2-dg` keeps only its 20px of air between blocks. The head card
+marks the block on its own - white, rimmed, sticky - and the selected rig's
+block is now marked on that card (`.sp2-dg.on>.sp2-dg-hd`) instead of on a tray
+that no longer exists.
+
+**Drag the head card and the whole block goes onto a rig.** It hands over every
+order id under it, through the same drop path several picked cards already use:
+each order packed in turn, capacity caught the same way, one toast at the end -
+"2 orders loaded onto BT-4 - 1,250 gal". `cursor:grab`, never a hand: nothing
+on that card navigates.
+
+**The drop had to learn the state the board is actually in.** `sp2Drop` read
+`if (o.driver === k) return` - an order already on this rig was skipped
+entirely. But most of the roster is assigned and NOT planned ("Load planning not
+started", 0 of 20 load plans done), which is exactly the case this drag is for:
+the orders are already the driver's, and what is missing is the gallons in the
+compartments. So the guard now asks whether the TANKS hold the order
+(`sp2OnRig`), not whether the driver does. Already placed, nothing happens;
+assigned but not placed, it is packed. Its gallons are not taken off the room a
+second time, because the room was counted from the orders on the rig.
+
+An order planned on somebody ELSE is still refused, with the same line as
+before - moving it across behind their back is how double-booking starts.
+
+### Cost
+
+89 steps green at 1512x950, clip check clean on the grouped list in All and in
+Planned. Two steps: one that a block's head card is draggable, carries every id
+under it, and lands the lot in the compartments; one that no box came back
+around a block and the head card keeps an edge of its own.
+
+## Round 80 - the fill section last, and tighter blocks
+
+**"Fill the compartments with room left" moved to the foot of the rig unit**,
+under the order chips. The lane now reads: who is driving, the compartments and
+the drawing, what is on the rig as chips with how much of the truck each order
+takes, and only then what would fill what is left. The chips are the reading you
+make the decision on, so the offer comes after them.
+
+**The folded strip was anchored to that section**, which was a proxy for "the
+rig has scrolled past" - true while the section sat right under the
+compartments, false once it moved to the bottom. It now trips at the foot of the
+compartments band itself, which is what the anchor always meant, so the strip
+appears at the same point on the page as before. The step reads the same anchor.
+
+**Inside a driver's block the cards sit 12px apart and nothing comes between
+them.** The "1h later" rail labels are gone from a block: they answer "what is
+the shape of the day", and a block answers "what is this driver carrying". The
+times are down the rail either way, and the labels only held the cards apart.
+Ungrouped, in time order, the gaps are unchanged.
+
+### Cost
+
+89 steps green at 1512x950, clip check clean on the grouped list in All, in
+Planned, and ungrouped. Two assertions added: the fill section sits below the
+chips, and the rows in a block are 12px apart with no gap label among them.
+
+## Round 81 - one search over the whole filter menu
+
+**The panel searches itself.** A search field under the tabs, over every group
+on that tab at once: type "morris" and the panel answers "Customers - Customer:
+Morris Group" and "Ship-tos - Ship-to: three Morris sites", instead of being
+clicked down group by group. Each result says which group and which dimension it
+came from, because the same word can be a ship-to and a product and ticking the
+wrong one is a filter that looks right. A dimension answers to its own name too,
+range or not - "room left" draws its slider.
+
+**It is the DS search field, not a box of its own making.** `molecule.search-field`
+as the Unified View toolbar draws it: `Search` glyph inside on the left,
+`type="search"`, the clear X only with a value, focus ring, 320px and not
+stretched - the panel is 600px, so it sits left in a row of its own. The panel's
+per-facet boxes were missing that glyph; they have it now, `pl-8` with the mark
+inside, which is what the DS says a facet search is. The segmented tabs stay the
+one thing in this panel that is ours.
+
+**The menu stands down while the box has something in it** - the box is what the
+menu is for - and comes back the moment it is cleared.
+
+**Typing used to be impossible.** The panel redraws itself on every keystroke
+and nothing handed the focus back, so the per-facet search lost the caret after
+one letter: `document.activeElement` went to BODY and the rest of the word went
+nowhere. `sp2FpDraw` now records the focused field and its caret and gives both
+back after the redraw, which fixes the new box and the old ones at once.
+
+### Cost
+
+90 steps green at 1512x950, clip check clean searching, with the menu, and on a
+facet's own box. The step checks the field is the DS one (wrapper class,
+`type="search"`, 320px, the X showing only with a value), that results carry
+their source, that a range found by name draws its slider, that ticking a result
+stages it, that an empty search says what was looked for, and that the menu
+returns when it is cleared.
+
+## Round 82 - a view's description reads on hover, and the guide gets its pictures
+
+**The description was on the browser's own tooltip** (`title`), which arrives a
+second late and in the operating system's type. It is now the design system's
+tooltip: `.sp2-vr-tip`, shown on hover of the tab, hidden again while that
+view's own ⋮ menu is open, since both hang off the same wrapper. A view with no
+description shows nothing at all. The step reads the tooltip's text and its
+computed display, and - since `:hover` cannot be fired - checks the stylesheet
+carries a rule that shows it.
+
+**Fifteen screenshots for the feature guide,** rendered off a throwaway copy of
+the planner rather than captured by hand. `_shot.html` was the file plus a
+bootstrap that reads `location.hash`, puts the page into one named state
+(filter panel searching, driver blocks, an overloaded rig, the split dialog, the
+toast after a real split) and writes the box worth cropping into
+`data-crop`. Headless Chrome at 1512x950 and a device scale factor of 2 took
+each one with `--screenshot --dump-dom` in one pass, so the picture and its crop
+box come from the same render; PIL cropped and sized them to 1400px. The file is
+deleted, like `_clip.js`.
+
+**Two traps in that method,** both worth remembering:
+
+- **Virtual time runs the clock forward**, so a toast hid itself before the
+  shutter. The recipe clears its timer and holds it open.
+- **The window settles at its full height after the first layout**, so a box
+  measured at 150ms put bottom-anchored elements about 87px high. Anything
+  anchored to the bottom (the toast, the day bar) is cropped against the
+  settled height instead.
+
+### Cost
+
+90 steps green at 1512x950, clip check clean with all six view tooltips forced
+open and at rest.

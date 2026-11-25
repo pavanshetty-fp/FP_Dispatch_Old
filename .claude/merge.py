@@ -136,6 +136,11 @@ def build():
         body = re.search(r'<body>(.*?)</body>', text, re.S).group(1)
         body = re.sub(r'<(script|style)>.*?</\1>', '', body, flags=re.S)
 
+        # A screen is a box inside the shell, not the window: the shell's own
+        # 48px nav means 100vh overflows it by 48 and whatever is anchored to
+        # the bottom (the planner's day bar) is clipped away. Inside the screen
+        # 100% IS the screen, since every .screen is position:absolute;inset:0.
+        css = css.replace('100vh', '100%')
         styles.append('/* ══ %s ══ */\n%s' % (label, scope_css(css, scope)))
         scripts.append('/* ══ %s ══ */\n%s' % (label, js))
         markup.append('<section class="screen" id="scr-%s">%s</section>' % (key, body))
