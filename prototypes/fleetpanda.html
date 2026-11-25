@@ -1091,7 +1091,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-vr-add:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
 #scr-plan .sp2-vr-end{margin-left:auto;display:flex;align-items:center;align-self:flex-end;
   gap:6px;margin-bottom:12px;}
-#scr-plan .sp2-vr-menu{display:none;position:absolute;right:0;top:100%;z-index:80;min-width:150px;
+#scr-plan .sp2-vr-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:80;min-width:150px;
   padding:5px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
   border-radius:var(--r-lg);box-shadow:0 8px 20px -6px rgba(3,4,5,.18);}
 #scr-plan .sp2-vr-menu.on{display:block;}
@@ -1585,7 +1585,10 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
   border:1px solid var(--fp-outline-1);border-radius:var(--r-lg);padding:10px 12px;
   box-shadow:0 1px 2px 0 rgba(3,4,5,.06);transition:box-shadow .12s,border-color .12s;}
 #scr-plan .sp2-ln-drv-top{display:flex;align-items:center;gap:8px;}
-#scr-plan .sp2-av{width:30px;height:30px;border-radius:50%;background:var(--fp-card-1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--fp-ink-1);flex-shrink:0;}
+#scr-plan .sp2-av{width:30px;height:30px;border-radius:50%;background:var(--fp-card-1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--fp-ink-1);flex-shrink:0;overflow:hidden;}
+/* the face fills its circle — drawn, not photographed, but it sits where a
+   photograph would and an <img> can take its place without touching anything */
+#scr-plan .sp2-face{width:100%;height:100%;display:block;}
 #scr-plan .sp2-ln-name{font-size:14px;font-weight:600;color:var(--fp-ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #scr-plan .sp2-ln-drv .sp2-state{margin-top:7px;}
 #scr-plan .sp2-ln-flags{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px;}
@@ -1977,26 +1980,34 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
    now rather than floating beside the table's — it takes the band's height,
    which is whichever of the two is taller, and the truck sits in the middle of
    it both ways instead of standing on the bottom edge. */
-#scr-plan .sp2-two{display:flex;gap:12px;align-items:stretch;margin-top:10px;}
+/* One box, not two. The table's own ending edge divides it from the drawing,
+   so the band has a single rim around the pair and a hairline where the table
+   stops — two bordered cards side by side drew four vertical rules between
+   two things that are one thing. */
+#scr-plan .sp2-two{display:flex;flex-direction:column;margin-top:10px;
+  background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
+  border-radius:var(--r-md);overflow:hidden;}
+#scr-plan .sp2-two-row{display:flex;align-items:stretch;min-height:0;}
 /* both cards take the band's height, so the two readings under the truck never
    leave the table card short of its neighbour. The table keeps its row heights
    — align-content:start, or the grid would share the spare height out across
    every row. */
-#scr-plan .sp2-two-l{flex:1 1 0;min-width:0;display:flex;flex-direction:column;}
-#scr-plan .sp2-two-l .sp2-ct{flex:1;align-content:start;}
-/* The column stays bare, as the table's does, and the card sits inside it:
-   a flex-basis of 0 takes the padding and border on top of the share it is
-   given, so a bordered column came out 22px wider than its neighbour. */
+/* the table's right edge is the divider, and it is the only one */
+#scr-plan .sp2-two-l{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+  border-right:1px solid var(--fp-outline-1);}
+#scr-plan .sp2-two-l .sp2-ct{flex:1;align-content:start;border:none;border-radius:0;margin-top:0;}
 #scr-plan .sp2-two-r{flex:1 1 0;min-width:0;display:flex;}
-#scr-plan .sp2-rig-box{flex:1;min-width:0;display:flex;flex-direction:column;
-  padding:10px;background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
-  border-radius:var(--r-md);overflow:hidden;}
+#scr-plan .sp2-rig-box{flex:1;min-width:0;display:flex;flex-direction:column;padding:10px;}
 /* the drawing takes the room the two readings leave, and sits in the middle of it */
 #scr-plan .sp2-rig-mid{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;}
-/* what is loaded and what is free, which is what the orders column reads against */
-#scr-plan .sp2-rig-foot{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:center;
-  margin-top:10px;padding-top:9px;border-top:1px solid var(--fp-stroke-hairline);
+/* One bar under both halves, so the table and the drawing end on the same
+   line. What is planned and what is free belong to the rig, not to either
+   half, and the table's "Balanced · N gal placed" only repeated its own
+   gallons column. */
+#scr-plan .sp2-rig-foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;
+  padding:9px 12px;border-top:1px solid var(--fp-outline-1);
   font-size:12px;color:var(--fp-ink-3);font-variant-numeric:tabular-nums;}
+#scr-plan .sp2-rig-act{display:inline-flex;align-items:center;gap:8px;margin-left:auto;}
 #scr-plan .sp2-rig-foot b{font-weight:600;color:var(--fp-ink-1);}
 #scr-plan .sp2-rig-foot span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 #scr-plan .sp2-rig-foot i{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
@@ -2017,7 +2028,6 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
    makes do with 7px — it is the column that runs into the card's edge */
 #scr-plan .sp2-two-l .sp2-ct-f{gap:3px;padding-right:12px;}
 #scr-plan .sp2-two-l .sp2-ct-pct{font-size:10px;}
-#scr-plan .sp2-two-l .sp2-ct-foot{padding:8px 9px;font-size:12px;flex-wrap:wrap;row-gap:7px;}
 #scr-plan .sp2-two-l .sp2-ct-btn{height:26px;padding:0 11px;font-size:12px;}
 /* the 2px under the drawing is room for a scrollbar it does not have in here,
    and it put the truck 2px above the middle of its box */
@@ -5552,6 +5562,40 @@ var SP2_HOS_MAX = { brk:8*60, drv:11*60, shf:14*60, cyc:70*60 };
 var SP2_HOS_NAME = { brk:'Break', drv:'Drive', shf:'Shift', cyc:'Cycle' };
 
 var SP2_TRUCKS = {};
+// A face for every driver. The roster is twenty invented names, so these are
+// illustrated rather than photographed \u2014 head and shoulders, drawn from the
+// name so the same driver always wears the same one, and no two next to each
+// other look alike. Swap sp2Face for an <img> the day there are real files.
+var SP2_FACE_SKIN  = ['#f2c9a0', '#e0a878', '#c98a5e', '#a86a44', '#7d4b2e', '#f7d9bd'];
+var SP2_FACE_HAIR  = ['#2b2b33', '#4a3728', '#6b4a2f', '#8a6a3f', '#b08c52', '#d8c7a8', '#5a5a66'];
+var SP2_FACE_SHIRT = ['#2f6fb0', '#2e8b74', '#8a5a2b', '#5d5fa8', '#a8524f', '#3f7a3f', '#4a6a86'];
+function sp2Face(name) {
+  var h = sp2Hash(name || 'driver');
+  var skin  = SP2_FACE_SKIN[h % SP2_FACE_SKIN.length];
+  var hair  = SP2_FACE_HAIR[(h >> 3) % SP2_FACE_HAIR.length];
+  var shirt = SP2_FACE_SHIRT[(h >> 6) % SP2_FACE_SHIRT.length];
+  var long  = (h >> 9) % 3 === 0;          // hair past the jaw on some
+  var beard = !long && (h >> 11) % 4 === 0;
+  return '<svg class="sp2-face" viewBox="0 0 40 40" aria-hidden="true">' +
+      '<rect width="40" height="40" fill="' + skin + '" opacity=".18"/>' +
+      // shoulders
+      '<path d="M4 40c0-8.4 7.2-13 16-13s16 4.6 16 13z" fill="' + shirt + '"/>' +
+      // collar
+      '<path d="M15.4 27.4 20 32l4.6-4.6-2.2-1.1h-4.8z" fill="#fff" opacity=".85"/>' +
+      (long ? '<path d="M9 22v-4a11 11 0 0 1 22 0v4l-2 1v-5H11v5z" fill="' + hair + '"/>' : '') +
+      // head
+      '<path d="M20 7a9 9 0 0 1 9 9v3a9 9 0 0 1-18 0v-3a9 9 0 0 1 9-9z" fill="' + skin + '"/>' +
+      (beard ? '<path d="M11.6 19.5c.6 5 4 8.5 8.4 8.5s7.8-3.5 8.4-8.5c-1.2 3-4.4 4.6-8.4 4.6' +
+               's-7.2-1.6-8.4-4.6z" fill="' + hair + '" opacity=".92"/>' : '') +
+      // hair over the crown
+      '<path d="M10.8 16.6C10.8 11 15 7 20 7s9.2 4 9.2 9.6c0 0-1.6-3.6-9.2-3.6s-9.2 3.6-9.2 3.6z" ' +
+        'fill="' + hair + '"/>' +
+      // eyes
+      '<circle cx="16.4" cy="17.6" r="1.15" fill="#2b2b33"/>' +
+      '<circle cx="23.6" cy="17.6" r="1.15" fill="#2b2b33"/>' +
+    '</svg>';
+}
+
 var SP2_DRIVERS = {};
 (function buildFleet() {
   SP2_ROSTER.forEach(function (row, i) {
@@ -6799,10 +6843,9 @@ function sp2FitChip(o) {
 function sp2OrderDriver(o) {
   var d = SP2_DRIVERS[o.driver];
   if (!d) return '';
-  var ini = d.name.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2);
   return '<div class="sp2-ord-drv" title="Planned on ' + d.name + ' · ' + d.truck +
       (d.trailer ? ' + ' + d.trailer : '') + '">' +
-      '<span class="sp2-av sp2-av-xs" aria-hidden="true">' + ini + '</span>' +
+      '<span class="sp2-av sp2-av-xs">' + sp2Face(d.name) + '</span>' +
       '<span class="sp2-ord-drv-n">' + d.name + '</span>' +
       '<span class="sp2-ord-drv-t">' + d.truck + (d.trailer ? ' + ' + d.trailer : '') + '</span>' +
     '</div>';
@@ -7383,13 +7426,19 @@ function sp2SetSort(o) {
 
 // The menu hangs off the head so it always lands on the list; this only lines
 // it up under the button that opened it, wherever the row has wrapped to.
+// A panel hangs off its BUTTON, not off the header the button happens to sit
+// in: the CSS said "100% + 4px" of the header, and the header's own padding put
+// the filters 16px below the control that opens them.
+var SP2_POP_GAP = 4;
 function sp2PopUnder(popId, btnId) {
   var pop = document.getElementById(popId), btn = document.getElementById(btnId);
   if (!pop || !btn) return;
   var hdr = btn.closest('.sp2-col-hdr') || btn.closest('.sp2-head');
   if (!hdr) return;
-  var x = btn.getBoundingClientRect().left - hdr.getBoundingClientRect().left;
+  var hb = hdr.getBoundingClientRect(), bb = btn.getBoundingClientRect();
+  var x = bb.left - hb.left;
   pop.style.left = Math.max(8, Math.min(x, hdr.clientWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.top = (bb.bottom - hb.top + SP2_POP_GAP) + 'px';   // exactly 4px, not 4 rounded
 }
 // Sort is the one menu the orders column still owns; the filters moved to the
 // head. Opening either shuts the other, and a click anywhere shuts both.
@@ -7437,7 +7486,7 @@ function sp2PopAt(id, btn) {
   if (!open) return false;
   p.classList.add('on');
   var r = btn.getBoundingClientRect();
-  p.style.top  = (r.bottom + 6) + 'px';
+  p.style.top  = (r.bottom + SP2_POP_GAP) + 'px';
   p.style.left = Math.max(8, Math.min(window.innerWidth - p.offsetWidth - 8,
                                       r.right - p.offsetWidth)) + 'px';
   return true;
@@ -7793,6 +7842,7 @@ function sp2FpToggle(e) {
   p.classList.add('on');
   if (sp2TabGroups(sp2FpTab).indexOf(sp2FpOn) < 0) sp2FpOn = sp2TabGroups(sp2FpTab)[0];
   sp2FpDraw();
+  sp2PopUnder('sp2Fp', 'sp2FpBtn');     // 4px under the control that opened it
 }
 function sp2FpClose() {
   var p = document.getElementById('sp2Fp');
@@ -8134,7 +8184,15 @@ function sp2VrMenu(e, id) {
   var m = document.getElementById('sp2VrM' + id);
   var was = m.classList.contains('on');
   sp2VrCloseMenus();
-  if (!was) { m.classList.add('on'); m.previousElementSibling.classList.add('on'); }
+  if (!was) {
+    m.classList.add('on');
+    var b = m.previousElementSibling;
+    b.classList.add('on');
+    // 4px under the button, like every other panel — the wrapper it sits in is
+    // taller than the button, so "100%" of it lands lower than that
+    var wrap = m.parentElement.getBoundingClientRect();
+    m.style.top = (b.getBoundingClientRect().bottom - wrap.top + SP2_POP_GAP) + 'px';
+  }
 }
 function sp2VrCloseMenus() {
   document.querySelectorAll('.sp2-vr-menu.on').forEach(function (m) { m.classList.remove('on'); });
@@ -8458,7 +8516,7 @@ function sp2HosBodyHtml(k) {
   }).join('') || '<div class="sp2-hos-none">Nothing recorded yet — the shift has not begun.</div>';
 
   return '<div class="sp2-hos-who">' +
-      '<div class="sp2-av lg">' + d.name.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2) + '</div>' +
+      '<div class="sp2-av lg">' + sp2Face(d.name) + '</div>' +
       '<div>' +
         '<div class="sp2-hos-nm">' + d.name + '</div>' +
         '<div class="sp2-hos-sub">' + d.truck + ' · ' + d.hub + ' · ' + sp2ShiftLabel(d.shift) + '</div>' +
@@ -8918,23 +8976,15 @@ function sp2CompTable(k) {
       '</div>';
   }).join('');
 
-  var placed = cells.reduce(function (a, c) { return a + c.l.q; }, 0);
+  // "Balanced · N gal placed" only repeated the gallons column, row by row,
+  // and the table's own foot sat at a different height from the drawing's. The
+  // box ends in one bar under both halves now; what is still to place and the
+  // undo live there, because they are the rig's state and not the table's.
   var loose = sp2Pend && sp2Pend.k === k ? sp2Pend : null;
-  var foot = loose
-    ? '<span class="sp2-ct-loose"><b>' + loose.q.toLocaleString() + ' gal</b> of ' + loose.p +
-        ' still to place</span>' +
-      '<button class="sp2-ct-btn" onclick="sp2PendPlace(event,\'' + k + '\')">Put it where it fits</button>'
-    : '<span class="sp2-ct-ok">Balanced \u00b7 ' + placed.toLocaleString() + ' gal placed</span>';
-
   return '<div class="sp2-ct' + (loose ? ' loose' : '') + '">' +
       '<div class="sp2-ct-head"><span>Comp</span><span>Product</span><span>Gallons</span>' +
         '<span title="Tank monitor">TM</span></div>' +
       rows +
-      '<div class="sp2-ct-foot">' + foot +
-        (sp2Undo && sp2Undo.k === k
-          ? '<button class="sp2-ct-btn out" onclick="event.stopPropagation();sp2LoadBack()">Undo</button>'
-          : '') +
-      '</div>' +
     '</div>';
 }
 
@@ -9845,6 +9895,17 @@ function sp2RouteHtml(k) {
 // screen rather than worked out from a percentage.
 function sp2RigRoomFoot(k) {
   var r = sp2RigRoom(k);
+  // fuel out of a compartment and not yet back in one is the rig's state, so
+  // it reads in the rig's own bar \u2014 with the way to place it, and the undo
+  var loose = sp2Pend && sp2Pend.k === k ? sp2Pend : null;
+  var act = (loose
+    ? '<span class="sp2-ct-loose"><b>' + loose.q.toLocaleString() + ' gal</b> of ' + loose.p +
+        ' still to place</span>' +
+      '<button class="sp2-ct-btn" onclick="sp2PendPlace(event,\'' + k + '\')">Put it where it fits</button>'
+    : '') +
+    (sp2Undo && sp2Undo.k === k
+      ? '<button class="sp2-ct-btn out" onclick="event.stopPropagation();sp2LoadBack()">Undo</button>'
+      : '');
   // Planned and loaded are the same number on a rig whose orders all fit, and
   // the pair is what makes the difference legible when they are not: 4,300 gal
   // committed to 2,800 gal of tank leaves 2,250 gal in no compartment at all.
@@ -9864,7 +9925,9 @@ function sp2RigRoomFoot(k) {
         '<i></i><b>' + r.free.toLocaleString() + ' gal</b> free · ' + r.freePct + '%</span>';
   // Two readings, not three: loaded said the same thing as planned on every rig
   // whose orders fit, and the compartment table is where the tanks are read.
-  return '<div class="sp2-rig-foot">' + planned + last + '</div>';
+  return '<div class="sp2-rig-foot' + (act ? ' acting' : '') + '">' +
+      planned + last + (act ? '<span class="sp2-rig-act">' + act + '</span>' : '') +
+    '</div>';
 }
 
 // the compartments holding a given order's fuel, in the rig's own order
@@ -9974,8 +10037,7 @@ function sp2LaneHtml(k) {
           '<circle cx="3.5" cy="3" r="1.3"/><circle cx="8.5" cy="3" r="1.3"/>' +
           '<circle cx="3.5" cy="8" r="1.3"/><circle cx="8.5" cy="8" r="1.3"/>' +
           '<circle cx="3.5" cy="13" r="1.3"/><circle cx="8.5" cy="13" r="1.3"/></svg></button>' +
-        '<div class="sp2-av" title="' + d.name + '">' +
-          d.name.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2) + '</div>' +
+        '<div class="sp2-av" title="' + d.name + '">' + sp2Face(d.name) + '</div>' +
         '<div class="sp2-ln-name">' + d.name + '</div>' +
         '<button class="sp2-ico-sm" title="Change the driver on ' + d.truck + '" ' +
           'onclick="event.stopPropagation();sp2DriverPop(this,\'' + k + '\')">' +
@@ -10033,11 +10095,13 @@ function sp2LaneHtml(k) {
       (shut ? ''
         : k === sp2Driver
         ? '<div class="sp2-two">' +
-            '<div class="sp2-two-l">' + sp2CompTable(k) + '</div>' +
-            '<div class="sp2-two-r"><div class="sp2-rig-box">' +
-              '<div class="sp2-rig-mid">' + sp2RigBareArt(k, 300) + '</div>' +
-              sp2RigRoomFoot(k) +
-            '</div></div>' +
+            '<div class="sp2-two-row">' +
+              '<div class="sp2-two-l">' + sp2CompTable(k) + '</div>' +
+              '<div class="sp2-two-r"><div class="sp2-rig-box">' +
+                '<div class="sp2-rig-mid">' + sp2RigBareArt(k, 300) + '</div>' +
+              '</div></div>' +
+            '</div>' +
+            sp2RigRoomFoot(k) +
           '</div>' + sp2SuggestHtml(k)
         : mine.length ? sp2SimpleBars(k) : '') +
 

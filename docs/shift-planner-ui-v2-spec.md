@@ -2408,3 +2408,74 @@ checks the card count matches the view the moment a preset is picked, that
 every one of the selected rig's orders is above every other, that the driver
 row sits between the window and the products and carries the avatar, name and
 rig, and that an unplanned card carries no driver at all.
+
+## Round 60 — faces, and one box
+
+**Every driver has a face.** The roster is twenty invented names, so these are
+drawn rather than photographed: head and shoulders in an SVG, the skin, hair
+and shirt picked from the name's hash so the same driver always wears the same
+one, with longer hair or a beard on some. They sit in the avatar circle the
+initials used to fill — the lane's driver card, the crew sheet and the planned
+order card — and an `<img>` can take the place of `sp2Face` the day there are
+real files, without touching anything around it.
+
+**The compartment table and the drawing are one box.** Two bordered cards side
+by side drew four vertical rules between two things that are one thing. The
+band carries a single rim and radius; the table's own ending edge is the
+divider, and the drawing's half has no rim of its own.
+
+### Cost
+
+81 steps green at 1512×950, archived V1 52, merged bundle 108. The step now
+reads the band's rim rather than the drawing's, and insists the drawing is not
+boxed inside the box and that something divides the two halves; the planned
+card's step checks the avatar carries a face, that the fleet's faces differ,
+and that a driver's face does not change between renders.
+
+## Round 61 — one bar under both halves
+
+The table had a foot and the drawing had its readings, at different heights
+inside the same box. There is one bar now, across the whole box, under both
+halves: **planned** and **free**, which belong to the rig rather than to either
+half. The table and the drawing end on the same line — both at 631px on LT-31,
+the bar 887 of the box's 889.
+
+**"Balanced · 7,750 gal placed" is gone.** It was the gallons column said over
+again, row by row.
+
+What was in the table's foot and is still needed moved into the bar: *"2,000
+gal of REC90 still to place"* with **Put it where it fits**, and **Undo**, held
+to the right of the two readings. They are the rig's state, not the table's.
+
+### Cost
+
+81 steps green at 1512×950, archived V1 52, merged bundle 109. The step reads
+the two readings off the bar, fails if the table grows a foot of its own or if
+the balanced line comes back, and measures that both halves end on the same
+line and the bar runs the width of the box. Clip check clean on four rigs,
+including with fuel waiting to be placed.
+
+## Round 62 — 4px, measured from the button
+
+The filter panel opened **16px** below the Filters button, and the CSS said
+`top: calc(100% + 4px)`. The 100% was the header's, not the button's: the
+header has its own padding under the control row, and the panel was hanging off
+the bottom of that.
+
+Every panel is now placed from the control that opened it, at one shared
+`SP2_POP_GAP = 4`:
+
+| panel | was | now |
+|---|---|---|
+| Filters | 16 | 4 |
+| Sort | 16 | 4 |
+| Truck and trailer pickers | 6 | 4 |
+| A view's ⋯ menu | 8.75 | 4 |
+
+The view menu had the same fault in miniature — its wrapper is taller than the
+small button inside it, so "100%" landed 4.75px low.
+
+### Cost
+
+81 steps green at 1512×950, archived V1 52, merged bundle 109. The filter step
+measures the gap from the button and fails if it is not 4.

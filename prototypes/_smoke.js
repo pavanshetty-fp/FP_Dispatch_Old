@@ -811,10 +811,18 @@
         // the drawing has a card of its own, built like the table's, and it
         // takes the band's height \u2014 whichever of the two is taller
         const card = col.querySelector('.sp2-rig-box');
-        if (!card) throw new Error('the drawing has no box of its own');
-        const cs2 = getComputedStyle(card);
-        if (parseFloat(cs2.borderTopWidth) < 1) throw new Error('the drawing\u2019s box has no rim');
-        if (parseFloat(cs2.borderRadius) <= 0) throw new Error('the drawing\u2019s box has square corners');
+        if (!card) throw new Error('the drawing has no box');
+        // One box around the pair, and the table's own ending edge divides it
+        // from the drawing \u2014 the drawing's half carries no rim of its own.
+        const band2 = col.closest('.sp2-two');
+        const bs = getComputedStyle(band2);
+        if (parseFloat(bs.borderTopWidth) < 1) throw new Error('the band has no rim');
+        if (parseFloat(bs.borderRadius) <= 0) throw new Error('the band has square corners');
+        if (parseFloat(getComputedStyle(card).borderTopWidth) > 0)
+          throw new Error('the drawing is boxed inside the box');
+        const tblCard = document.querySelector('.sp2-ln.on .sp2-two-l');
+        if (parseFloat(getComputedStyle(tblCard).borderRightWidth) < 1)
+          throw new Error('nothing divides the table from the drawing');
         const tbl = document.querySelector('.sp2-ln.on .sp2-two-l .sp2-ct');
         if (!tbl) throw new Error('there is no compartment card to measure against');
         const mid = card.querySelector('.sp2-rig-mid') || card;
@@ -1758,7 +1766,16 @@
       const d = SP2_DRIVERS[k];
       if (row.textContent.indexOf(d.name) < 0) throw new Error('it does not name the driver');
       if (row.textContent.indexOf(d.truck) < 0) throw new Error('it does not name the rig');
-      if (!row.querySelector('.sp2-av')) throw new Error('the driver has no avatar on the card');
+      const av = row.querySelector('.sp2-av');
+      if (!av) throw new Error('the driver has no avatar on the card');
+      if (!av.querySelector('.sp2-face')) throw new Error('the avatar carries no face');
+      // every driver has one, and two drivers do not share it
+      const faces = Object.keys(SP2_DRIVERS).map(x => sp2Face(SP2_DRIVERS[x].name));
+      if (faces.some(f => !/^<svg/.test(f))) throw new Error('a driver has no face drawn');
+      if (new Set(faces).size < Math.min(6, faces.length))
+        throw new Error('the faces barely differ: ' + new Set(faces).size + ' of ' + faces.length);
+      if (sp2Face('Same Name') !== sp2Face('Same Name'))
+        throw new Error('a driver\u2019s face changes between renders');
       const win = card.querySelector('.sp2-win').getBoundingClientRect();
       const prod = card.querySelector('.sp2-lsum,.sp2-lt').getBoundingClientRect();
       const rb = row.getBoundingClientRect();
@@ -1782,6 +1799,14 @@
         throw new Error('the lists are not one control');
       const on = tabs.filter(t => t.classList.contains('on'));
       if (on.length !== 1) throw new Error(on.length + ' lists read as selected');
+      // every panel opens 4px under the control that opened it \u2014 the CSS used to
+      // measure from the header the button sits in, which put it 16px away
+      const fb = document.getElementById('sp2FpBtn').getBoundingClientRect();
+      const pb = document.getElementById('sp2Fp').getBoundingClientRect();
+      const away = pb.top - fb.bottom;
+      if (Math.abs(away - 4) > 1)
+        throw new Error('the panel opens ' + away.toFixed(1) + 'px under the Filters button');
+
       // and it runs the width of the panel, the lists sharing it equally
       const seg = tabs[0].closest('.sp2-fp-seg');
       const panel = document.getElementById('sp2Fp');
@@ -3610,8 +3635,23 @@
         const cells = [...t.querySelectorAll('input.sp2-cell')];
         if (cells.length !== sp2Cells('d0').length)
           throw new Error('the table lists ' + cells.length + ' of ' + sp2Cells('d0').length + ' compartments');
-        const foot = () => t.parentElement.querySelector('.sp2-ct-foot').innerText;
-        if (!/Balanced/.test(foot())) throw new Error('a settled load does not read as balanced');
+        // One bar under both halves, so the table and the drawing end on the
+        // same line. "Balanced \u00b7 N gal placed" was the gallons column said
+        // over again; what is planned and what is free belong to the rig.
+        const bar = () => document.querySelector('.sp2-ln.on .sp2-rig-foot');
+        const foot = () => bar().innerText;
+        if (document.querySelector('.sp2-ln.on .sp2-ct-foot'))
+          throw new Error('the table still carries a foot of its own');
+        if (/Balanced/.test(foot())) throw new Error('the balanced line is back');
+        if (!/planned/.test(foot()) || !/free|over capacity/.test(foot()))
+          throw new Error('the bar does not carry the rig\u2019s two readings: ' + foot());
+        const halves = [t.getBoundingClientRect().bottom,
+                        document.querySelector('.sp2-ln.on .sp2-rig-box').getBoundingClientRect().bottom];
+        if (Math.abs(halves[0] - halves[1]) > 2)
+          throw new Error('the table and the drawing do not end on the same line');
+        if (bar().getBoundingClientRect().width <
+            document.querySelector('.sp2-ln.on .sp2-two').getBoundingClientRect().width - 4)
+          throw new Error('the bar does not run the width of the box');
 
         // take some out: it is held, not lost, and the card says so
         const was = d.load[1].q, take = 200;
@@ -3649,7 +3689,8 @@
         if (d.load[1].q !== was) throw new Error('typing it back did not land');
         if (document.querySelector('.sp2-ln.on .sp2-ct-loose'))
           throw new Error('it still thinks something is loose');
-        if (!/Balanced/.test(foot())) throw new Error('it did not read as balanced again');
+        if (/still to place/.test(foot()))
+          throw new Error('the bar still says something is to be placed');
 
         // a compartment never takes more than it holds
         const cap = SP2_TRUCKS[d.truck].comps[1].cap;
