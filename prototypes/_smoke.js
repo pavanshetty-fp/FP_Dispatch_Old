@@ -1688,6 +1688,129 @@
       sp2SetQuick('unplanned');
     });
 
+    if (V2) step('the presets each ask a question of both columns', () => {
+      // a preset narrows the orders and the rigs together; an order list means
+      // nothing without the rigs it could go on
+      if (sp2Views.length < 5)
+        throw new Error('only ' + sp2Views.length + ' presets to open the planner with');
+      const was = sp2ViewOn;
+      const seen = {};
+      sp2Views.forEach(v => {
+        if (seen[v.name]) throw new Error('two presets are called ' + v.name);
+        seen[v.name] = 1;
+        sp2VrPick(v.id);
+        const os = sp2Visible(), ds = sp2DriverKeys();
+        if (!os.length) throw new Error(v.name + ' shows no orders at all');
+        if (!ds.length) throw new Error(v.name + ' shows no drivers at all');
+        // every facet the preset sets has to be one the panel actually has
+        Object.keys(v.state.facet).forEach(key => {
+          const f = SP2_FACETS.filter(x => x.k === key)[0];
+          if (!f) throw new Error(v.name + ' sets a facet nobody has: ' + key);
+          if (f.opts) v.state.facet[key].forEach(val => {
+            if (f.opts.indexOf(val) < 0)
+              throw new Error(v.name + ' asks ' + key + ' for "' + val + '", which is not an option');
+          });
+        });
+      });
+
+      // Planned is the orders somebody has taken, and only those
+      const planned = sp2Views.filter(v => v.name === 'Planned')[0];
+      if (!planned) throw new Error('there is no Planned preset');
+      sp2VrPick(planned.id);
+      const shown = sp2Visible();
+      if (!shown.length) throw new Error('Planned shows nothing');
+      shown.forEach(o => {
+        if (!o.driver) throw new Error(o.id + ' has no driver and is in Planned');
+      });
+      const missing = SP2_ORDERS.filter(o => o.driver && shown.indexOf(o) < 0);
+      if (missing.length)
+        throw new Error(missing.length + ' orders have a driver and are not in Planned');
+
+      sp2VrPick(was);
+    });
+
+    if (V2) step('a planned order says whose it is, and the rig\u2019s own come first', () => {
+      const wasDrv = sp2Driver, wasView = sp2ViewOn;
+      sp2VrPick('vPlanned');
+      // a preset narrows both columns, so both have to be drawn again
+      if (document.querySelectorAll('.sp2-card').length !== sp2Visible().length)
+        throw new Error('picking a preset left the orders column showing the list before it');
+      const k = [...document.querySelectorAll('.sp2-ln')].map(l => l.dataset.k)
+        .find(x => SP2_ORDERS.filter(o => o.driver === x).length >= 2);
+      if (!k) throw new Error('no driver has two orders to float');
+      sp2PickDriver(k);
+      const seq = sp2Visible();
+      const his = SP2_ORDERS.filter(o => o.driver === k).length;
+      if (seq.length <= his) throw new Error('nothing else is in the list to rank against');
+      seq.slice(0, his).forEach(o => {
+        if (o.driver !== k)
+          throw new Error(o.id + ' is not on ' + k + ' and is above the orders that are');
+      });
+      seq.slice(his).forEach(o => {
+        if (o.driver === k) throw new Error(o.id + ' is on the selected rig and sits below the rest');
+      });
+
+      // and the card carries the driver: avatar, name, rig, between the window
+      // and the products
+      const card = document.querySelector('.sp2-card[data-id="' + seq[0].id + '"]');
+      const row = card.querySelector('.sp2-ord-drv');
+      if (!row) throw new Error('a planned card does not say whose order it is');
+      const d = SP2_DRIVERS[k];
+      if (row.textContent.indexOf(d.name) < 0) throw new Error('it does not name the driver');
+      if (row.textContent.indexOf(d.truck) < 0) throw new Error('it does not name the rig');
+      if (!row.querySelector('.sp2-av')) throw new Error('the driver has no avatar on the card');
+      const win = card.querySelector('.sp2-win').getBoundingClientRect();
+      const prod = card.querySelector('.sp2-lsum,.sp2-lt').getBoundingClientRect();
+      const rb = row.getBoundingClientRect();
+      if (rb.top < win.bottom - 1) throw new Error('the driver sits above the window');
+      if (rb.bottom > prod.top + 1) throw new Error('the driver sits below the products');
+      // an unplanned order has nobody, so it says nobody
+      sp2VrPick('vAvail');
+      if (document.querySelector('.sp2-card .sp2-ord-drv'))
+        throw new Error('an unplanned card carries a driver');
+      sp2VrPick(wasView);
+      sp2PickDriver(wasDrv);
+    });
+
+    if (V2) step('the filter panel says which list it is filtering', () => {
+      // an underline and a weight change were too quiet for the choice the
+      // whole panel hangs on
+      sp2FpToggle({ stopPropagation(){} });
+      const tabs = [...document.querySelectorAll('.sp2-fp-tab')];
+      if (tabs.length < 2) throw new Error('the panel has ' + tabs.length + ' lists to filter');
+      if (!tabs[0].closest('.sp2-fp-seg'))
+        throw new Error('the lists are not one control');
+      const on = tabs.filter(t => t.classList.contains('on'));
+      if (on.length !== 1) throw new Error(on.length + ' lists read as selected');
+      // and it runs the width of the panel, the lists sharing it equally
+      const seg = tabs[0].closest('.sp2-fp-seg');
+      const panel = document.getElementById('sp2Fp');
+      const sw = seg.getBoundingClientRect().width, pw = panel.getBoundingClientRect().width;
+      if (pw - sw > 24)
+        throw new Error('the control is ' + Math.round(sw) + 'px in a ' + Math.round(pw) + 'px panel');
+      const widths = tabs.map(t => t.getBoundingClientRect().width);
+      if (Math.max(...widths) - Math.min(...widths) > 2)
+        throw new Error('the lists do not share the control equally');
+      const off = tabs.find(t => !t.classList.contains('on'));
+      const a = getComputedStyle(on[0]), b2 = getComputedStyle(off);
+      if (a.backgroundColor === b2.backgroundColor)
+        throw new Error('the selected list is not filled');
+      if (/rgba\(0, 0, 0, 0\)|transparent/.test(a.backgroundColor))
+        throw new Error('the selected list has no fill at all');
+      if (a.color === b2.color) throw new Error('the selected list reads in the same ink');
+      // and it moves with the choice \u2014 the panel redraws, so read it again
+      const want = off.textContent.trim();
+      off.click();
+      const after = [...document.querySelectorAll('.sp2-fp-tab')];
+      const nowOn = after.filter(t => t.classList.contains('on'));
+      if (nowOn.length !== 1) throw new Error(nowOn.length + ' lists read as selected at once');
+      if (nowOn[0].textContent.trim() !== want)
+        throw new Error('clicking a list selected ' + nowOn[0].textContent.trim());
+      after[0].click();
+      sp2FpClose && sp2FpClose();
+      document.getElementById('sp2Fp').classList.remove('on');
+    });
+
     if (V2) step('both columns carry the same two tools', () => {
       // whatever one column can do to itself, the other can too
       const ords = document.querySelector('.sp2-col-orders .sp2-tools-r');

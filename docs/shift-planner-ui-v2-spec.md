@@ -2327,3 +2327,84 @@ fix.
 78 steps green at 1512×950, archived V1 52, merged bundle 104. Two stale
 assertions retired: the card no longer hides its reading, and "V2 took the fit
 off the card" is settled — it lives in the head.
+
+## Round 57 — the filter panel says which list it is filtering
+
+Orders against Drivers and trucks was an underlined tab with a weight change —
+too quiet for the choice the whole panel hangs on. It is the segmented control
+this screen already uses for a one-of-these choice: a grey track, the selected
+side filled in the primary with its label in the reverse ink, and its count
+riding that fill at 24% white rather than sitting on it as a grey chip.
+
+Same component as the Trucks / Trailers segment inside the panel, so the panel
+now answers "which" the same way twice.
+
+### Cost
+
+79 steps green at 1512×950, archived V1 52, merged bundle 105. The new step
+fails if the two lists are not one control, if more or fewer than one reads as
+selected, if the selected one has no fill or shares the other's ink, or if
+clicking a list does not move the selection.
+
+## Round 58 — presets
+
+The views row had one preset. It has six, each a question a dispatcher opens
+the planner to ask, and each narrowing **both columns**, because an order list
+means nothing without the rigs it could go on.
+
+| preset | orders | rigs | shows |
+|---|---|---|---|
+| Available orders and drivers | Unplanned | Available | 54 · 20 |
+| **Planned** | Planned | all | 45 · 30 |
+| Outside the window | Outside | all | 3 · 30 |
+| Morning runs | Unplanned, before noon | AM shift | 32 · 16 |
+| Blends to place | Unplanned, carrying a blend | 2+ compartments free | 18 · 20 |
+| Tank wagons with room | Unplanned | Available tank wagons | 54 · 8 |
+
+**Planned** is the one asked for: every order that has a driver, against the
+whole fleet, so "who has what" reads off one screen. `Planned` was already the
+status facet's own word for an order with a driver, so the preset is that facet
+and nothing else.
+
+Two presets cross the columns rather than narrowing one of them — Morning runs
+pairs the first half of the day with the shift that works it, Blends to place
+pairs blended orders with the rigs that have a free compartment to put one in.
+
+### Cost
+
+80 steps green at 1512×950, archived V1 52, merged bundle 106. The new step
+walks every preset, fails if one shows no orders or no rigs, if two share a
+name, or if one asks a facet for a value that is not among its options; then it
+checks Planned holds every order with a driver and nothing else. Seven tabs fit
+the row at 1512 without wrapping, and the clip check is clean in all six.
+
+## Round 59 — whose order it is
+
+**The segment runs the width of the panel**, Orders and Drivers and trucks
+sharing it equally at 285px each inside the 600px panel. It is the choice the
+whole panel hangs on, so it is the width of the panel.
+
+**The rig you are looking at comes first.** Select a driver and their own orders
+float to the top of the lane, everything else below, in whatever order the sort
+gives. One rule in every sort rather than a mode of its own — reading "who has
+what" with a driver selected is the point of the Planned preset.
+
+**A planned card names its driver**, between the window and the products, which
+is the order Pavan listed: number, type, ship-to, delivery window, **driver**,
+products. Avatar, name, rig — "AS · Arpita Shah · BT-4". The avatar carries
+initials; the roster has no photographs, and a generated face would be a
+fiction on a card that is otherwise all fact.
+
+**A bug the step turned up:** picking a preset redrew only the rigs.
+`sp2ViewApply` ended with `sp2RenderUnit()`, so switching to Planned left the
+orders column showing the list from the view before it — 54 cards against a
+45-order view — until something else happened to redraw it. A preset narrows
+both columns, so it now draws both.
+
+### Cost
+
+81 steps green at 1512×950, archived V1 52, merged bundle 107. The new step
+checks the card count matches the view the moment a preset is picked, that
+every one of the selected rig's orders is above every other, that the driver
+row sits between the window and the products and carries the avatar, name and
+rig, and that an unplanned card carries no driver at all.

@@ -1114,16 +1114,25 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 /* ── unit.filter-panel ────────────────────────────────────
    600px, the facets down the left in 200px, their options to the
    right, and a footer that counts the rows before you commit. */
-/* the panel's two lists, as tabs */
-#scr-plan .sp2-fp-tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--fp-outline-1);}
-#scr-plan .sp2-fp-tab{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:none;
-  border-bottom:2px solid transparent;background:none;font-family:inherit;font-size:13px;
-  color:var(--fp-ink-3);cursor:pointer;}
-#scr-plan .sp2-fp-tab:hover{color:var(--fp-ink-1);}
-#scr-plan .sp2-fp-tab.on{font-weight:500;color:var(--fp-ink-1);border-bottom-color:var(--fp-ink-1);}
+/* Which list is being filtered, as the segmented control this screen already
+   uses for a one-of-these choice. An underline and a weight change were too
+   quiet for the thing that decides what the whole panel is about. */
+#scr-plan .sp2-fp-tabs{display:flex;padding:9px 10px;border-bottom:1px solid var(--fp-outline-1);}
+/* the control runs the width of the panel and the lists share it equally — it
+   is the choice the whole panel hangs on, so it is the width of the panel */
+#scr-plan .sp2-fp-seg{flex:1;display:flex;gap:2px;padding:2px;background:var(--muted);
+  border:1px solid var(--fp-outline-1);border-radius:var(--r-md);}
+#scr-plan .sp2-fp-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;height:30px;padding:0 13px;
+  border:none;border-radius:6px;background:transparent;font-family:inherit;font-size:13px;
+  font-weight:500;color:var(--fp-ink-3);cursor:pointer;white-space:nowrap;}
+#scr-plan .sp2-fp-tab:hover{background:var(--fp-emphasis-hover);color:var(--fp-ink-1);}
+#scr-plan .sp2-fp-tab.on{background:var(--primary);color:var(--primary-foreground);font-weight:600;}
 #scr-plan .sp2-fp-tab-n{min-width:17px;height:17px;padding:0 5px;border-radius:9999px;background:var(--chip);
   font-size:11px;color:var(--fp-ink-1);font-variant-numeric:tabular-nums;
   display:inline-flex;align-items:center;justify-content:center;}
+/* the count rides the selected fill rather than sitting on it as a grey chip */
+#scr-plan .sp2-fp-tab.on .sp2-fp-tab-n{background:rgba(255,255,255,.24);color:var(--primary-foreground);}
 
 #scr-plan .sp2-fp{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:90;width:600px;
   background:var(--fp-surface-1b);border:1px solid var(--fp-outline-1);
@@ -1837,6 +1846,13 @@ body{font-family:'Geist',system-ui,sans-serif;background:#e8e8e4;color:#030405;o
 #scr-plan .sp2-fit.part{color:var(--status-caution);}
 #scr-plan .sp2-fit.part b{color:var(--status-caution);}
 #scr-plan .sp2-fit.none{color:var(--status-neutral);}
+/* whose order it is: the avatar, the name, the rig */
+#scr-plan .sp2-ord-drv{display:flex;align-items:center;gap:7px;margin-top:8px;min-width:0;}
+#scr-plan .sp2-av-xs{width:22px;height:22px;font-size:9px;box-shadow:inset 0 0 0 1px var(--fp-outline-1);}
+#scr-plan .sp2-ord-drv-n{font-size:13px;font-weight:600;color:var(--fp-ink-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scr-plan .sp2-ord-drv-t{margin-left:auto;font-size:12px;color:var(--fp-ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
 /* ranked by fit, the reading is a pill beside the order number */
 /* a flex box drops the whitespace between its children, so "100%" and
    "utilization" need the gap putting back */
@@ -6090,20 +6106,27 @@ function sp2Visible() {
     if (q && (o.id + ' ' + o.ship + ' ' + o.addr).toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
+  // Whatever the order, the rig you are looking at comes first: its own orders
+  // at the top of the lane, everything else below. Reading "who has what" with
+  // a driver selected is the whole point of the Planned preset.
+  var mine = function (o) { return sp2Driver && o.driver === sp2Driver ? 0 : 1; };
+  var byRig = function (sorted) {
+    return sorted.sort(function (a, b) { return mine(a) - mine(b); });   // stable
+  };
   if (sp2Sort === 'fit')
-    return list.sort(function (a, b) { return sp2FitScore(b) - sp2FitScore(a) || a.t - b.t; });
+    return byRig(list.sort(function (a, b) { return sp2FitScore(b) - sp2FitScore(a) || a.t - b.t; }));
   // By driver: every driver's orders together, in the order their day runs
   // them. It is a planned-order reading, so orders nobody has taken fall to
   // the bottom rather than being scattered through the list.
   if (sp2Sort === 'driver')
-    return list.sort(function (a, b) {
+    return byRig(list.sort(function (a, b) {
       var an = a.driver && SP2_DRIVERS[a.driver] ? SP2_DRIVERS[a.driver].name : '';
       var bn = b.driver && SP2_DRIVERS[b.driver] ? SP2_DRIVERS[b.driver].name : '';
       if (!an !== !bn) return an ? -1 : 1;
       if (an !== bn)   return an < bn ? -1 : 1;
       return a.t - b.t;
-    });
-  return list.sort(function(a,b){ return a.t - b.t; });
+    }));
+  return byRig(list.sort(function(a,b){ return a.t - b.t; }));
 }
 
 // ══════════════════════════════════════════════════════════
@@ -6770,6 +6793,20 @@ function sp2FitChip(o) {
 }
 // What splitting it would actually put on, in gallons and compartments. Not a
 // pill: a pill is a reading, and this is a sentence about what would happen.
+// The driver an order is planned on \u2014 their avatar, their name, their rig.
+// The avatar carries initials: the roster has no photographs, and a generated
+// face would be a fiction on a card that is otherwise all fact.
+function sp2OrderDriver(o) {
+  var d = SP2_DRIVERS[o.driver];
+  if (!d) return '';
+  var ini = d.name.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2);
+  return '<div class="sp2-ord-drv" title="Planned on ' + d.name + ' · ' + d.truck +
+      (d.trailer ? ' + ' + d.trailer : '') + '">' +
+      '<span class="sp2-av sp2-av-xs" aria-hidden="true">' + ini + '</span>' +
+      '<span class="sp2-ord-drv-n">' + d.name + '</span>' +
+      '<span class="sp2-ord-drv-t">' + d.truck + (d.trailer ? ' + ' + d.trailer : '') + '</span>' +
+    '</div>';
+}
 function sp2FitSplitLine(o) {
   var f = sp2FitFor(sp2Driver, o);
   if (!f || !f.splits) return '';
@@ -6984,6 +7021,11 @@ function sp2CardV3(o, style) {
     // and under the window, what splitting it would put on — a sentence,
     // because it is a consequence rather than a reading
     (!planned && SP2_DRIVERS[sp2Driver] ? sp2FitSplitLine(o) : '') +
+
+    // Whose order this is, between the window and the products: an order that
+    // has been planned is somebody's, and the card should not make you look
+    // the driver up in the other column.
+    (planned ? sp2OrderDriver(o) : '') +
 
     // ── unit 2 · what was asked for, correctable in place ──
     // The DS lines table: flush to the card's edges, a tinted header band,
@@ -7653,8 +7695,34 @@ var sp2FpSeg   = {};        // per-facet segment, for a list of two kinds
 // A preset is a narrowing of the WHOLE planner, both columns at once. The one
 // the planner opens on is the day's work: the orders nobody has taken, against
 // the rigs that can still take them.
-var sp2Views   = [{ id:'vAvail', name:'Available orders and drivers',
-                    state:{ q:'', facet:{ ostatus:['Unplanned'], room:['Available'] } } }];
+// The presets are the questions a dispatcher opens the planner to ask. Each
+// one narrows both columns at once, because an order list means nothing
+// without the rigs it could go on.
+var sp2Views   = [
+  // the day's work: nobody has taken these, and these rigs can still take them
+  { id:'vAvail',   name:'Available orders and drivers',
+    state:{ q:'', facet:{ ostatus:['Unplanned'], room:['Available'] } } },
+  // what is already somebody's \u2014 every order with a driver against the whole
+  // fleet, so the question "who has what" can be read off one screen
+  { id:'vPlanned', name:'Planned',
+    state:{ q:'', facet:{ ostatus:['Planned'] } } },
+  // planned, but the run does not reach it inside its window
+  { id:'vOutside', name:'Outside the window',
+    state:{ q:'', facet:{ ostatus:['Outside'] } } },
+  // the first half of the day, against the shift that works it
+  { id:'vMorning', name:'Morning runs',
+    state:{ q:'', facet:{ ostatus:['Unplanned'],
+                          win:['Before 8 AM', '8 AM \u2013 12 PM'], shift:['AM'] } } },
+  // a blend needs a compartment of its own, so the rigs are the ones with two
+  // or more still free
+  { id:'vBlend',   name:'Blends to place',
+    state:{ q:'', facet:{ ostatus:['Unplanned'], oblend:['Carrying a blend'],
+                          comps:['2', '3 or more'] } } },
+  // small rigs with room: the drops nobody wants to send a transport to
+  { id:'vWagon',   name:'Tank wagons with room',
+    state:{ q:'', facet:{ ostatus:['Unplanned'], room:['Available'],
+                          'class':['Tank wagon'] } } },
+];
 var sp2ViewOn  = 'vAvail';
 
 function sp2FacetOpts(f) {
@@ -7866,7 +7934,8 @@ function sp2FpDraw() {
 
   var n = isOrders ? sp2OrdCountFor(sp2FpStage) : sp2DrvCountFor(sp2FpStage);
   p.innerHTML =
-    '<div class="sp2-fp-tabs">' + tabs + '</div>' +
+    '<div class="sp2-fp-tabs"><div class="sp2-fp-seg" role="group" ' +
+      'aria-label="Which list to filter">' + tabs + '</div></div>' +
     '<div class="sp2-fp-body">' +
       '<div class="sp2-fp-menu">' + menu + '</div>' +
       '<div class="sp2-fp-opts">' + opts + '</div>' +
@@ -7973,7 +8042,10 @@ function sp2ViewApply(st) {
   sp2OnlyDriver = null;
   document.getElementById('sp2DrvSearch').value = st.q;
   sp2AvailFreeze();
-  sp2RenderUnit();
+  // A preset narrows BOTH columns, so both are drawn again. It used to redraw
+  // only the rigs: switching to Planned left the orders column showing the
+  // list from the view before it until something else happened to redraw it.
+  sp2Render();
 }
 function sp2ViewDirty() {
   var v = sp2Views.filter(function (x) { return x.id === sp2ViewOn; })[0];
